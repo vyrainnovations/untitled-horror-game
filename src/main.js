@@ -1,45 +1,54 @@
-// Starter scene. It only proves the pipeline works: a dim room with one
-// hanging light, rendered at low resolution. Replace it with the real game.
+// Entry point. Sets up the renderer, builds the apartment, creates the player
+// and runs the game loop.
 import * as THREE from 'three';
+import { buildApartment } from './apartment.js';
+import { createPlayer } from './player.js';
+import { createVhs } from './vhs.js';
 
 // Render at a small fixed height and let CSS stretch it, for the lo-fi look.
 const RENDER_HEIGHT = 240;
+const DARK = 0x04050a;
 
 const renderer = new THREE.WebGLRenderer({ antialias: false });
 document.body.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x050506);
-scene.fog = new THREE.Fog(0x050506, 2, 9);
+scene.background = new THREE.Color(DARK);
+scene.fog = new THREE.Fog(DARK, 1.0, 8.5);
 
-const camera = new THREE.PerspectiveCamera(65, 1, 0.1, 50);
-camera.position.set(0, 1.6, 3);
+const camera = new THREE.PerspectiveCamera(68, 1, 0.05, 30);
 
-// A room: one box seen from the inside.
-const room = new THREE.Mesh(
-  new THREE.BoxGeometry(6, 3, 8),
-  new THREE.MeshLambertMaterial({ color: 0x6b6558, side: THREE.BackSide })
-);
-room.position.y = 1.5;
-scene.add(room);
+const apartment = buildApartment(scene);
+// Start in the bedroom, standing behind the chair, facing the desk.
+const player = createPlayer(camera, renderer.domElement, apartment.colliders, { x: 2.3, z: 2.3, yaw: 0 });
+const vhs = createVhs(renderer);
 
-const bulb = new THREE.PointLight(0xffd9a0, 6, 8);
-bulb.position.set(0, 2.6, 0);
-scene.add(bulb);
-scene.add(new THREE.AmbientLight(0x202030, 0.6));
+// The "click to play" message, hidden while the mouse is captured.
+const overlay = document.getElementById('overlay');
+document.addEventListener('playerlockchange', () => {
+  overlay.style.display = player.isLocked() ? 'none' : '';
+});
 
 function resize() {
   const aspect = window.innerWidth / window.innerHeight;
-  renderer.setSize(Math.round(RENDER_HEIGHT * aspect), RENDER_HEIGHT, false);
+  const width = Math.round(RENDER_HEIGHT * aspect);
+  renderer.setSize(width, RENDER_HEIGHT, false);
+  vhs.setSize(width, RENDER_HEIGHT);
   camera.aspect = aspect;
   camera.updateProjectionMatrix();
 }
 window.addEventListener('resize', resize);
 resize();
 
+let last = 0;
 renderer.setAnimationLoop((ms) => {
   const t = ms / 1000;
-  camera.rotation.y = Math.sin(t * 0.2) * 0.3; // slow look left and right
-  bulb.intensity = 6 + Math.sin(t * 13) * 0.4; // slight flicker
-  renderer.render(scene, camera);
+  const dt = Math.min(0.05, t - last); // never jump far after a hitch
+  last = t;
+  player.update(dt);
+  apartment.update(t);
+  vhs.render(scene, camera, t);
 });
+
+// Only while developing: lets tests reach into the game from the console.
+if (import.meta.env.DEV) window.__game = { player, apartment, camera, scene };
