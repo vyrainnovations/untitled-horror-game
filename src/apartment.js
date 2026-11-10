@@ -17,7 +17,7 @@
 // "=" is a doorway. The kitchen has a wide open archway onto the hall.
 import * as THREE from 'three';
 
-const CEILING = 2.5;
+const CEILING = 2.8;
 const DOOR_HEIGHT = 2.05;
 const WALL = 0.12; // wall thickness
 const HALF = WALL / 2;
@@ -178,10 +178,10 @@ export function buildApartment(scene) {
 
   // One bare bulb. It is the only warm light in the flat, and it is not well.
   const bulbMaterial = new THREE.MeshBasicMaterial({ color: 0xffe2b0, fog: false });
-  box(4.66, 4.74, 2.3, 2.4, 3.86, 3.94, bulbMaterial);
-  box(4.69, 4.71, 2.4, 2.5, 3.89, 3.91, M.dark); // cord
+  box(4.66, 4.74, 2.38, 2.48, 3.86, 3.94, bulbMaterial);
+  box(4.69, 4.71, 2.48, CEILING, 3.89, 3.91, M.dark); // cord
   const bulb = new THREE.PointLight(0xffc98a, 2.2, 7, 1.6);
-  bulb.position.set(4.7, 2.2, 3.9);
+  bulb.position.set(4.7, 2.3, 3.9);
   scene.add(bulb);
 
   scene.add(new THREE.AmbientLight(0x1c2030, 0.55));

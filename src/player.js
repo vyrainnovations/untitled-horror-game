@@ -1,7 +1,7 @@
 // First-person player: click to capture the mouse, mouse to look, WASD to
 // walk. The player is a circle on the floor that is pushed back out of any
 // wall or furniture rectangle it overlaps.
-const EYE_HEIGHT = 1.6;
+const EYE_HEIGHT = 1.5; // eye level of someone about 1.62 m tall
 const RADIUS = 0.25; // how wide the player is
 const WALK_SPEED = 1.5; // metres per second
 const FAST_SPEED = 2.5; // holding Shift
