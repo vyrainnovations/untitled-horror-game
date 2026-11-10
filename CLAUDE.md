@@ -31,7 +31,10 @@ Out of scope for now: voice acting, multiple endings, a second location, multipl
 
 ## Layout
 
-- `index.html`, `src/main.js`: entry point. Currently a tiny starter scene that proves the pipeline works.
+- `index.html`, `src/main.js`: entry point (renderer, game loop).
+- `src/apartment.js`: the apartment built from boxes in code, its lights, and the list of solid rectangles the player collides with. There is a floor plan at the top of the file.
+- `src/player.js`: first-person controls and collisions.
+- `src/vhs.js`: the VHS screen filter.
 - `src/`: game code.
 - `public/models/`, `public/textures/`, `public/audio/`: assets served as-is.
 - `blender/`: source `.blend` files.
@@ -53,4 +56,12 @@ The repo is a showcase of a game made with AI, told as a story with the mistakes
 
 ## Status
 
-Folder set up on 10 November 2026. Nothing of the game is built yet. **Next step:** a walkable grey-box apartment with the VHS look, so Eshan can judge the mood before anything is built on top.
+Folder set up on 10 November 2026. Same day: a walkable grey-box apartment (bedroom, kitchen, bathroom, hallway with front door) with first-person controls, collisions, dim lighting, fog and the VHS filter. No chores, phone, PC interaction or footage yet.
+
+Things to know:
+
+- The browser panel inside the Claude app cannot capture the mouse, so the game falls back to hold-and-drag to look there. Test mouse look in a normal browser tab.
+- In dev mode `window.__game` exposes the player and apartment for tests. `player.update(dt, input)` can be driven by hand to walk a test route.
+- Lights cast no shadows, so light leaks through walls. Accepted for now.
+
+**Next step:** Eshan playtests the grey-box and gives his reaction to the mood (not given yet; it is owed as a director's note). Then the three chores.
