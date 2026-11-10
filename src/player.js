@@ -1,6 +1,6 @@
 // First-person player: click to capture the mouse, mouse to look, WASD to
 // walk. The player is a circle on the floor that is pushed back out of any
-// wall or furniture rectangle it overlaps.
+// wall, piece of furniture or open door it overlaps.
 const EYE_HEIGHT = 1.5; // eye level of someone about 1.62 m tall
 const RADIUS = 0.25; // how wide the player is
 const WALK_SPEED = 1.5; // metres per second
@@ -71,28 +71,44 @@ export function createPlayer(camera, element, colliders, start) {
     };
   }
 
-  // Push the player out of anything solid.
+  // Push the player out of anything solid. There are two kinds of barrier:
+  // a rectangle on the floor (walls, furniture) and a thin straight line at
+  // any angle (an open door).
   function collide() {
-    for (let pass = 0; pass < 3; pass++) {
+    for (let pass = 0; pass < 4; pass++) {
       for (const c of colliders) {
-        const nearX = Math.max(c.minX, Math.min(c.maxX, state.x));
-        const nearZ = Math.max(c.minZ, Math.min(c.maxZ, state.z));
+        let nearX;
+        let nearZ;
+        let reach = RADIUS;
+        if (c.half !== undefined) {
+          const lx = c.bx - c.ax;
+          const lz = c.bz - c.az;
+          const along = Math.max(0, Math.min(1, ((state.x - c.ax) * lx + (state.z - c.az) * lz) / (lx * lx + lz * lz)));
+          nearX = c.ax + lx * along;
+          nearZ = c.az + lz * along;
+          reach += c.half;
+        } else {
+          nearX = Math.max(c.minX, Math.min(c.maxX, state.x));
+          nearZ = Math.max(c.minZ, Math.min(c.maxZ, state.z));
+        }
         const dx = state.x - nearX;
         const dz = state.z - nearZ;
         const distSq = dx * dx + dz * dz;
-        if (distSq >= RADIUS * RADIUS) continue;
+        if (distSq >= reach * reach) continue;
         if (distSq > 1e-9) {
           const dist = Math.sqrt(distSq);
-          state.x += (dx / dist) * (RADIUS - dist);
-          state.z += (dz / dist) * (RADIUS - dist);
-        } else {
-          // Centre is inside the box: leave through the nearest side.
-          const exits = [
-            [state.x - c.minX, -1, 0], [c.maxX - state.x, 1, 0],
-            [state.z - c.minZ, 0, -1], [c.maxZ - state.z, 0, 1],
+          state.x += (dx / dist) * (reach - dist);
+          state.z += (dz / dist) * (reach - dist);
+        } else if (c.half === undefined) {
+          // Centre is inside a rectangle: leave through the nearest side.
+          const exit = [
+            [state.x - c.minX, -1, 0],
+            [c.maxX - state.x, 1, 0],
+            [state.z - c.minZ, 0, -1],
+            [c.maxZ - state.z, 0, 1],
           ].sort((a, b) => a[0] - b[0])[0];
-          state.x += exits[1] * (exits[0] + RADIUS);
-          state.z += exits[2] * (exits[0] + RADIUS);
+          state.x += exit[1] * (exit[0] + RADIUS);
+          state.z += exit[2] * (exit[0] + RADIUS);
         }
       }
     }

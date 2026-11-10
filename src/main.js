@@ -1,5 +1,5 @@
-// Entry point. Sets up the renderer, builds the apartment, creates the player
-// and runs the game loop.
+// Entry point. Sets up the renderer, builds the flat, creates the player and
+// runs the game loop.
 import * as THREE from 'three';
 import { buildApartment } from './apartment.js';
 import { createPlayer } from './player.js';
@@ -13,17 +13,21 @@ const MAX_SCREEN_LINES = 1440;
 const DARK = 0x04050a;
 
 const renderer = new THREE.WebGLRenderer({ antialias: false });
+// Nothing in the flat moves, so shadows are drawn once and then kept.
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFShadowMap;
+renderer.shadowMap.autoUpdate = false;
+renderer.shadowMap.needsUpdate = true;
 document.body.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(DARK);
-scene.fog = new THREE.Fog(DARK, 1.0, 8.5);
+scene.fog = new THREE.Fog(DARK, 1.5, 11);
 
-const camera = new THREE.PerspectiveCamera(68, 1, 0.05, 30);
+const camera = new THREE.PerspectiveCamera(64, 1, 0.05, 40);
 
 const apartment = buildApartment(scene);
-// Start in the bedroom, standing behind the chair, facing the desk.
-const player = createPlayer(camera, renderer.domElement, apartment.colliders, { x: 2.3, z: 2.3, yaw: 0 });
+const player = createPlayer(camera, renderer.domElement, apartment.colliders, apartment.start);
 const vhs = createVhs(renderer);
 
 // The "click to play" message, hidden while the mouse is captured.
@@ -48,15 +52,46 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
+let debugView = null; // only used while developing, see below
 let last = 0;
 renderer.setAnimationLoop((ms) => {
   const t = ms / 1000;
   const dt = Math.min(0.05, t - last); // never jump far after a hitch
   last = t;
   player.update(dt);
-  apartment.update(t);
+  if (debugView) {
+    camera.position.set(debugView[0], debugView[1], debugView[2]);
+    camera.rotation.set(debugView[4], debugView[3], 0);
+  }
+  apartment.update(t, dt);
   vhs.render(scene, camera, t);
 });
 
 // Only while developing: lets tests reach into the game from the console.
-if (import.meta.env.DEV) window.__game = { player, apartment, camera, scene };
+//   __game.bright(true)   floods the flat with light and removes the fog,
+//                         to check that things are where they should be.
+//   __game.view(x, y, z, yaw, pitch)   looks from anywhere, even from above
+//                         with the ceiling hidden. __game.view() goes back.
+if (import.meta.env.DEV) {
+  const flood = new THREE.AmbientLight(0xffffff, 2.2);
+  const fog = scene.fog;
+  window.__game = {
+    player,
+    apartment,
+    camera,
+    scene,
+    renderer,
+    bright(on) {
+      if (on) scene.add(flood);
+      else scene.remove(flood);
+      scene.fog = on ? null : fog;
+    },
+    view(x, y, z, yaw = 0, pitch = 0) {
+      debugView = x === undefined ? null : [x, y, z, yaw, pitch];
+      // From above, hide the ceiling (the one big slab at the top).
+      scene.traverse((o) => {
+        if (o.isMesh && o.position.y > 2.8 && o.geometry.parameters && o.geometry.parameters.width > 9) o.visible = !(debugView && y > 2.8);
+      });
+    },
+  };
+}

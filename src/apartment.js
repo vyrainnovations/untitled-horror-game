@@ -1,206 +1,205 @@
-// The apartment, blocked out in plain boxes ("grey-box"). No textures, no
-// real models yet: this is only here to judge the layout and the mood.
-//
-// Top-down plan, in metres. X runs left to right, Z runs top to bottom.
-//
-//        x=0               x=4    x=5.4    x=7
-//   z=0   +-----------------+------+-------+
-//         |                 |      | bath  |
-//         |    bedroom      = hall =       |
-//         |                 |      +-------+ z=2.6
-//   z=3.4 +-----------------+      |
-//         |                        |
-//         |    kitchen        hall |
-//         |                 |      |
-//   z=6   +-----------------+-door-+
-//
-// "=" is a doorway. The kitchen has a wide open archway onto the hall.
+// The flat: its walls, floors, doors, windows and lights. The furniture and
+// clutter in each room live in src/rooms/. The floor plan is in src/plan.js.
 import * as THREE from 'three';
-
-const CEILING = 2.8;
-const DOOR_HEIGHT = 2.05;
-const WALL = 0.12; // wall thickness
-const HALF = WALL / 2;
+import { createBuilder } from './build.js';
+import { createMaterials } from './materials.js';
+import { createFittings } from './fittings.js';
+import { CEILING, DOOR_HEIGHT, STREET_LAMP } from './plan.js';
+import { buildOutside } from './outside.js';
+import { dressStudy } from './rooms/study.js';
+import { dressBedroom, dressSpareRoom } from './rooms/bedrooms.js';
+import { dressKitchen } from './rooms/kitchen.js';
+import { dressBathroom } from './rooms/bathroom.js';
+import { dressStore } from './rooms/store.js';
+import { dressCorridor } from './rooms/corridor.js';
 
 export function buildApartment(scene) {
-  // Everything the player cannot walk through, as flat rectangles on the floor.
-  const colliders = [];
-  // An invisible barrier. Used to close gaps that are too narrow to walk
-  // through, so the player cannot wedge into them.
-  const block = (minX, maxX, minZ, maxZ) => colliders.push({ minX, maxX, minZ, maxZ });
+  const M = createMaterials();
+  const b = createBuilder(scene);
+  const f = createFittings(b, M);
+  const { wall, doorFrame, doorLeaf, windowAt } = f;
+  const OUT = M.outside;
 
-  const mat = (color) => new THREE.MeshLambertMaterial({ color });
-  const M = {
-    wall: mat(0x8a8578),
-    ceiling: mat(0x6f6b62),
-    floorBedroom: mat(0x5a5348),
-    floorKitchen: mat(0x55584f),
-    floorHall: mat(0x4d4a45),
-    floorBath: mat(0x596062),
-    furniture: mat(0x6e6a66),
-    dark: mat(0x3a3836),
-    pale: mat(0x9a9a94),
-    door: mat(0x4a4038),
+  // --- Floors and ceiling --------------------------------------------------
+  const floor = (x0, x1, z0, z1, material) => b.box(x0, x1, -0.1, 0, z0, z1, material, { cast: false });
+  floor(-0.06, 4.2, -0.06, 7.2, M.mosaic); // study and bedroom 1
+  floor(-0.06, 4.2, 7.2, 12.06, M.kitchenFloor);
+  floor(4.2, 5.7, -0.06, 12.06, M.mosaic); // corridor
+  floor(5.7, 9.36, -0.06, 3.6, M.mosaic); // bedroom 2
+  floor(5.7, 8.16, 3.6, 6.2, M.bathFloor);
+  floor(5.7, 8.16, 6.2, 8.26, M.cement); // store room
+  b.box(-0.2, 9.5, CEILING, CEILING + 0.1, -0.2, 12.2, M.ceiling, { cast: false });
+  // Stone strips in the doorways where one floor meets another.
+  b.box(4.14, 4.26, 0, 0.006, 8.8, 10.4, M.stone, { cast: false });
+  b.box(5.64, 5.76, 0, 0.025, 4.5, 5.3, M.stone, { cast: false });
+  b.box(5.64, 5.76, 0, 0.006, 6.8, 7.6, M.stone, { cast: false });
+  // Two beams across the corridor.
+  for (const z of [3.5, 7.2]) b.box(4.26, 5.64, 2.45, CEILING, z - 0.07, z + 0.07, M.plaster);
+
+  // --- Walls ----------------------------------------------------------------
+  const door = (from, to) => ({ from, to });
+  const win = (from, to, bottom, top) => ({ from, to, bottom, top });
+
+  // North outer wall.
+  wall('x', 0, -0.06, 4.2, OUT, M.studyWall);
+  wall('x', 0, 4.2, 5.7, OUT, M.hallWall);
+  wall('x', 0, 5.7, 9.36, OUT, M.bed2Wall);
+  // West outer wall, with the windows that look onto the lane.
+  wall('z', 0, 0.06, 3.4, OUT, M.studyWall, [win(0.9, 2.5, 0.95, 2.15)]);
+  wall('z', 0, 3.4, 7.2, OUT, M.bed1Wall, [win(4.4, 6.2, 0.95, 2.15)]);
+  wall('z', 0, 7.2, 11.94, OUT, M.kitchenWall, [win(7.75, 9.55, 0.9, 2.2), win(10.4, 11.4, 1.15, 2.0)]);
+  // South outer wall, with the front door.
+  wall('x', 12, -0.06, 4.2, M.kitchenWall, OUT);
+  wall('x', 12, 4.2, 5.76, M.hallWall, OUT, [door(4.5, 5.4)]);
+  // Between the rooms on the west side.
+  wall('x', 3.4, 0.06, 4.14, M.studyWall, M.bed1Wall);
+  wall('x', 7.2, 0.06, 4.14, M.bed1Wall, M.kitchenWall);
+  // West side of the corridor: study door, bedroom door, kitchen archway.
+  wall('z', 4.2, 0.06, 3.4, M.studyWall, M.hallWall, [door(1.7, 2.6)]);
+  wall('z', 4.2, 3.4, 7.2, M.bed1Wall, M.hallWall, [door(4.4, 5.3)]);
+  wall('z', 4.2, 7.2, 11.94, M.kitchenWall, M.hallWall, [{ from: 8.8, to: 10.4, top: 2.25 }]);
+  // East side of the corridor: spare room, bathroom, store room.
+  wall('z', 5.7, 0.06, 3.6, M.hallWall, M.bed2Wall, [door(1.7, 2.6)]);
+  wall('z', 5.7, 3.6, 6.2, M.hallWall, M.bathWall, [door(4.45, 5.35)]);
+  wall('z', 5.7, 6.2, 8.2, M.hallWall, M.storeWall, [door(6.75, 7.65)]);
+  wall('z', 5.7, 8.2, 11.94, M.hallWall, OUT);
+  // The rooms on the east side.
+  wall('x', 3.6, 5.76, 9.36, M.bed2Wall, M.bathWall);
+  wall('x', 6.2, 5.76, 8.04, M.bathWall, M.storeWall);
+  wall('x', 8.2, 5.76, 8.16, M.storeWall, OUT);
+  wall('z', 8.1, 3.66, 6.2, M.bathWall, OUT, [win(4.6, 5.2, 2.1, 2.45)]);
+  wall('z', 8.1, 6.2, 8.14, M.storeWall, OUT);
+  wall('z', 9.3, 0.06, 3.54, M.bed2Wall, OUT, [win(1.0, 2.6, 0.95, 2.15)]);
+
+  // --- Doors ----------------------------------------------------------------
+  doorFrame('z', 4.2, 1.7, 2.6); // study
+  doorFrame('z', 5.7, 1.7, 2.6); // spare room
+  doorFrame('z', 4.2, 4.4, 5.3); // bedroom
+  doorFrame('z', 5.7, 4.45, 5.35); // bathroom
+  doorFrame('z', 5.7, 6.75, 7.65); // store room
+  doorFrame('x', 12, 4.5, 5.4); // front door
+
+  doorLeaf(4.12, 2.55, -0.407, 0.914, M.doorWood); // study: pushed back against the wall
+  doorLeaf(4.12, 5.25, -0.407, 0.914, M.doorWood); // bedroom: the same
+  doorLeaf(5.78, 1.75, 0.966, 0.259, M.doorWood); // spare room: standing half open
+  doorLeaf(5.78, 4.5, 0.5, -0.866, M.doorBath, { edge: M.whitePlastic }); // bathroom
+  doorLeaf(5.78, 7.6, 0.985, 0.174, M.doorWood); // store room
+
+  // The front door is shut. Lock, bolt and handle are on the inside.
+  b.box(4.55, 5.35, 0.01, DOOR_HEIGHT - 0.06, 11.95, 11.99, b.sides(M.woodDark, { north: M.doorFront }));
+  b.block(4.5, 5.4, 11.94, 12.06);
+  b.box(4.6, 4.72, 1.0, 1.14, 11.91, 11.95, M.darkMetal); // lock
+  b.rod([4.66, 1.07, 11.91], [4.66, 1.07, 11.88], 0.016, M.steel, { cast: false });
+  b.box(4.6, 4.74, 0.92, 0.94, 11.9, 11.92, M.steel); // handle
+  b.box(4.58, 4.78, 1.86, 1.885, 11.925, 11.95, M.steel); // bolt, top
+  b.box(4.52, 4.58, 1.845, 1.9, 11.92, 11.95, M.steel);
+
+  // --- Windows ----------------------------------------------------------------
+  windowAt(0, 0.9, 2.5, 0.95, 2.15, 1); // study
+  windowAt(0, 4.4, 6.2, 0.95, 2.15, 1, { panes: 3 }); // bedroom
+  windowAt(0, 7.75, 9.55, 0.9, 2.2, 1, { panes: 3 }); // dining: the big one to look out of
+  windowAt(0, 10.4, 11.4, 1.15, 2.0, 1); // over the kitchen sink
+  windowAt(9.3, 1.0, 2.6, 0.95, 2.15, -1); // spare room
+  // Bathroom ventilator: frosted glass slats high in the wall.
+  const slat = new THREE.MeshLambertMaterial({ color: 0x8fa0a8, emissive: 0x0e161c });
+  for (let i = 0; i < 5; i++) b.box(8.06, 8.14, 2.11 + i * 0.068, 2.125 + i * 0.068, 4.6, 5.2, slat, { cast: false });
+
+  buildOutside(b, M);
+
+  // --- Lights -----------------------------------------------------------------
+  // Everything in the flat stands still, so shadows are worked out once at the
+  // start and never again. That makes eight shadow-casting lights cheap.
+  const shadows = (light, size, near, far) => {
+    light.castShadow = true;
+    light.shadow.mapSize.set(size, size);
+    light.shadow.camera.near = near;
+    light.shadow.camera.far = far;
+    light.shadow.bias = -0.0006;
+    light.shadow.normalBias = 0.02;
+    scene.add(light);
+    if (light.target) scene.add(light.target);
+    return light;
   };
 
-  // Add a box from its two corners. solid = the player collides with it.
-  function box(x0, x1, y0, y1, z0, z1, material, solid = false) {
-    const mesh = new THREE.Mesh(
-      new THREE.BoxGeometry(x1 - x0, y1 - y0, z1 - z0),
-      material
-    );
-    mesh.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
-    scene.add(mesh);
-    if (solid) colliders.push({ minX: x0, maxX: x1, minZ: z0, maxZ: z1 });
-    return mesh;
-  }
+  // A little light everywhere, so black is never completely black.
+  scene.add(new THREE.HemisphereLight(0x2b3347, 0x120f0c, 0.45));
 
-  // A wall along a line, with optional doorways cut into it. Each doorway is
-  // [from, to] along the wall. Above each doorway sits a lintel you walk under.
-  function wall(axis, at, from, to, doorways = []) {
-    const piece = (a, b, y0, y1, solid) => {
-      if (b - a < 0.001) return;
-      if (axis === 'x') box(a, b, y0, y1, at - HALF, at + HALF, M.wall, solid);
-      else box(at - HALF, at + HALF, y0, y1, a, b, M.wall, solid);
-    };
-    let cursor = from - HALF;
-    for (const [a, b] of doorways) {
-      piece(cursor, a, 0, CEILING, true);
-      piece(a, b, DOOR_HEIGHT, CEILING, false);
-      cursor = b;
-    }
-    piece(cursor, to + HALF, 0, CEILING, true);
-  }
+  // The corridor bulb: the only warm light in the flat, and it is not well.
+  const bulbMaterial = M.bulbOn.clone();
+  f.hangingBulb(4.95, 8.4, 0.38, bulbMaterial);
+  const bulb = shadows(new THREE.PointLight(0xffc98a, 2.6, 9, 1.6), 512, 0.06, 9);
+  bulb.position.set(4.95, CEILING - 0.38, 8.4);
+  const bulbHaze = b.glow(4.95, CEILING - 0.38, 8.4, 0.9, M.hazeWarm.clone());
 
-  // --- Shell: floors, ceiling, walls -------------------------------------
-  box(0, 4, -0.1, 0, 0, 3.4, M.floorBedroom);
-  box(0, 4, -0.1, 0, 3.4, 6, M.floorKitchen);
-  box(4, 5.4, -0.1, 0, 0, 6, M.floorHall);
-  box(5.4, 7, -0.1, 0, 0, 2.6, M.floorBath);
-  box(-0.2, 7.2, CEILING, CEILING + 0.1, -0.2, 6.2, M.ceiling);
+  // A cold strip light under the kitchen wall cabinets.
+  f.tube([0.55, 1.47, 11.57], [1.2, 1.47, 11.57], true);
+  const strip = shadows(new THREE.PointLight(0xb4d6ae, 1.8, 7, 1.6), 512, 0.05, 7);
+  strip.position.set(0.88, 1.42, 11.52);
+  b.glow(0.88, 1.46, 11.55, 0.7, M.hazeCold);
 
-  wall('x', 0, 0, 7); // north
-  wall('z', 0, 0, 6); // west
-  wall('x', 6, 0, 5.4, [[4.25, 5.15]]); // south, with the front door
-  wall('x', 3.4, 0, 4); // between bedroom and kitchen
-  wall('z', 4, 0, 6, [[1.6, 2.5], [4.0, 5.4]]); // hall west: bedroom door, kitchen arch
-  wall('z', 5.4, 0, 6, [[0.9, 1.8]]); // hall east: bathroom door
-  wall('z', 7, 0, 2.6); // bathroom east
-  wall('x', 2.6, 5.4, 7); // bathroom south
+  // The PC monitor in the study, shining into the room.
+  const screen = shadows(new THREE.SpotLight(0x9db4e0, 2.4, 8, 1.25, 0.9, 1.3), 512, 0.1, 8);
+  screen.position.set(2.5, 1.05, 0.3);
+  screen.target.position.set(2.5, 0.85, 3);
+  const screenFill = new THREE.PointLight(0x9db4e0, 0.4, 1.6, 2);
+  screenFill.position.set(2.5, 1.05, 0.55);
+  scene.add(screenFill);
 
-  // Front door: shut. A slab filling the doorway, plus a handle and a mat.
-  box(4.25, 5.15, 0, DOOR_HEIGHT, 5.97, 6.03, M.door, true);
-  box(4.33, 4.37, 0.98, 1.04, 5.9, 5.97, M.pale);
-  box(4.35, 5.05, 0, 0.015, 5.35, 5.85, M.dark);
+  // The street lamp outside. One lamp, three beams: one through each window.
+  const street = (target, angle, size = 1024) => {
+    const beam = shadows(new THREE.SpotLight(0xff9a3c, 5, 26, angle, 0.2, 1), size, 3, 26);
+    beam.position.set(...STREET_LAMP);
+    beam.target.position.set(...target);
+    return beam;
+  };
+  const beams = [
+    street([0, 1.55, 1.7], 0.15), // study
+    street([0, 1.55, 5.3], 0.23), // bedroom
+    street([0, 1.55, 9.35], 0.32, 2048), // both kitchen windows
+  ];
 
-  // --- Bedroom -----------------------------------------------------------
-  // Bed in the south-west corner.
-  box(0.06, 1.06, 0, 0.3, 1.3, 3.3, M.dark, true); // frame
-  box(0.08, 1.04, 0.3, 0.45, 1.32, 3.28, M.pale); // mattress
-  box(0.2, 0.9, 0.45, 0.55, 2.8, 3.2, M.furniture); // pillow
+  // Two faint glows with no shadows: daylight tube beyond the bathroom
+  // ventilator, and lamplight soaking through the spare room's shut curtains.
+  const vent = new THREE.PointLight(0x8fb0c8, 0.5, 3.2, 1.5);
+  vent.position.set(7.85, 2.25, 4.9);
+  const drawn = new THREE.PointLight(0xd88a3c, 0.45, 3.4, 1.5);
+  drawn.position.set(9.0, 1.5, 1.8);
+  scene.add(vent, drawn);
 
-  // Desk against the north wall, with the PC on it.
-  box(1.6, 3.0, 0.7, 0.75, 0.06, 0.76, M.furniture); // top
-  box(1.6, 1.66, 0, 0.7, 0.06, 0.76, M.furniture); // left side
-  box(2.94, 3.0, 0, 0.7, 0.06, 0.76, M.furniture); // right side
-  block(1.6, 3.0, 0.06, 0.76);
-  box(2.6, 2.85, 0.05, 0.6, 0.15, 0.65, M.dark); // PC tower under the desk
-  box(2.25, 2.35, 0.75, 0.85, 0.22, 0.32, M.dark); // monitor stand
-  box(1.98, 2.62, 0.83, 1.22, 0.2, 0.24, M.dark); // monitor body
-  box(2.05, 2.55, 0.75, 0.77, 0.45, 0.62, M.dark); // keyboard
+  // --- Furniture and clutter ----------------------------------------------------
+  dressStudy(b, M, f);
+  dressBedroom(b, M, f);
+  dressSpareRoom(b, M, f);
+  dressKitchen(b, M, f);
+  dressBathroom(b, M, f);
+  dressStore(b, M, f);
+  dressCorridor(b, M, f);
 
-  // The monitor is on. Its screen is the brightest thing in the bedroom.
-  const screen = new THREE.Mesh(
-    new THREE.PlaneGeometry(0.58, 0.33),
-    new THREE.MeshBasicMaterial({ color: 0x7f97b8, fog: false })
-  );
-  screen.position.set(2.3, 1.025, 0.245);
-  scene.add(screen);
-  const screenLight = new THREE.PointLight(0x8fa8d8, 1.1, 5, 1.6);
-  screenLight.position.set(2.3, 1.05, 0.6);
-  scene.add(screenLight);
-
-  // Chair, pushed back a little from the desk.
-  box(2.08, 2.52, 0.4, 0.46, 0.95, 1.39, M.dark, true); // seat
-  block(2.08, 2.52, 0.76, 0.95); // gap between chair and desk
-  box(2.08, 2.52, 0.46, 0.95, 1.34, 1.39, M.dark); // back
-  box(2.27, 2.33, 0, 0.4, 1.14, 1.2, M.dark); // post
-
-  // Wardrobe in the north-east corner.
-  box(3.3, 3.94, 0, 2.0, 0.06, 1.1, M.furniture, true);
-  box(3.04, 3.26, 0, 0.32, 0.3, 0.52, M.dark); // waste bin between desk and wardrobe
-  block(3.0, 3.3, 0.06, 0.76);
-
-  // Window on the west wall above the bed. Night outside.
-  const windowGlow = new THREE.Mesh(
-    new THREE.PlaneGeometry(1.2, 1.0),
-    new THREE.MeshBasicMaterial({ color: 0x18233c, fog: false })
-  );
-  windowGlow.rotation.y = Math.PI / 2;
-  windowGlow.position.set(0.065, 1.55, 2.2);
-  scene.add(windowGlow);
-  box(0.06, 0.09, 1.03, 2.07, 2.18, 2.22, M.dark); // frame, upright bar
-  box(0.06, 0.09, 1.53, 1.57, 1.6, 2.8, M.dark); // frame, cross bar
-  const windowLight = new THREE.PointLight(0x33466e, 0.7, 4.5, 1.6);
-  windowLight.position.set(0.5, 1.6, 2.2);
-  scene.add(windowLight);
-
-  // --- Kitchen -----------------------------------------------------------
-  box(0.06, 2.6, 0, 0.9, 5.34, 5.94, M.furniture, true); // counter
-  box(0.06, 2.6, 0.9, 0.93, 5.3, 5.94, M.pale); // worktop
-  box(0.06, 2.6, 1.5, 2.15, 5.59, 5.94, M.furniture); // wall cabinets
-  box(1.1, 1.7, 0.93, 0.96, 5.45, 5.85, M.dark); // hob
-  box(0.06, 0.76, 0, 1.8, 3.5, 4.2, M.pale, true); // fridge
-  box(1.7, 2.5, 0.68, 0.72, 4.05, 4.65, M.furniture); // table top
-  box(2.07, 2.13, 0, 0.68, 4.32, 4.38, M.furniture); // table leg
-  block(1.7, 2.5, 4.05, 4.65);
-  box(1.4, 1.7, 0, 0.45, 4.2, 4.5, M.dark, true); // stool, tucked against the table
-
-  // A cold strip light under the wall cabinets.
-  box(0.5, 2.2, 1.47, 1.5, 5.62, 5.68,
-    new THREE.MeshBasicMaterial({ color: 0xb9d4b4, fog: false }));
-  const kitchenLight = new THREE.PointLight(0xa8c8a0, 1.6, 5, 1.6);
-  kitchenLight.position.set(1.35, 1.35, 5.3);
-  scene.add(kitchenLight);
-
-  // --- Bathroom (no light on in here) -------------------------------------
-  box(6.4, 6.9, 0, 0.4, 0.3, 0.8, M.pale, true); // toilet bowl
-  box(6.4, 6.9, 0.4, 0.8, 0.06, 0.3, M.pale, true); // toilet tank
-  box(6.56, 6.94, 0.65, 0.85, 1.1, 1.6, M.pale, true); // sink
-  box(6.7, 6.8, 0, 0.65, 1.3, 1.4, M.pale); // sink pedestal
-  box(6.92, 6.94, 1.15, 1.85, 1.05, 1.65, M.dark); // mirror (just a dark slab for now)
-  box(5.52, 6.94, 0, 0.5, 1.95, 2.54, M.pale, true); // bathtub
-  block(6.56, 6.94, 0.8, 1.1); // gap between toilet and sink
-  block(6.56, 6.94, 1.6, 1.95); // gap between sink and bathtub
-
-  // --- Hallway -----------------------------------------------------------
-  box(5.06, 5.34, 0, 0.4, 4.5, 5.3, M.furniture, true); // shoe rack
-
-  // One bare bulb. It is the only warm light in the flat, and it is not well.
-  const bulbMaterial = new THREE.MeshBasicMaterial({ color: 0xffe2b0, fog: false });
-  box(4.66, 4.74, 2.38, 2.48, 3.86, 3.94, bulbMaterial);
-  box(4.69, 4.71, 2.48, CEILING, 3.89, 3.91, M.dark); // cord
-  const bulb = new THREE.PointLight(0xffc98a, 2.2, 7, 1.6);
-  bulb.position.set(4.7, 2.3, 3.9);
-  scene.add(bulb);
-
-  scene.add(new THREE.AmbientLight(0x1c2030, 0.55));
-
-  // Called every frame. Makes the hall bulb flicker and sometimes cut out.
-  const bulbOn = new THREE.Color(0xffe2b0);
-  const bulbOff = new THREE.Color(0x3a2c1c);
+  // --- Things that change over time ---------------------------------------------
+  const bulbLit = new THREE.Color(0xffe2b0);
+  const bulbDead = new THREE.Color(0x3a2c1c);
   let dropoutUntil = 0;
-  let nextDropout = 6;
-  function update(t) {
+  let nextDropout = 8;
+  b.updaters.push((t) => {
+    // The corridor bulb flickers, and now and then cuts out for a moment.
     if (t > nextDropout) {
       dropoutUntil = t + 0.05 + Math.random() * 0.25;
-      nextDropout = t + 4 + Math.random() * 14;
+      nextDropout = t + 5 + Math.random() * 16;
     }
     const out = t < dropoutUntil;
-    bulb.intensity = out ? 0.15 : 2.2 + Math.sin(t * 13) * 0.12 + Math.sin(t * 47) * 0.06;
-    bulbMaterial.color.copy(out ? bulbOff : bulbOn);
-    screenLight.intensity = 1.1 + Math.sin(t * 2.1) * 0.05;
-  }
+    const level = out ? 0.06 : 1 + Math.sin(t * 13) * 0.05 + Math.sin(t * 47) * 0.025;
+    bulb.intensity = 2.6 * level;
+    bulbMaterial.color.copy(out ? bulbDead : bulbLit);
+    bulbHaze.material.opacity = 0.5 * level;
+    screen.intensity = 2.4 * (1 + Math.sin(t * 2.1) * 0.03);
+  });
 
-  return { colliders, update };
+  return {
+    colliders: b.colliders,
+    start: { x: 2.5, z: 2.2, yaw: 0 }, // in the study, behind the chair, facing the desk
+    lights: { bulb, strip, screen, beams, vent, drawn },
+    update(t, dt) {
+      for (const tick of b.updaters) tick(t, dt);
+    },
+  };
 }
