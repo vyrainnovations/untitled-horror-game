@@ -116,7 +116,8 @@ export function createFittings(b, M) {
     return b.box(x - half, x + half, y - half, y + half, z - half, z + half, material);
   }
 
-  // A plate of light switches, with the little red light Indian boards have.
+  // A plate of light switches, with the little red light that switchboards
+  // in this part of the world have.
   function switchboard(x, y, z, facing) {
     const [nx, nz] = NORMAL[facing];
     hung(x, y, z, 0.15, 0.1, facing, M.switchboard, { frame: null });

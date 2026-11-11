@@ -50,6 +50,12 @@ const fragmentShader = /* glsl */ `
     float h = min(0.5, 0.5 * uSrc.y / uOut.y);
     float g = 0.5 + (max(0.0, f - (1.0 - h)) - max(0.0, h - f)) * (0.5 / h);
     uv.y = (floor(y) + g) / uSrc.y;
+    // Sideways, blend neighbouring pixels over a little more than half their
+    // width: soft like tape, but not smeared.
+    float x = uv.x * uSrc.x;
+    float fx = fract(x);
+    float gx = 0.5 + (max(0.0, fx - 0.7) - max(0.0, 0.3 - fx)) * (0.5 / 0.3);
+    uv.x = (floor(x) + gx) / uSrc.x;
 
     vec3 c = texture2D(tFrame, uv).rgb;
     c = 1.0 - exp(-c * 1.25);      // bright lights roll off softly instead of clipping
@@ -77,8 +83,8 @@ const fragmentShader = /* glsl */ `
     // Brightness: the centre plus a little of each neighbour, so edges are
     // slightly soft, the way tape is.
     vec3 mid = tap(uv);
-    float luma = mid.x * 0.5
-      + (tap(uv - vec2(0.8 * px, 0.0)).x + tap(uv + vec2(0.8 * px, 0.0)).x) * 0.25;
+    float luma = mid.x * 0.6
+      + (tap(uv - vec2(0.7 * px, 0.0)).x + tap(uv + vec2(0.7 * px, 0.0)).x) * 0.2;
 
     // Colour: VHS stores colour with far less detail than brightness, and
     // late. So colour is smeared over several pixels and dragged to the right.

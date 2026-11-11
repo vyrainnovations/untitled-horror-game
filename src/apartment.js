@@ -110,7 +110,7 @@ export function buildApartment(scene) {
 
   // --- Lights -----------------------------------------------------------------
   // Everything in the flat stands still, so shadows are worked out once at the
-  // start and never again. That makes eight shadow-casting lights cheap.
+  // start and never again. That makes seven shadow-casting lights cheap.
   const shadows = (light, size, near, far) => {
     light.castShadow = true;
     light.shadow.mapSize.set(size, size);
