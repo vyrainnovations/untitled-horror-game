@@ -8,7 +8,9 @@
 //
 // What it does, in order: tape wobble, a tracking band, torn lines at the
 // bottom, soft edges, colour smear, grain, dropouts, scanlines, lifted blacks
-// and dark corners.
+// and dark corners. It can also look like a paused tape (the picture shivers
+// and a bar of noise sits across it) and make a burst of static when the
+// picture cuts from one shot to another.
 import * as THREE from 'three';
 
 const fragmentShader = /* glsl */ `
@@ -17,6 +19,10 @@ const fragmentShader = /* glsl */ `
   uniform vec2 uOut;     // size of the screen, in pixels
   uniform float uGrain;  // size of one speck of grain, in screen pixels
   uniform float uTime;
+  uniform float uBright; // the brightness setting: 1 is normal
+  uniform float uWear;   // how worn the tape is: 1 is normal, 0 is clean
+  uniform float uPause;  // 1 while the tape is paused
+  uniform float uBurst;  // 1 for a moment when the picture cuts
   varying vec2 vUv;
 
   // A random number between 0 and 1 for any position. No visible pattern.
@@ -58,27 +64,38 @@ const fragmentShader = /* glsl */ `
     uv.x = (floor(x) + gx) / uSrc.x;
 
     vec3 c = texture2D(tFrame, uv).rgb;
-    c = 1.0 - exp(-c * 1.25);      // bright lights roll off softly instead of clipping
-    c = pow(c, vec3(1.0 / 2.2));   // linear light to screen brightness
+    c = 1.0 - exp(-c * 1.25 * uBright); // bright lights roll off softly instead of clipping
+    c = pow(c, vec3(1.0 / 2.2));        // linear light to screen brightness
     return toSignal(c);
   }
 
   void main() {
     vec2 uv = vUv;
     float px = 1.0 / uSrc.x;                        // one game pixel, sideways
-    float row = floor(uv.y * uSrc.y);               // which line of the picture this is
     float frame = mod(floor(uTime * 30.0), 600.0);  // the noise changes 30 times a second
 
+    // A cut: for a moment the picture rolls upwards and tears sideways.
+    uv.y = fract(uv.y + uBurst * uBurst * 0.22);
+    // A paused tape: the whole picture shivers up and down a little.
+    uv.y += uPause * (hash(vec3(frame, 5.0, 9.0)) - 0.5) * 0.004;
+
+    float row = floor(uv.y * uSrc.y);               // which line of the picture this is
+
     // Tape wobble: every line sits a fraction of a pixel left or right.
-    uv.x += (hash(vec3(row, frame, 1.0)) - 0.5) * 0.7 * px;
+    uv.x += (hash(vec3(row, frame, 1.0)) - 0.5) * (0.7 * uWear + 2.4 * uPause) * px;
+    uv.x += (hash(vec3(row, frame, 7.0)) - 0.5) * 0.1 * uBurst;
 
     // Tracking band: a thin strip of tearing that drifts slowly up the screen.
-    float band = smoothstep(0.012, 0.0, abs(uv.y - fract(uTime * 0.045)));
+    float band = uWear * smoothstep(0.012, 0.0, abs(uv.y - fract(uTime * 0.045)));
     uv.x += band * (hash(vec3(row, frame, 2.0)) - 0.5) * 8.0 * px;
 
     // Head switching: the bottom few lines of a VHS picture are always torn.
-    float tear = smoothstep(0.018, 0.0, uv.y);
+    float tear = min(uWear, 1.0) * smoothstep(0.018, 0.0, uv.y);
     uv.x += tear * (0.4 + hash(vec3(row, frame, 3.0))) * 9.0 * px;
+
+    // A paused tape also has a bar of noise lying across it, drifting a little.
+    float bar = uPause * smoothstep(0.04, 0.0, abs(vUv.y - (0.2 + 0.015 * sin(uTime * 0.7))));
+    uv.x += bar * (hash(vec3(row, frame, 6.0)) - 0.5) * 34.0 * px;
 
     // Brightness: the centre plus a little of each neighbour, so edges are
     // slightly soft, the way tape is.
@@ -98,14 +115,17 @@ const fragmentShader = /* glsl */ `
     // Grain: fine specks at screen resolution, plus short streaks along each line.
     float fine = hash(vec3(floor(vUv * uOut / uGrain), frame)) - 0.5;
     float streak = hash(vec3(floor(vUv.x * uSrc.x / 3.0), row, frame + 40.0)) - 0.5;
-    luma += fine * 0.034 + streak * 0.02;
+    luma += (fine * 0.034 + streak * 0.02) * uWear;
 
     // Colour noise: faint blotches of wrong colour, a VHS trademark.
     float cell = floor(vUv.x * uSrc.x / 9.0);
-    chroma += (vec2(hash(vec3(cell, row, frame + 80.0)), hash(vec3(cell, row, frame + 120.0))) - 0.5) * 0.022;
+    chroma += (vec2(hash(vec3(cell, row, frame + 80.0)), hash(vec3(cell, row, frame + 120.0))) - 0.5) * 0.022 * uWear;
 
     // Dropouts: now and then the tape loses the signal and leaves a white dash.
-    luma += step(0.99997, hash(vec3(floor(vUv.x * uSrc.x / 20.0), row, frame + 160.0))) * 0.3;
+    luma += step(1.0 - 0.00003 * uWear, hash(vec3(floor(vUv.x * uSrc.x / 20.0), row, frame + 160.0))) * 0.3;
+
+    // A paused picture flickers slightly.
+    luma *= 1.0 - uPause * 0.05 * hash(vec3(frame, 1.0, 2.0));
 
     vec3 col = toColour(vec3(luma, chroma * 0.92));
 
@@ -115,9 +135,12 @@ const fragmentShader = /* glsl */ `
     float gap = 0.5 + 0.5 * cos(fract(vUv.y * uSrc.y) * 6.2831853);
     col *= 1.0 - 0.09 * gap * smoothstep(2.0, 3.0, lineHeight);
 
-    // Snow inside the tracking band and the torn bottom lines.
+    // Snow: in the tracking band, the torn bottom lines, the pause bar, and
+    // all over the picture during a cut.
     float snow = step(0.8, hash(vec3(floor(vUv.x * uSrc.x / 2.0), row, frame + 200.0)));
     col += (band * 0.5 + tear * 0.6) * snow * 0.12;
+    float fuzz = hash(vec3(floor(vUv.x * uSrc.x / 2.0), floor(vUv.y * uSrc.y), frame + 240.0));
+    col = mix(col, vec3(fuzz * 0.55), max(bar * 0.5, uBurst * 0.75));
 
     // Blacks that never go fully black, with a slight cool tint.
     col = col * 0.95 + vec3(0.016, 0.017, 0.024);
@@ -146,19 +169,18 @@ export function createVhs(renderer) {
     magFilter: THREE.LinearFilter,
   });
 
-  const material = new THREE.ShaderMaterial({
-    uniforms: {
-      tFrame: { value: target.texture },
-      uSrc: { value: new THREE.Vector2(1, 1) },
-      uOut: { value: new THREE.Vector2(1, 1) },
-      uGrain: { value: 1 },
-      uTime: { value: 0 },
-    },
-    vertexShader,
-    fragmentShader,
-    depthTest: false,
-    depthWrite: false,
-  });
+  const uniforms = {
+    tFrame: { value: target.texture },
+    uSrc: { value: new THREE.Vector2(1, 1) },
+    uOut: { value: new THREE.Vector2(1, 1) },
+    uGrain: { value: 1 },
+    uTime: { value: 0 },
+    uBright: { value: 1 },
+    uWear: { value: 1 },
+    uPause: { value: 0 },
+    uBurst: { value: 0 },
+  };
+  const material = new THREE.ShaderMaterial({ uniforms, vertexShader, fragmentShader, depthTest: false, depthWrite: false });
 
   // A flat sheet that covers the whole screen.
   const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
@@ -171,19 +193,34 @@ export function createVhs(renderer) {
   // is what the filter draws onto.
   function setSize(gameWidth, gameHeight, screenWidth, screenHeight) {
     target.setSize(gameWidth, gameHeight);
-    material.uniforms.uSrc.value.set(gameWidth, gameHeight);
-    material.uniforms.uOut.value.set(screenWidth, screenHeight);
+    uniforms.uSrc.value.set(gameWidth, gameHeight);
+    uniforms.uOut.value.set(screenWidth, screenHeight);
     // About 1.5 pixels per speck on a 1080-line screen, never less than 1.
-    material.uniforms.uGrain.value = Math.max(1, screenHeight / 720);
+    uniforms.uGrain.value = Math.max(1, screenHeight / 720);
   }
 
+  // time is in seconds and keeps running while the game is paused, so that a
+  // paused picture still crawls with noise.
+  let lastTime = 0;
+  let burst = 0;
   function render(scene, camera, time) {
-    material.uniforms.uTime.value = time;
+    const dt = Math.min(0.1, Math.max(0, time - lastTime));
+    lastTime = time;
+    burst = Math.max(0, burst - dt * 3.2); // a cut's static dies away in a third of a second
+    uniforms.uBurst.value = burst;
+    uniforms.uTime.value = time;
     renderer.setRenderTarget(target);
     renderer.render(scene, camera);
     renderer.setRenderTarget(null);
     renderer.render(quadScene, quadCamera);
   }
 
-  return { setSize, render };
+  return {
+    setSize,
+    render,
+    setBrightness: (value) => { uniforms.uBright.value = value; },
+    setWear: (value) => { uniforms.uWear.value = value; },
+    setPaused: (on) => { uniforms.uPause.value = on ? 1 : 0; },
+    cut: () => { burst = 1; },
+  };
 }
