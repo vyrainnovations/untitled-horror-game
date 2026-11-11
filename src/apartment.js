@@ -6,6 +6,7 @@ import { createMaterials } from './materials.js';
 import { createFittings } from './fittings.js';
 import { CEILING, DOOR_HEIGHT, STREET_LAMP } from './plan.js';
 import { buildOutside } from './outside.js';
+import { createFurniture } from './furniture.js';
 import { dressStudy } from './rooms/study.js';
 import { dressBedroom, dressSpareRoom } from './rooms/bedrooms.js';
 import { dressKitchen } from './rooms/kitchen.js';
@@ -17,6 +18,7 @@ export function buildApartment(scene) {
   const M = createMaterials();
   const b = createBuilder(scene);
   const f = createFittings(b, M);
+  const F = createFurniture(b, M, f);
   const { wall, doorFrame, doorLeaf, windowAt } = f;
   const OUT = M.outside;
 
@@ -167,13 +169,13 @@ export function buildApartment(scene) {
   scene.add(vent, drawn);
 
   // --- Furniture and clutter ----------------------------------------------------
-  dressStudy(b, M, f);
-  dressBedroom(b, M, f);
-  dressSpareRoom(b, M, f);
-  dressKitchen(b, M, f);
-  dressBathroom(b, M, f);
-  dressStore(b, M, f);
-  dressCorridor(b, M, f);
+  dressStudy(b, M, f, F);
+  dressBedroom(b, M, f, F);
+  dressSpareRoom(b, M, f, F);
+  dressKitchen(b, M, f, F);
+  dressBathroom(b, M, f, F);
+  dressStore(b, M, f, F);
+  dressCorridor(b, M, f, F);
 
   // --- Things that change over time ---------------------------------------------
   const bulbLit = new THREE.Color(0xffe2b0);
