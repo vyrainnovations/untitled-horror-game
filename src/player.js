@@ -5,7 +5,8 @@ const EYE_HEIGHT = 1.5; // eye level of someone about 1.62 m tall
 const RADIUS = 0.25; // how wide the player is
 const WALK_SPEED = 1.5; // metres per second
 const FAST_SPEED = 2.5; // holding Shift
-const LOOK_SPEED = 0.0022; // radians per pixel of mouse movement
+const LOOK_SIDEWAYS = 0.0018; // radians turned per pixel of mouse movement, left and right
+const LOOK_UP_DOWN = 0.0022; // the same, up and down
 const MAX_PITCH = 1.45; // how far up or down you can look
 
 export function createPlayer(camera, element, colliders, start) {
@@ -50,8 +51,8 @@ export function createPlayer(camera, element, colliders, start) {
   });
   document.addEventListener('mousemove', (e) => {
     if (!captured() && !(dragMode && e.buttons & 1)) return;
-    state.yaw -= e.movementX * LOOK_SPEED;
-    state.pitch -= e.movementY * LOOK_SPEED;
+    state.yaw -= e.movementX * LOOK_SIDEWAYS;
+    state.pitch -= e.movementY * LOOK_UP_DOWN;
     state.pitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, state.pitch));
   });
 
