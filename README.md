@@ -2,7 +2,7 @@
 
 A short first-person lo-fi horror game that runs in the browser. You play a freelance video editor who takes a job from an anonymous client, and the footage is not what it seems.
 
-**Status:** in development. You can walk around a grey-box version of the apartment (plain shapes, no textures) with the VHS look on. No story or gameplay yet. Target: shipped by 16 November 2026.
+**Status:** in development. You can walk around the whole flat: seven furnished rooms and a long corridor, textured, lit and shadowed, with a view out of the windows and the VHS look on. No story or gameplay yet. Target: shipped by 16 November 2026.
 
 ## How this is being made
 
@@ -30,6 +30,11 @@ Then open http://localhost:5173. Click to start, mouse to look, WASD to walk, Sh
 | Path | What is in it |
 |---|---|
 | `src/` | Game code (Three.js, plain JavaScript) |
+| `src/plan.js` | The floor plan and the main measurements |
+| `src/apartment.js` | Walls, floors, doors, windows and lights |
+| `src/rooms/` | The furniture and clutter, one file per room |
+| `src/textures.js` | Every texture, painted by code when the game starts |
+| `src/vhs.js` | The VHS screen filter |
 | `public/models/`, `public/textures/`, `public/audio/` | Game assets |
 | `blender/` | Source Blender files for the models |
 | `DEVLOG.md` | The build diary |

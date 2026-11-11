@@ -60,3 +60,83 @@ Not yet. He has not walked through it at the time of writing. His reaction goes 
 **Next**
 
 Eshan walks through the flat and says what the mood needs: darker or brighter, more or less VHS, room sizes. Then the three chores.
+
+### Evening: Eshan's verdict, and a much bigger flat
+
+**What happened**
+
+Eshan walked through the grey-box in Chrome. The mood passed. Three things did not: he felt too tall, the screen was too grainy, and the pixels were too big.
+
+- **Height.** Eye level came down from 1.6 m to 1.5 m, and the ceiling went up from 2.5 m to 2.8 m. Lowering the eyes alone only bought 10 cm of headroom, which would not have fixed the feeling of scraping the roof.
+- **The screen.** The picture went from 240 lines to 360, so every pixel is a third smaller. The VHS filter was rewritten to run at the screen's real resolution instead of being stretched up with the picture. Grain is now fine specks at less than half the old strength, and colour bleed is a soft smear to the right, the way tape does it, instead of hard red and blue fringes.
+- **Then the brief changed.** While the texture work was under way, Eshan asked for a much bigger flat: a longer corridor, a bigger kitchen with the dining table in it, a store room, two bedrooms, a separate room for the PC, and a window you can look out of. The old four-room flat was thrown away and a new shell was built that evening: seven rooms, a 12 m corridor, about 92 square metres against the old 36.
+- **Textures and shadows.** Every surface now has a texture, painted by code when the game starts, so there are still no image files. Lights cast real shadows. Nothing in the flat moves, so the shadows are worked out once at start-up and cost nothing after that.
+- **A view.** Outside the west windows there is a lane, the buildings opposite, a street lamp and overhead wires. The lamp's light comes in through the windows and throws the window grills across the walls.
+
+**What went wrong, and what got pushed back on**
+
+- **The woven mesh over the picture was a bug, not a style.** Two bugs, in fact: a cheap random-number formula that repeated in a visible grid, and scanlines stretched by an uneven amount (4.5 times) so they beat against the pixels. Eshan called the pattern "negative". He was right to dislike it.
+- **Scope.** The bigger flat arrived after the textures for the small one were already painted and its furniture was planned. Claude built it anyway, because rooms made in code are cheap to add, but said plainly that this more than doubles the floor area with six days left and not one line of gameplay written.
+- **A second bedroom for a man who lives alone needs a reason.** Claude's answer, not yet approved by Eshan: it was a flatmate's room, and the flatmate moved out. It is nearly empty. That also gives the horror somewhere to go later.
+- **Blender was offered and not used.** Eshan said Claude could use Blender on his PC. Everything is still built from simple shapes in code. Reason: at 360 lines and in this light, more props and better lighting buy far more than smoother shapes, and code-built rooms could be torn up and rebuilt in an evening, which is exactly what happened. Blender is being saved for the things boxes cannot fake.
+
+**Eshan's note**
+
+> "This feels good, we need to improve the textures though"
+
+> "The next thing is our hieght make it a little smaller we are too long. amost touvhing the roof."
+
+> "The pixels on the screen should be less "negative" and a little smaller as large ones make it look jald bazi me kiya hua kaam."
+
+> "Bro we need to improve the map as well. The house is too small right now make it a little bigger. ... But it should be big."
+
+**Next**
+
+Furniture. The new flat is seven empty rooms.
+
+---
+
+## Day 1: 11 November 2026. Filling the flat
+
+**What happened**
+
+The seven rooms were furnished, lit and tested.
+
+- **Study.** The room with the PC, and where the player starts. Desk, a monitor showing an editing timeline paused on a corridor, keyboard, drives, a steel tumbler of chai gone cold, an office chair with a hoodie over it, a camera on a tripod pointed into the room, pinboard, posters, a sofa.
+- **Bedroom.** Unmade bed with the blanket hanging off one side, alarm clock showing 3:07, steel cupboard, wardrobe, the chair that clothes live on.
+- **Spare room.** Stripped bed, shut curtains glowing with lamplight, taped boxes, something under a dust sheet, pale patches where pictures used to hang, and one chair left facing the door. From the study doorway you look straight across the corridor at it.
+- **Kitchen and dining.** L-shaped worktop, cabinets, fridge with magnets, a built-in microwave whose clock also says 3:07, a three-ring hob with a pan of chai, a kadhai and a pressure cooker, cutlery stand, knife block, spice shelf, ladles on a rail, sink, plate rack, a table for four, and the big window to look out of.
+- **Bathroom.** Toilet, basin, washing machine, towel, bucket and mug, water heater with its red light. The mirror faces the door.
+- **Store room.** A steel rack with an old television, a video recorder and a stack of tapes, boxes, a ladder, the spare gas cylinder. No light.
+- **Corridor.** Shoe rack and helmet, a jacket on a hook, pictures, a router with blinking lights, and at the dead end a landline nobody uses under a photograph whose faces never quite resolve.
+
+The light does something that was half planned and half luck. The street lamp shines through the bedroom window, out of the bedroom door, across the corridor, through the bathroom door, and lands on the bathroom mirror with the window grill's shadow still in it.
+
+Every poster, picture and label is invented. Nothing is copied from a real film, brand or artwork.
+
+**Checked**
+
+- A scripted walk with 53 stops through all seven rooms: reached every one.
+- 400,000 random steps shoved into every wall, door and corner: never outside the flat, never inside anything.
+- One frame takes about 5 thousandths of a second on this PC's built-in graphics chip, the weak one, not the main graphics card. The budget for smooth play is 16.
+- No errors in the console. `npm run build` works.
+
+**What went wrong**
+
+- **The work stopped half-way through the study.** Claude's usage allowance ran out mid-task on the evening of the 10th and the session was cut off. It picked up the next day from the last commit. Small commits earned their keep.
+- **The bedroom was pitch black.** The lamp lit one wall and nothing else, because the engine does not bounce light off surfaces. A soft light now stands in for the bounce. It is a cheat, and it is labelled as one in the code.
+- **The spare room's curtains glowed like a television.** Turned down until they looked like cloth with a lamp behind it.
+- **A false alarm about speed.** The first reading said 20 frames a second. The preview panel was running in the background, where the app slows everything down. Frames are now timed by hand instead.
+- **The new screen filter was too soft on a 4K screen.** Sharpened a little.
+- **The mirror is a fake.** Dark glass with a highlight. It does not reflect the room, and the player has no body to reflect anyway.
+- **Up close, some things are still boxes.** The toilet, the shoes and the tripod will not survive a hard stare.
+- **Seven lights cast shadows.** Fine on this PC. Not tested on a weak laptop or a phone.
+- **Still no gameplay.** Two days have gone on how it looks. Five are left.
+
+**Eshan's note**
+
+Not yet. He has not walked through the furnished flat at the time of writing.
+
+**Next**
+
+Eshan walks the flat and says what is wrong with it. Then gameplay has to start: the three chores, and the phone.
