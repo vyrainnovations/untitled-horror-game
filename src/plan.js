@@ -29,3 +29,13 @@ export const HALF = WALL / 2;
 
 // Where the street lamp outside hangs. Its light comes in through the west windows.
 export const STREET_LAMP = [-5.9, 1.38, 6.0];
+
+// What the floor is made of at a spot on the plan: 'tile' in the kitchen and
+// the bathroom, 'cement' in the store room, 'mosaic' everywhere else.
+// Footsteps sound different on each.
+export function floorAt(x, z) {
+  if (x < 4.2 && z > 7.2) return 'tile'; // kitchen
+  if (x > 5.7 && z > 3.6 && z < 6.2) return 'tile'; // bathroom
+  if (x > 5.7 && z > 6.2 && z < 8.2) return 'cement'; // store room
+  return 'mosaic';
+}
