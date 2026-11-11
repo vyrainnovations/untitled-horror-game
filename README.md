@@ -2,7 +2,9 @@
 
 A short first-person lo-fi horror game that runs in the browser. You play a freelance video editor who takes a job from an anonymous client, and the footage is not what it seems.
 
-**Status:** in development. You can walk around the whole flat: seven furnished rooms and a long corridor, textured, lit and shadowed, with a view out of the windows and the VHS look on. No story or gameplay yet. Target: shipped by 16 November 2026.
+**Status:** in development. The game opens on a title screen and you can walk around the whole flat: seven furnished rooms and a long corridor, textured, lit and shadowed, with a view out of the windows and the VHS look on. It has a pause menu, settings that are remembered, and sound. No story or gameplay yet, and no name. Target: shipped by 16 November 2026.
+
+Every texture is painted by code and every sound is made by code. The game holds no image or sound files.
 
 ## How this is being made
 
@@ -23,7 +25,13 @@ npm install
 npm run dev
 ```
 
-Then open http://localhost:5173. Click to start, mouse to look, WASD to walk, Shift to walk faster, Esc to release the mouse.
+Then open http://localhost:5173 and choose Start. Mouse to look, WASD to walk, Shift to walk faster, Esc to pause. Mouse speed, volume, brightness and the rest are under Settings.
+
+To check that nothing can be walked through or got stuck in, open the browser's console while the game is running and type:
+
+```js
+(await import('/tools/walk-test.js')).run()
+```
 
 ## Layout
 
@@ -35,6 +43,10 @@ Then open http://localhost:5173. Click to start, mouse to look, WASD to walk, Sh
 | `src/rooms/` | The furniture and clutter, one file per room |
 | `src/textures.js` | Every texture, painted by code when the game starts |
 | `src/vhs.js` | The VHS screen filter |
+| `src/menu.js`, `src/menu.css` | The title screen and the pause screen |
+| `src/settings.js` | The settings, and remembering them |
+| `src/audio.js` | Every sound, made by code |
+| `tools/walk-test.js` | The test that walks every room and tries to get stuck |
 | `public/models/`, `public/textures/`, `public/audio/` | Game assets |
 | `blender/` | Source Blender files for the models |
 | `DEVLOG.md` | The build diary |

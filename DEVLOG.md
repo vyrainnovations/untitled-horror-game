@@ -141,3 +141,56 @@ Not yet. He has not walked through the furnished flat at the time of writing.
 **Next**
 
 Eshan walks the flat and says what is wrong with it. Then gameplay has to start: the three chores, and the phone.
+
+### Later the same day: his verdict, then a menu and sound
+
+**Eshan's note on the furnished flat**
+
+> "Now this looks pretty good."
+
+Then two requests. The first was small: "the horizontal sensitivity is a little faster make it a bit slower not much just a bit, its playable right now." The second was not: "add a custom menu screen. It should not be a sloppy box in the middle, it should stuck the game in between with all the menu option on the left side all clickable. add settings there where you can configure some settings. Add features like sensitivity adjustment, sound and some other features of your choice. Make it look good similar to the fears to fathom."
+
+**What happened**
+
+- **Look speed.** Turning left and right is about a fifth slower. Up and down was left alone, because he only named sideways. Both can now be changed from the settings anyway.
+- **A title screen.** The game no longer opens on a line of text saying CLICK TO PLAY. It opens on a menu down the left side of the screen, with the flat showing behind it: five slow camera shots (the desk, the corridor from the front door, across to the spare room, through the bedroom door, the dining window), with a burst of tape static on every cut.
+- **A pause screen.** Esc freezes the picture the way a paused tape freezes: it shivers, and a bar of noise lies across it. The same menu comes back with Resume at the top. A tape counter in the corner shows how long has been played.
+- **Settings.** Mouse sensitivity, invert up and down, volume, brightness, tape wear (from clean to heavy), field of view, head bob, picture detail (chunky, normal or fine), full screen, and restore defaults. They take effect while the slider is being dragged, and the browser remembers them.
+- **Sound.** The game was silent. It now has a room tone, hums that grow as you walk up to the fridge, the corridor bulb, the PC and the kitchen strip light, the street through the west windows, footsteps that change between mosaic, tile and cement, and clunks for the menu. All of it is made by code while the game runs. There is still not one sound file or image file in the game.
+- **The walking test became a file.** It used to be retyped by hand. Now it is `tools/walk-test.js` and runs with one line.
+
+On "similar to the fears to fathom": the menu is in the same family (a plain list on the left, the live game behind it, VHS over everything). It is not a copy of that game's menu. Claude worked from the style of the genre and did not go and look at the real one. The title, the colours (the street lamp's orange for the cursor) and the tape counter are ours.
+
+**Checked**
+
+- Every option by mouse and by keyboard. Settings survive a reload. Restore defaults puts them back.
+- Start, pause, resume and back to title, each by click and by key.
+- The layout at Eshan's screen size (2400 x 1300) and in a small window.
+- The walking test: all seven rooms reached, 400,000 random steps, nobody out, nobody wedged.
+- Sound levels by measurement: the loudest moment (running on tile next to the fridge with the volume at full) peaks at about half the level where it would distort. Volume at zero is silence.
+- `npm run build` works. No errors in the console.
+
+**What went wrong**
+
+- **Eight files were written before any of them was run.** Claude's usage allowance ran out again, more than once, in the middle of the menu. For hours the working folder held a game that could not even load, because one file asked another for something that had not been written yet. Nothing broken was committed, but nothing was committed at all, which is the opposite of small steps.
+- **It loaded first time, and was still wrong in six places.** Testing found them:
+  - In windows that cannot capture the mouse, Esc paused the game and resumed it in the same key press. Two parts of the code both heard the key.
+  - A menu that appeared under a resting mouse chose whichever option the mouse happened to be over. Esc then Enter could have meant "Back to title" and thrown away the player's place. Options are now only chosen by a mouse that actually moves.
+  - Dragging a slider did not select its row.
+  - Full screen did nothing, silently, where the browser ignores the request.
+  - Esc cannot resume a game in a browser. Browsers refuse to let that one key hand the mouse back to a page. So Esc on the pause screen now tells you to press Enter or click Resume.
+  - A browser also refuses to hand the mouse back for about a second after Esc. The game waits that second and asks again by itself.
+- **A sound measurement that measured nothing.** The first test "stood" in ten places and got the same loudness in all of them. The test moved the player but never moved the ears. The numbers looked reasonable. Only the fact that they were identical gave it away.
+- **A false alarm from the new walking test.** It reported walkers escaping. They were standing in narrow gaps that the player really does fit through. The test was wrong, not the flat.
+- **Claude cannot hear.** Every sound is tuned by numbers. It may be too quiet, too loud, or just ugly.
+- **Not tested: real mouse capture and full screen.** The preview panel inside the Claude app allows neither. The mouse-capture code is the same call that worked for Eshan before, but the new pause and resume around it has only been run in the panel's hold-and-drag mode.
+- **The game has no name.** The menu says UNTITLED, with "working title" under it.
+- **Still no gameplay.** Most of another day went on a menu. Five days are left, counting the 16th itself.
+
+**Eshan's note**
+
+On the menu: not yet. He has not seen it at the time of writing.
+
+**Next**
+
+Eshan opens the game in Chrome, tries the menu, and listens. He needs to name the game. Then gameplay has to start, with nothing else allowed in front of it: the three chores, and the phone.

@@ -28,12 +28,17 @@ Out of scope for now: voice acting, multiple endings, a second location, multipl
 - Everything in the flat is currently built in code from simple shapes (`src/build.js`), and every texture is painted by code at start-up (`src/textures.js`). There are no model or image files yet.
 - Blender (through the Blender connector) is for the things simple shapes cannot fake, exported as `.glb` into `public/models/`. Eshan has said Claude may use Blender on his PC.
 - Nothing in the flat moves, so shadows are drawn once at start-up (`renderer.shadowMap.autoUpdate = false`). Anything that starts to move later (a door, a figure) must ask for a shadow update or opt out of shadows.
-- Sound should be synthesized or from properly licensed sources; note the source of every file added.
+- Sound should be synthesized or from properly licensed sources; note the source of every file added. So far every sound is synthesized while the game runs (`src/audio.js`) and there are no sound files. Claude cannot hear: levels are measured with `__game.audio.level()`, and Eshan judges by ear.
 - Decided against Unreal, Unity and Roblox: slower to build here, bigger downloads, no gain at this art style.
 
 ## Layout
 
-- `index.html`, `src/main.js`: entry point (renderer, game loop, dev-only test hooks).
+- `index.html`, `src/main.js`: entry point (renderer, the three states `title` / `playing` / `paused`, game loop, dev-only test hooks).
+- `src/menu.js`, `src/menu.css`: the title screen and the pause screen (one menu, a column on the left over the game). The game's name is `TITLE` at the top of `menu.js`.
+- `src/settings.js`: the settings and their limits, saved in the browser. `src/main.js` says what each one does (`apply`).
+- `src/audio.js`: every sound, made by code.
+- `src/attract.js`: the camera shots behind the title screen.
+- `tools/walk-test.js`: the walking test (see Things to know).
 - `src/plan.js`: the floor plan (drawn in text at the top) and shared measurements.
 - `src/apartment.js`: floors, walls, doors, windows and all the lights. Calls the room files.
 - `src/rooms/`: furniture and clutter, one file per room (`study`, `bedrooms`, `kitchen`, `bathroom`, `store`, `corridor`). Each file also places the invisible barriers for its furniture.
@@ -42,7 +47,7 @@ Out of scope for now: voice acting, multiple endings, a second location, multipl
 - `src/furniture.js`: pieces used in more than one room (bed, chairs, boxes, bottles, cups, plants).
 - `src/textures.js`, `src/materials.js`: every texture painted in code, and the materials made from them.
 - `src/outside.js`: the view out of the west windows.
-- `src/player.js`: first-person controls and collisions (rectangles, and angled lines for open doors).
+- `src/player.js`: first-person controls and collisions (rectangles, and angled lines for open doors). It does not decide when the game has the mouse: the menu calls `capture()`, and letting go of the mouse (Esc) is what pauses.
 - `src/vhs.js`: the VHS screen filter.
 - `src/`: game code.
 - `public/models/`, `public/textures/`, `public/audio/`: assets served as-is.
@@ -65,22 +70,28 @@ The repo is a showcase of a game made with AI, told as a story with the mistakes
 
 ## Status
 
-As of 11 November 2026: the whole flat is built, furnished, textured, lit and shadowed, and can be walked end to end. No chores, phone, PC interaction or footage yet. Five days remain and no gameplay exists: that is the risk.
+As of the evening of 11 November 2026: the whole flat is built, furnished, textured, lit and shadowed, and can be walked end to end. The game opens on a title screen and has a pause menu, settings that are remembered, and sound. No chores, phone, PC interaction or footage yet. Five days remain (counting the 16th) and no gameplay exists: that is the risk. The game also has no name: the menu says "Untitled", with "working title" under it.
 
 Look decisions Eshan has made (do not undo without asking):
 
 - The mood of the first grey-box "feels good". Keep it dark.
-- Big blocky pixels and heavy grain look rushed to him. The picture is 360 lines (`RENDER_HEIGHT` in `src/main.js`), the VHS filter runs at screen resolution, and grain is light.
+- Big blocky pixels and heavy grain look rushed to him. The picture is 360 lines by default (`pictureLines` in `src/settings.js`; the player can pick 240 or 480 under Picture detail), the VHS filter runs at screen resolution, and grain is light.
 - Eye level is 1.5 m and ceilings are 2.8 m. At 1.6 m under 2.5 m he felt too tall.
-- He wants surfaces textured and rooms full of small real-life detail.
+- He wants surfaces textured and rooms full of small real-life detail. His verdict on the furnished flat: "Now this looks pretty good."
+- Turning left and right was "a little faster and difficult to use". It is 0.0018 radians per pixel now, down from 0.0022 (`LOOK_SIDEWAYS` in `src/player.js`). He did not mention up and down, so that is unchanged.
+- The menu is a column on the left with the game showing behind it and every option clickable, "not a sloppy box in the middle". He asked for it to look "similar to the fears to fathom": keep it in that family (a plain list over the live game, VHS all over), but never copy that game's menu.
 
 Things to know:
 
 - The browser panel inside the Claude app cannot capture the mouse, so the game falls back to hold-and-drag to look there. It also renders on the weak built-in graphics chip and slows right down when hidden, so do not trust frame rates measured in it.
-- Dev-only test hooks on `window.__game`: `player.update(dt, input)` walks the player by hand, `bright(true)` floods the flat with light, `view(x, y, z, yaw, pitch)` looks from anywhere (from above it hides the ceiling), `frame(ms)` draws one frame for timing.
-- Collision rule used so far: never leave a gap between two solid things that is narrower than the player (0.5 m). Close it with `b.block(...)`. The walking test (a route through every room, then random walkers) lives in the devlog description, not in a file yet.
+- Browsers have rules about the mouse that the menu works around. A page can only take the mouse straight after a click or a key press. The Esc key never counts, so Esc cannot resume the game (the pause screen says to press Enter or click Resume). And for about a second after Esc the browser refuses outright, so `play()` in `src/main.js` waits and asks once more.
+- Real mouse capture and full screen cannot be tested in the Claude app's browser panel. Eshan has to confirm those in Chrome.
+- Dev-only test hooks on `window.__game`: `mode()` says which state the game is in, `play()`, `pause()` and `toTitle()` change it, `testMode()` skips the menu and silences the feet so the player can be walked by hand with `player.update(dt, input)`, `bright(true)` floods the flat with light, `view(x, y, z, yaw, pitch)` looks from anywhere (from above it hides the ceiling), `frame(ms)` draws one frame for timing, `settings.set(name, value)` changes a setting, `audio.level()` measures how loud the output is.
+- Collision rule used so far: never leave a gap between two solid things that is narrower than the player (0.5 m). Close it with `b.block(...)`.
+- The walking test is `tools/walk-test.js`. With the game running in dev, type `(await import('/tools/walk-test.js')).run()` in the browser's console. It walks to every room, lets random walkers loose and checks the footstep floors. Run it after anything that moves a wall, a door or a piece of furniture, and reload the page afterwards.
+- Screenshots of the browser panel are often one frame stale. Draw a frame by hand (`__game.frame(performance.now())`), wait a second, then look, and trust what the page reports over what the picture shows.
 - The engine does not bounce light. The bedroom has one soft light standing in for lamplight bouncing off the wall.
 - The mirrors are fakes (dark glossy panels).
 - The game is played in Chrome in a big window (roughly 2400 x 1300). Check the look at that size.
 
-**Next step:** Eshan walks the furnished flat and reacts (his director's note for the furnishing is owed). Then gameplay must start: the three chores and the phone.
+**Next step:** Eshan tries the menu in Chrome and listens to the sound (his director's note on the menu is owed), and gives the game a name. Then gameplay must start, with nothing else allowed in front of it: the three chores and the phone.
