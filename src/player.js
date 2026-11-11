@@ -1,6 +1,10 @@
-// First-person player: click to capture the mouse, mouse to look, WASD to
-// walk. The player is a circle on the floor that is pushed back out of any
-// wall, piece of furniture or open door it overlaps.
+// First-person player: mouse to look, WASD to walk. The player is a circle on
+// the floor that is pushed back out of any wall, piece of furniture or open
+// door it overlaps.
+//
+// The player does not decide when the game has the mouse. The menu does: it
+// calls capture() when you press Start or Resume, and the game pauses when the
+// mouse is let go again (Esc).
 const EYE_HEIGHT = 1.5; // eye level of someone about 1.62 m tall
 const RADIUS = 0.25; // how wide the player is
 const WALK_SPEED = 1.5; // metres per second
@@ -14,54 +18,67 @@ export function createPlayer(camera, element, colliders, start) {
   const keys = new Set();
   camera.rotation.order = 'YXZ';
 
-  // --- Mouse capture and look ---
+  // Things the settings screen can change.
+  let lookScale = 1; // mouse sensitivity: 1 is normal
+  let invertLook = false; // push the mouse away from you to look down
+  let headBob = true;
+  let stepListener = null; // told about every footstep, for the sound
+
+  // --- Taking and releasing the mouse ---
   // Normal mode: the browser hides and captures the mouse ("pointer lock").
   // Fallback: some embedded browser windows refuse to capture the mouse. There
-  // the game still starts on click, and you hold the mouse button and drag to
-  // look around.
+  // you hold the mouse button and drag to look around instead.
   let dragMode = false;
   const captured = () => document.pointerLockElement === element;
   const isLocked = () => captured() || dragMode;
   const changed = () => document.dispatchEvent(new Event('playerlockchange'));
 
-  element.addEventListener('click', async () => {
-    if (isLocked()) return;
+  // Take the mouse. Answers true if the game now has it. Browsers only allow
+  // this straight after a click or a key press, and they refuse for about a
+  // second after the player has pressed Esc.
+  async function capture() {
+    if (isLocked()) return true;
     try {
-      await element.requestPointerLock();
+      const request = element.requestPointerLock();
+      // Wait for the browser's answer, but never for more than a moment.
+      const patience = new Promise((done) => setTimeout(done, request && request.then ? 1500 : 150));
+      await Promise.race([request, patience]);
+      return captured();
     } catch (error) {
       // "WrongDocumentError" means this window can never capture the mouse.
-      // Anything else is the browser refusing a click made too soon after
-      // Esc, and the next click will work.
-      if (error.name === 'WrongDocumentError') {
-        dragMode = true;
-        changed();
-      }
+      if (error.name !== 'WrongDocumentError') return false;
+      dragMode = true;
+      changed();
+      return true;
     }
-  });
+  }
+
+  // Let go of the mouse.
+  function release() {
+    keys.clear();
+    if (captured()) document.exitPointerLock();
+    else if (dragMode) {
+      dragMode = false;
+      changed();
+    }
+  }
+
   document.addEventListener('pointerlockchange', () => {
     if (!captured()) keys.clear();
     changed();
   });
   window.addEventListener('keydown', (e) => {
-    if (e.code === 'Escape' && dragMode) {
-      dragMode = false;
-      keys.clear();
-      changed();
-    }
-  });
-  document.addEventListener('mousemove', (e) => {
-    if (!captured() && !(dragMode && e.buttons & 1)) return;
-    state.yaw -= e.movementX * LOOK_SIDEWAYS;
-    state.pitch -= e.movementY * LOOK_UP_DOWN;
-    state.pitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, state.pitch));
-  });
-
-  // --- Keyboard ---
-  window.addEventListener('keydown', (e) => {
-    if (isLocked()) keys.add(e.code);
+    if (e.code === 'Escape' && dragMode) release();
+    else if (isLocked()) keys.add(e.code);
   });
   window.addEventListener('keyup', (e) => keys.delete(e.code));
   window.addEventListener('blur', () => keys.clear());
+  document.addEventListener('mousemove', (e) => {
+    if (!captured() && !(dragMode && e.buttons & 1)) return;
+    state.yaw -= e.movementX * LOOK_SIDEWAYS * lookScale;
+    state.pitch -= e.movementY * LOOK_UP_DOWN * lookScale * (invertLook ? -1 : 1);
+    state.pitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, state.pitch));
+  });
 
   function readInput() {
     const down = (...codes) => codes.some((c) => keys.has(c));
@@ -132,14 +149,40 @@ export function createPlayer(camera, element, colliders, start) {
       collide();
       const moved = Math.hypot(state.x - beforeX, state.z - beforeZ);
       moving = moved > 0.0005;
-      state.bob += moved * 3.6; // one head-bob per step
+      // One head-bob per step. Each time the bob passes its low point, a foot
+      // has landed.
+      const stepsBefore = Math.floor(state.bob / Math.PI);
+      state.bob += moved * 3.6;
+      if (stepListener && Math.floor(state.bob / Math.PI) > stepsBefore) stepListener(state.x, state.z, input.fast);
     }
     // Settle the head back to rest when standing still.
     if (!moving) state.bob += (Math.round(state.bob / Math.PI) * Math.PI - state.bob) * Math.min(1, dt * 8);
 
-    camera.position.set(state.x, EYE_HEIGHT + Math.abs(Math.sin(state.bob)) * 0.035, state.z);
+    const lift = headBob ? Math.abs(Math.sin(state.bob)) * 0.035 : 0;
+    camera.position.set(state.x, EYE_HEIGHT + lift, state.z);
     camera.rotation.set(state.pitch, state.yaw, 0);
   }
 
-  return { state, update, isLocked };
+  // Put the player back somewhere, looking a given way.
+  function reset(place) {
+    state.x = place.x;
+    state.z = place.z;
+    state.yaw = place.yaw || 0;
+    state.pitch = place.pitch || 0;
+    state.bob = 0;
+    keys.clear();
+  }
+
+  return {
+    state,
+    update,
+    isLocked,
+    capture,
+    release,
+    reset,
+    setLookScale: (scale) => { lookScale = scale; },
+    setInvertLook: (on) => { invertLook = on; },
+    setHeadBob: (on) => { headBob = on; },
+    setStepListener: (listener) => { stepListener = listener; },
+  };
 }

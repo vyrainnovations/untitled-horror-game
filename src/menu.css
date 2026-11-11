@@ -1,0 +1,313 @@
+/* How the menu looks. It is a column down the left of the screen, over the
+   game. The colours come from the flat itself: the off-white of an old
+   screen for the words, and the orange of the street lamp for the one accent.
+   Only fonts that are already on the computer are used: nothing is downloaded. */
+
+:root {
+  --tape-black: 6, 7, 10; /* the game's own darkness */
+  --phosphor: #d9d6cc; /* words that are chosen */
+  --dim: #8b887f; /* words that are not */
+  --lamp: #e8943a; /* the street lamp: the cursor and the sliders */
+  --signage: "Bahnschrift", "Avenir Next Condensed", "Arial Narrow", "Liberation Sans Narrow", system-ui, sans-serif;
+  --counter: "Cascadia Mono", Consolas, "SF Mono", Menlo, "Courier New", monospace;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: #000;
+  overflow: hidden;
+}
+
+/* The game picture. It is drawn at (or at a whole fraction of) the screen's real size. */
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+
+.menu {
+  position: fixed;
+  inset: 0;
+  color: var(--phosphor);
+  font-family: var(--signage);
+  font-stretch: 87.5%;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+.menu[hidden] {
+  display: none;
+}
+
+/* Darkness from the left edge, thinning out so the game shows on the right. */
+.menu__shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(var(--tape-black), 0.95) 0%,
+    rgba(var(--tape-black), 0.88) 22%,
+    rgba(var(--tape-black), 0.6) 40%,
+    rgba(var(--tape-black), 0.18) 58%,
+    rgba(var(--tape-black), 0) 72%
+  );
+}
+
+.menu__column {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: clamp(28px, 6.5vw, 150px);
+  width: min(660px, 44vw);
+  padding: 9vh 0 6vh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  /* Colour on tape lags behind and smears to the right. So do these words. */
+  text-shadow: 1.5px 0 0 rgba(232, 148, 58, 0.32);
+}
+
+/* --- The title --- */
+.menu__title {
+  position: relative;
+  margin: 0;
+  font-size: clamp(54px, 12.5vh, 176px);
+  font-weight: 700;
+  font-stretch: 75%;
+  line-height: 0.86;
+  letter-spacing: -0.012em;
+  text-transform: uppercase;
+  text-shadow: 0.028em 0 0 rgba(232, 148, 58, 0.4);
+  /* The big words are softened a touch so they sit in the soft picture
+     instead of looking pasted on. Small words are left sharp to stay readable. */
+  filter: blur(0.5px);
+}
+/* Now and then a strip of the title slips sideways, like a tape losing its place. */
+.menu__title::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  clip-path: inset(100% 0 0 0);
+  animation: slip 11s steps(1) infinite;
+}
+@keyframes slip {
+  0%, 100% { clip-path: inset(100% 0 0 0); transform: none; }
+  63% { clip-path: inset(16% 0 60% 0); transform: translateX(-0.05em); }
+  64% { clip-path: inset(54% 0 22% 0); transform: translateX(0.04em); }
+  65% { clip-path: inset(30% 0 48% 0); transform: translateX(-0.02em); }
+  66% { clip-path: inset(100% 0 0 0); transform: none; }
+}
+.menu__note {
+  margin: 0.9vh 0 0 0.1em;
+  font-size: clamp(13px, 1.7vh, 19px);
+  color: var(--dim);
+  letter-spacing: 0.03em;
+}
+
+/* --- The page of options --- */
+.menu__page {
+  position: relative;
+  margin-top: 7.5vh;
+  font-size: clamp(22px, 3.7vh, 44px);
+  line-height: 1.2;
+}
+.menu[data-page="main"] .menu__page {
+  filter: blur(0.3px);
+}
+.menu[data-page="settings"] .menu__page,
+.menu[data-page="controls"] .menu__page,
+.menu[data-page="credits"] .menu__page {
+  margin-top: 4.5vh;
+  font-size: clamp(15px, 2.25vh, 30px);
+}
+
+/* The cursor: a bar the colour of the street lamp. It slides to whichever
+   option is chosen. */
+.menu__cursor {
+  position: absolute;
+  left: -0.75em;
+  top: -0.42em;
+  width: 0.2em;
+  height: 0.84em;
+  background: var(--lamp);
+  transition: transform 110ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  animation: blink 1.15s steps(1) infinite;
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  82% { opacity: 0.35; }
+}
+
+.row {
+  display: block;
+  margin: 0;
+  padding: 0.24em 0;
+  color: var(--dim);
+}
+.row button {
+  all: unset;
+  cursor: pointer;
+}
+button.row {
+  all: unset;
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0.24em 0;
+  color: var(--dim);
+  cursor: pointer;
+}
+.row.is-current,
+.row.is-current .row__name {
+  color: var(--phosphor);
+}
+button.row:focus-visible,
+.row__name:focus-visible {
+  outline: none;
+}
+
+/* A setting: its name, the control, and what it is set to. */
+.row--set {
+  display: grid;
+  grid-template-columns: minmax(8.6em, 1fr) minmax(110px, 1.15fr) 4.4em;
+  align-items: center;
+  column-gap: 1.1em;
+  padding: 0.3em 0;
+}
+.row .row__value,
+.row .row__pick {
+  font-family: var(--counter);
+  font-size: 0.78em;
+  color: var(--phosphor);
+  text-align: right;
+  white-space: nowrap;
+}
+.row .row__pick {
+  grid-column: 2 / 4;
+}
+.row .row__pick.is-off {
+  color: var(--dim);
+}
+
+.row__slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 1.5em;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.row__slider::-webkit-slider-runnable-track {
+  height: 2px;
+  background: linear-gradient(90deg, var(--lamp) var(--fill), rgba(217, 214, 204, 0.26) var(--fill));
+}
+.row__slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 4px;
+  height: 1em;
+  margin-top: calc(-0.5em + 1px);
+  background: var(--phosphor);
+}
+.row__slider::-moz-range-track {
+  height: 2px;
+  background: linear-gradient(90deg, var(--lamp) var(--fill), rgba(217, 214, 204, 0.26) var(--fill));
+}
+.row__slider::-moz-range-thumb {
+  width: 4px;
+  height: 1em;
+  border: 0;
+  border-radius: 0;
+  background: var(--phosphor);
+}
+
+/* Words that cannot be chosen. */
+.row--heading {
+  padding-bottom: 0.7em;
+  font-size: 1.5em;
+  font-weight: 600;
+  color: var(--phosphor);
+}
+.row--text {
+  max-width: 30em;
+  padding: 0.3em 0;
+  line-height: 1.4;
+  color: var(--phosphor);
+}
+.row--control {
+  display: grid;
+  grid-template-columns: 6.5em 1fr;
+  column-gap: 1.1em;
+  padding: 0.3em 0;
+  color: var(--phosphor);
+}
+.row__keys {
+  font-family: var(--counter);
+  font-size: 0.82em;
+  color: var(--lamp);
+}
+/* Back, on a page of words or settings, stands a little apart. */
+.menu[data-page="controls"] button.row,
+.menu[data-page="credits"] button.row {
+  margin-top: 1em;
+}
+
+/* --- The foot of the column: a hint, and the tape counter --- */
+.menu__foot {
+  margin-top: auto;
+  font-size: clamp(12px, 1.5vh, 16px);
+  color: var(--dim);
+}
+.menu__hint {
+  margin: 0 0 0.9em;
+}
+.menu__hint.is-urgent {
+  color: var(--lamp);
+}
+.menu__counter {
+  margin: 0;
+  font-family: var(--counter);
+  letter-spacing: 0.04em;
+}
+.menu__state {
+  margin-left: 1.4em;
+}
+
+/* When the menu appears it shudders into place, like a tape finding its
+   tracking. This happens once, and nothing else moves by itself. */
+.menu.is-opening .menu__column {
+  animation: settle 420ms steps(1) both;
+}
+@keyframes settle {
+  0% { transform: translateX(-16px); opacity: 0.3; }
+  18% { transform: translateX(10px); opacity: 0.8; }
+  36% { transform: translateX(-6px); opacity: 0.6; }
+  54% { transform: translateX(3px); opacity: 1; }
+  72% { transform: translateX(-1px); }
+  100% { transform: none; opacity: 1; }
+}
+
+/* A narrow window: the column takes the width and the dark covers everything. */
+@media (max-width: 760px) {
+  .menu__column {
+    width: auto;
+    right: 24px;
+  }
+  .menu__shade {
+    background: rgba(var(--tape-black), 0.86);
+  }
+}
+
+/* For people who have asked their computer for less movement. */
+@media (prefers-reduced-motion: reduce) {
+  .menu__title::after,
+  .menu__cursor,
+  .menu.is-opening .menu__column {
+    animation: none;
+  }
+  .menu__cursor {
+    transition: none;
+  }
+}
