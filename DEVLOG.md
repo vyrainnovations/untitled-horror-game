@@ -128,6 +128,7 @@ Every poster, picture and label is invented. Nothing is copied from a real film,
 - **The spare room's curtains glowed like a television.** Turned down until they looked like cloth with a lamp behind it.
 - **A false alarm about speed.** The first reading said 20 frames a second. The preview panel was running in the background, where the app slows everything down. Frames are now timed by hand instead.
 - **The new screen filter was too soft on a 4K screen.** Sharpened a little.
+- **The mattress poked through the blanket.** Pale patches all over it in bright light: the sheet showing wherever a wrinkle dipped too low. Found on a last inspection after the furnishing was already committed, and fixed in its own commit.
 - **The mirror is a fake.** Dark glass with a highlight. It does not reflect the room, and the player has no body to reflect anyway.
 - **Up close, some things are still boxes.** The toilet, the shoes and the tripod will not survive a hard stare.
 - **Seven lights cast shadows.** Fine on this PC. Not tested on a weak laptop or a phone.
