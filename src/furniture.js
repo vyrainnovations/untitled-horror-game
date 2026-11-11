@@ -28,7 +28,7 @@ export function createFurniture(b, M, f) {
       if (opts.blanket === false) return;
       // An unmade bed: the blanket covers the foot end, hangs down one side,
       // and has been thrown back in a ragged line.
-      const top = 0.475;
+      const top = 0.5; // clear of the mattress, even at the bottom of a wrinkle
       const cover = width - 0.08; // how much of the cloth lies on top before it hangs
       const total = cover + 0.42;
       b.cloth(12, 10, total, length * 0.62, M.blanket, (u, v) => {
