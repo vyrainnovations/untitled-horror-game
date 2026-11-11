@@ -54,7 +54,7 @@ resize();
 
 let debugView = null; // only used while developing, see below
 let last = 0;
-renderer.setAnimationLoop((ms) => {
+function frame(ms) {
   const t = ms / 1000;
   const dt = Math.min(0.05, t - last); // never jump far after a hitch
   last = t;
@@ -65,7 +65,8 @@ renderer.setAnimationLoop((ms) => {
   }
   apartment.update(t, dt);
   vhs.render(scene, camera, t);
-});
+}
+renderer.setAnimationLoop(frame);
 
 // Only while developing: lets tests reach into the game from the console.
 //   __game.bright(true)   floods the flat with light and removes the fog,
@@ -81,6 +82,7 @@ if (import.meta.env.DEV) {
     camera,
     scene,
     renderer,
+    frame, // draws one frame by hand, for timing tests
     bright(on) {
       if (on) scene.add(flood);
       else scene.remove(flood);

@@ -1122,6 +1122,38 @@ function wardrobe(seed) {
   });
 }
 
+// Two more framed pictures: a block painting and a misty treeline.
+function abstractArt(seed) {
+  return paint(48, 60, seed, (g, r, w, h) => {
+    fill(g, '#b8ae98', 0, 0, w, h);
+    const colours = ['#7a2e26', '#2f4a58', '#c29a3a', '#26221e', '#6a7a5a'];
+    for (let i = 0; i < 9; i++) fill(g, pick(r, colours), Math.floor(r() * 36), Math.floor(r() * 46), 8 + Math.floor(r() * 18), 8 + Math.floor(r() * 20));
+    g.strokeStyle = '#26221e';
+    g.lineWidth = 1;
+    g.beginPath();
+    g.moveTo(4, 50);
+    g.lineTo(44, 12);
+    g.stroke();
+    speckle(g, r, w, h, 0.05);
+  });
+}
+
+function forest(seed) {
+  return paint(60, 44, seed, (g, r, w, h) => {
+    const sky = g.createLinearGradient(0, 0, 0, h);
+    sky.addColorStop(0, '#7f8a8a');
+    sky.addColorStop(1, '#c2bca6');
+    fill(g, sky, 0, 0, w, h);
+    for (let i = 0; i < 26; i++) {
+      const top = 6 + r() * 16;
+      fill(g, rgb([18, 24, 20], 0.75 + r() * 0.25), r() * w, top, 1 + Math.floor(r() * 3), h - top);
+    }
+    fill(g, '#141a16', 0, h - 7, w, 7);
+    blot(g, 30, 30, 22, [200, 196, 176], 0.25);
+    speckle(g, r, w, h, 0.05);
+  });
+}
+
 // --- The full set ---------------------------------------------------------
 
 export function createTextures() {
@@ -1182,7 +1214,9 @@ export function createTextures() {
     doorBath: fitted(door(52, [150, 150, 138], { grain: 0.08, damp: true })),
     cupboard: fitted(cupboard(53)),
     cabinetsLow: fitted(cabinets(54, 204, 62, 5, [150, 142, 120], 'top')),
-    cabinetsHigh: fitted(cabinets(55, 204, 52, 5, [150, 142, 120], 'bottom')),
+    cabinetsWest: fitted(cabinets(102, 100, 62, 3, [150, 142, 120], 'top')),
+    cabinetsHigh2: fitted(cabinets(55, 60, 56, 2, [150, 142, 120], 'bottom')),
+    cabinetsHigh3: fitted(cabinets(103, 92, 56, 3, [150, 142, 120], 'bottom')),
     drawers: fitted(cabinets(56, 20, 56, 1, [146, 120, 88], 'top')),
     fridge: fitted(fridge(57)),
     posterMoon: fitted(posterMoon(58)),
@@ -1194,6 +1228,8 @@ export function createTextures() {
     landscape: fitted(landscape(64)),
     familyPhoto: fitted(familyPhoto(65)),
     certificate: fitted(certificate(66)),
+    abstractArt: fitted(abstractArt(100)),
+    forest: fitted(forest(101)),
     screen: fitted(editingScreen(67)),
     keyboard: fitted(keyboard(68)),
     books: [fitted(books(69)), fitted(books(70)), fitted(books(71))],

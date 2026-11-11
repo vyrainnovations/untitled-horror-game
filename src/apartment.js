@@ -124,7 +124,7 @@ export function buildApartment(scene) {
   };
 
   // A little light everywhere, so black is never completely black.
-  scene.add(new THREE.HemisphereLight(0x2b3347, 0x120f0c, 0.45));
+  scene.add(new THREE.HemisphereLight(0x2b3347, 0x120f0c, 0.65));
 
   // The corridor bulb: the only warm light in the flat, and it is not well.
   const bulbMaterial = M.bulbOn.clone();
@@ -140,7 +140,8 @@ export function buildApartment(scene) {
   b.glow(0.88, 1.46, 11.55, 0.7, M.hazeCold);
 
   // The PC monitor in the study, shining into the room.
-  const screen = shadows(new THREE.SpotLight(0x9db4e0, 2.4, 8, 1.25, 0.9, 1.3), 512, 0.1, 8);
+  const SCREEN = 3.4; // how bright it is
+  const screen = shadows(new THREE.SpotLight(0x9db4e0, SCREEN, 9, 1.25, 0.7, 1.2), 512, 0.1, 9);
   screen.position.set(2.5, 1.05, 0.3);
   screen.target.position.set(2.5, 0.85, 3);
   const screenFill = new THREE.PointLight(0x9db4e0, 0.4, 1.6, 2);
@@ -160,12 +161,17 @@ export function buildApartment(scene) {
     street([0, 1.55, 9.35], 0.32, 2048), // both kitchen windows
   ];
 
-  // Two faint glows with no shadows: daylight tube beyond the bathroom
+  // Lamplight that lands on the bedroom wall bounces back into the room.
+  // The engine does not do bounces, so a soft light stands in for it.
+  const bounce = shadows(new THREE.PointLight(0xff9a3c, 0.55, 5.5, 1.4), 256, 0.1, 5.5);
+  bounce.position.set(3.4, 1.7, 5.0);
+
+  // Two faint glows with no shadows: a tube light beyond the bathroom
   // ventilator, and lamplight soaking through the spare room's shut curtains.
   const vent = new THREE.PointLight(0x8fb0c8, 0.5, 3.2, 1.5);
   vent.position.set(7.85, 2.25, 4.9);
-  const drawn = new THREE.PointLight(0xd88a3c, 0.45, 3.4, 1.5);
-  drawn.position.set(9.0, 1.5, 1.8);
+  const drawn = new THREE.PointLight(0xd88a3c, 0.75, 4.2, 1.4);
+  drawn.position.set(8.9, 1.5, 1.8);
   scene.add(vent, drawn);
 
   // --- Furniture and clutter ----------------------------------------------------
@@ -193,13 +199,13 @@ export function buildApartment(scene) {
     bulb.intensity = 2.6 * level;
     bulbMaterial.color.copy(out ? bulbDead : bulbLit);
     bulbHaze.material.opacity = 0.5 * level;
-    screen.intensity = 2.4 * (1 + Math.sin(t * 2.1) * 0.03);
+    screen.intensity = SCREEN * (1 + Math.sin(t * 2.1) * 0.03);
   });
 
   return {
     colliders: b.colliders,
-    start: { x: 2.5, z: 2.2, yaw: 0 }, // in the study, behind the chair, facing the desk
-    lights: { bulb, strip, screen, beams, vent, drawn },
+    start: { x: 2.5, z: 2.2, yaw: 0, pitch: -0.1 }, // in the study, behind the chair, facing the desk
+    lights: { bulb, strip, screen, beams, bounce, vent, drawn },
     update(t, dt) {
       for (const tick of b.updaters) tick(t, dt);
     },

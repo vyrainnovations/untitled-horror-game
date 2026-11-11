@@ -9,7 +9,7 @@ const LOOK_SPEED = 0.0022; // radians per pixel of mouse movement
 const MAX_PITCH = 1.45; // how far up or down you can look
 
 export function createPlayer(camera, element, colliders, start) {
-  const state = { x: start.x, z: start.z, yaw: start.yaw || 0, pitch: 0, bob: 0 };
+  const state = { x: start.x, z: start.z, yaw: start.yaw || 0, pitch: start.pitch || 0, bob: 0 };
   const keys = new Set();
   camera.rotation.order = 'YXZ';
 
