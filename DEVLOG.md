@@ -194,3 +194,46 @@ On the menu: not yet. He has not seen it at the time of writing.
 **Next**
 
 Eshan opens the game in Chrome, tries the menu, and listens. He needs to name the game. Then gameplay has to start, with nothing else allowed in front of it: the three chores, and the phone.
+
+---
+
+## Day 2: 12 November 2026. The story comes first
+
+**What happened**
+
+A session was started to build the first gameplay: a way to use things, and the three chores that open the game. It read the code. Before it wrote a line of it, Eshan stopped it. He wanted the whole story decided first, so that everything the player does is there for a reason.
+
+So the evening went on the story instead, and it is written down: [STORY.md](STORY.md). It has an ending that changes what everything before it meant, so it is not repeated here. That file is the whole thing, spoilers and all. What it holds:
+
+- What really happened, in order, with times.
+- Six rules that everything in the game has to obey.
+- The game beat by beat, about 14 minutes, with what the screen says at each step.
+- A table of everything the player does and why it is there, and a table of everything planted in the flat and what it turns out to mean.
+- A first draft of every message on the phone.
+- What has to be built by the 16th, day by day, and what gets cut first if a day is lost.
+
+His five beats are all still in it, in his order: the flat, the chores, the phone, the edit, the payoff.
+
+The best surprise was how much of it was already standing in the flat. Every clock was painted stopped at 3:07 when the rooms were furnished. There is a camera on a tripod pointed into the study, a chair in the spare room left facing the door, a landline nobody uses, a date ringed on the kitchen calendar, a poster of a figure in a lit doorway. All of it was put there for mood, with no story behind it. In the story, every one of them means something.
+
+**What it changes**
+
+- The chores are the same three, but the order is now rubbish, bolt, chai. The chai is never finished: the phone interrupts it.
+- Every clip of footage is this flat. The pool at night, from the first outline, is dropped.
+- The flashbacks happen on the tape and on the phone. There are no flashback scenes with people in them.
+
+**What went wrong, and what got pushed back on**
+
+- **Three days in, the game had an outline and no story.** Five lines in the brief, and chores that were listed as "ideas". Claude was one step from building three chores that meant nothing, and would have had to bend a story round them afterwards. Eshan caught it. Claude had not.
+- **Nobody had ever said what country the flat is in.** Claude drafted a closing image that only makes sense in one country, then noticed that the setting had never been written down and the image might not belong in this home at all. It was cut before it reached the page. The setting is now a question for Eshan at the bottom of the story.
+- **Flashback scenes were asked for and will not be built.** People who move and talk need character models, animation and voices. There are four days. The story gets its flashbacks another way, and says so.
+- **A fourth day with no gameplay.** This time for a good reason, but the count is the count. Four days are left, counting the 16th, and the game still cannot be played.
+- **The story is a proposal.** Eshan has not read it at the time of writing. If he throws it out, the evening went on a document.
+
+**Eshan's note**
+
+> "Bro we need to follow a full storyline that I want you keep intact. It should be a suspensful horror game, We need everything to happen for a meaning, flashbacks, backstory, reason behind every action we make the player do and a somewhat understanding and the sudden feeling of everything clicking at the very end of the game. Build everything around it. I want you to first decide the full story before making the game."
+
+**Next**
+
+Eshan reads the story and says yes, no, or what to change. He also owes it two names and a title. The build starts the moment he answers: using things, the task line, the three chores, the phone buzzing.

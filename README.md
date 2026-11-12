@@ -2,7 +2,7 @@
 
 A short first-person lo-fi horror game that runs in the browser. You play a freelance video editor who takes a job from an anonymous client, and the footage is not what it seems.
 
-**Status:** in development. The game opens on a title screen and you can walk around the whole flat: seven furnished rooms and a long corridor, textured, lit and shadowed, with a view out of the windows and the VHS look on. It has a pause menu, settings that are remembered, and sound. No story or gameplay yet, and no name. Target: shipped by 16 November 2026.
+**Status:** in development. The game opens on a title screen and you can walk around the whole flat: seven furnished rooms and a long corridor, textured, lit and shadowed, with a view out of the windows and the VHS look on. It has a pause menu, settings that are remembered, and sound. The story is written and waiting for the director's yes. No gameplay yet, and no name. Target: shipped by 16 November 2026.
 
 Every texture is painted by code and every sound is made by code. The game holds no image or sound files.
 
@@ -15,6 +15,7 @@ The whole process is kept in the open, wrong turns included:
 - **[DEVLOG.md](DEVLOG.md)** is the story of the build, day by day, with the ideas that were dropped and the mistakes that were made.
 - **The commit history** is the same story in small steps. Every commit says what changed and carries a director's note in Eshan's own words.
 - **[CLAUDE.md](CLAUDE.md)** is the brief the AI reads at the start of every session.
+- **[STORY.md](STORY.md)** is the whole story, written before any gameplay was built. It gives away the ending: play the game first.
 
 ## Run it
 
@@ -50,4 +51,5 @@ To check that nothing can be walked through or got stuck in, open the browser's 
 | `public/models/`, `public/textures/`, `public/audio/` | Game assets |
 | `blender/` | Source Blender files for the models |
 | `DEVLOG.md` | The build diary |
+| `STORY.md` | The whole story, and what has to be built for it. Spoilers |
 | `CLAUDE.md` | The brief for the AI |

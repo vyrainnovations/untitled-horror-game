@@ -13,6 +13,12 @@ A short first-person lo-fi horror game for the browser. Portfolio piece for Esha
 
 Original story, lo-fi PS1/VHS look (low-poly models, small textures, low render resolution, grain). The style comes from the genre; the story, apartment and characters are our own. Do not copy any existing game.
 
+**The full story is in `STORY.md`. Read it before building anything.** Eshan's rule, 12 November: "We need everything to happen for a meaning ... reason behind every action we make the player do ... and the sudden feeling of everything clicking at the very end of the game. Build everything around it. I want you to first decide the full story before making the game." He also said the storyline must be kept intact: do not change it, or add anything it does not need, without him saying so.
+
+`STORY.md` was written by Claude on 12 November and **Eshan has not approved it yet**. Until he does, build nothing that depends on it. When he does, change this paragraph and the status line at the top of `STORY.md`, and write down what he decided: the names, the title, how the characters text, and the setting.
+
+The five lines below are his first outline. The story keeps all five in this order. Where the two differ (the order of the chores, the pool), `STORY.md` is the newer one, once approved.
+
 1. **The apartment.** The player is a freelance video editor living alone in a flat that is too big for one person: a study with the PC, his bedroom, a spare bedroom, a kitchen with the dining table in it, a bathroom, a store room, and a 12 m corridor joining them. One location only. (Eshan enlarged it on 10 November from the original four small rooms.) The spare bedroom is the room of a flatmate who moved out: this is Claude's suggestion and Eshan has not confirmed it yet.
 2. **Chores.** Three short everyday tasks (ideas: take out the trash, make chai, lock the door). They teach the controls and make the place feel safe.
 3. **The phone.** An anonymous client messages with an editing job that pays too well, and sends files.
@@ -33,6 +39,7 @@ Out of scope for now: voice acting, multiple endings, a second location, multipl
 
 ## Layout
 
+- `STORY.md`: the whole story, the rules it sets, every beat of the game, the message script, and the build order to the deadline. Spoilers.
 - `index.html`, `src/main.js`: entry point (renderer, the three states `title` / `playing` / `paused`, game loop, dev-only test hooks).
 - `src/menu.js`, `src/menu.css`: the title screen and the pause screen (one menu, a column on the left over the game). The game's name is `TITLE` at the top of `menu.js`.
 - `src/settings.js`: the settings and their limits, saved in the browser. `src/main.js` says what each one does (`apply`).
@@ -70,7 +77,7 @@ The repo is a showcase of a game made with AI, told as a story with the mistakes
 
 ## Status
 
-As of the evening of 11 November 2026: the whole flat is built, furnished, textured, lit and shadowed, and can be walked end to end. The game opens on a title screen and has a pause menu, settings that are remembered, and sound. No chores, phone, PC interaction or footage yet. Five days remain (counting the 16th) and no gameplay exists: that is the risk. The game also has no name: the menu says "Untitled", with "working title" under it.
+As of the evening of 12 November 2026: the whole flat is built, furnished, textured, lit and shadowed, and can be walked end to end. The game opens on a title screen and has a pause menu, settings that are remembered, and sound. The story is written (`STORY.md`) and waiting for Eshan to approve it. No chores, phone, PC interaction or footage yet: the player can only walk and look. Four days remain (counting the 16th) and no gameplay exists: that is the risk. The game also has no name: the menu says "Untitled", with "working title" under it. `STORY.md` offers three.
 
 Look decisions Eshan has made (do not undo without asking):
 
@@ -94,4 +101,6 @@ Things to know:
 - The mirrors are fakes (dark glossy panels).
 - The game is played in Chrome in a big window (roughly 2400 x 1300). Check the look at that size.
 
-**Next step:** Eshan tries the menu in Chrome and listens to the sound (his director's note on the menu is owed), and gives the game a name. Then gameplay must start, with nothing else allowed in front of it: the three chores and the phone.
+**Next step:** Eshan reads `STORY.md` and says yes, no, or what to change, and gives it two names and a title. Then gameplay starts at once, in the order `STORY.md` gives under "What this needs built": using things (look at it, press E), the task line, the three chores (rubbish, bolt, chai) and the phone buzzing. Nothing else goes in front of that. Still owed from before: his note on the menu and the sound, which he has to try in Chrome.
+
+Things the story will need from the flat that are not there yet, so nobody is surprised: each room's furniture has to be hideable as one group (the footage shows the flat emptied), the front door has to open, its bolt has to slide, a ring on the hob has to light, and there has to be a figure that can stand in a few places. All of these move or appear, so all of them touch the rule about shadows being drawn once.
