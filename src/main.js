@@ -62,8 +62,13 @@ const chores = createChores({
 });
 
 // --- THE NEXT PART OF THE GAME STARTS HERE --------------------------------------
-// The chores are done. Whatever comes next in STORY.md begins in this
-// function. For now it only says that the game stops here.
+// The chores are done: the rubbish is out, the door is bolted, a ring is
+// burning under the chai, and the player has just picked up the buzzing
+// phone in the study. This function is called at that moment, once.
+//
+// What comes next is STORY.md, Part 2, beat 6, "The unknown number": the
+// phone fills the screen and the messages begin. It is not built yet. When
+// it is, open it from here, in place of the line below.
 function afterTheChores() {
   hud.task('That is as far as the game goes for now.', { plain: true });
 }

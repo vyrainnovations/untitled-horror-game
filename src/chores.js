@@ -17,11 +17,16 @@ import * as THREE from 'three';
 //   prompt  what the prompt says when the player looks at the thing.
 //   thing   the thing that has to be used (see THINGS, further down).
 //   does    what happens when it is used (see ACTIONS, further down).
+//   wait    instead of a thing to use: just wait this many seconds.
+//   ticks   false if the line should give way to the next one without being
+//           ticked off, because the job was not finished.
+//   buzzing true while the phone should be buzzing.
 //   hints   [seconds, words]: if the player has still not managed the step
 //           after that many seconds, these words appear under the task
 //           line. [seconds, null] takes the words away again.
 // The order can be changed, with one catch: the bag has to be picked up
-// before it can be put out.
+// before it can be put out. But read STORY.md first: the order, and the
+// chai that is never finished, are what the ending is made of.
 const STEPS = [
   {
     task: 'Take out the rubbish',
@@ -44,6 +49,30 @@ const STEPS = [
     does: 'slideBolt',
     hints: [[15, 'The bolt is near the top of the front door.']],
   },
+  {
+    task: 'Make chai',
+    prompt: 'Light the ring',
+    thing: 'hob',
+    does: 'lightRing',
+    ticks: false, // lighting the ring is not the chai made
+    hints: [[22, 'The pan is on the hob, in the kitchen.']],
+  },
+  {
+    // Nothing to do but wait. It never boils: the phone gets in first, and
+    // the player walks away from a lit ring. STORY.md is built on that, so
+    // this line must never be ticked off.
+    task: 'Wait for it to boil',
+    wait: 5,
+    ticks: false,
+  },
+  {
+    task: 'Your phone is buzzing in the study',
+    prompt: 'Pick up the phone',
+    thing: 'phone',
+    does: 'pickUpPhone',
+    buzzing: true,
+    hints: [[25, 'It is on the desk, to the right of the screen.']],
+  },
 ];
 
 // --- How long things take, in seconds -----------------------------------------
@@ -54,10 +83,14 @@ const TIMES = {
   doorHolds: 0.3, // the door standing open afterwards
   doorShuts: 0.4, // the door swinging shut again
   boltSlides: 0.18, // the bolt going across
+  ringCatches: 0.36, // the lighter ticking before the gas catches
+  buzzEvery: 2.6, // the phone buzzes this often
+  screenStaysLit: 1.3, // and its screen is lit for this long each time
 };
 
 const DOOR_OPEN = 0.7; // how far the front door opens: 0.7 is about 40 degrees, a wide crack
 const BOLT_TRAVEL = 0.085; // how far the bolt slides, in metres: far enough for its end to go into the frame
+const RING_LIGHT = 0.42; // how bright the lit gas ring is
 // Where the carried bag is seen: right of centre and low, as if 62 cm in
 // front of the eyes, so that only the top of it shows. [right, up, forward
 // is negative]. These are for the usual field of view (64 degrees): the
@@ -82,6 +115,10 @@ export function createChores({ apartment, camera, player, interact, hud, audio, 
   const bag = things.rubbishBag;
   const door = things.frontDoor;
   const bolt = things.bolt;
+  const flame = things.ringFlame;
+  const ringLight = apartment.lights.ring;
+  const phone = things.phone;
+  const phoneScreen = things.phoneScreen;
   const binBarrier = things.binBarrier;
 
   // How things are at the start, so reset() can put them back.
@@ -99,6 +136,8 @@ export function createChores({ apartment, camera, player, interact, hud, audio, 
   let busy = false; // true while something is in the middle of happening
   let holding = false; // true while the bag is in the player's hand
   let settled = false; // true once the bag has finished coming up into the hand
+  let ringLit = false; // true once the gas ring is burning
+  let sinceBuzz = 0; // seconds since the phone last buzzed
   const moves = []; // movements that are under way (see move())
 
   // --- Small helpers -----------------------------------------------------------
@@ -212,6 +251,31 @@ export function createChores({ apartment, camera, player, interact, hud, audio, 
         });
       },
     },
+
+    // The ring under the pan of chai: the lighter ticks, the gas catches,
+    // and it burns from then on. Nothing in this file ever puts it out.
+    lightRing: {
+      run() {
+        busy = true;
+        audio.act('ignite');
+        after(TIMES.ringCatches, () => {
+          ringLit = true;
+          flame.visible = true;
+          audio.setRing(true);
+          busy = false;
+          next();
+        });
+      },
+    },
+
+    // The phone comes up off the desk and stops buzzing.
+    pickUpPhone: {
+      run() {
+        audio.act('phoneUp');
+        phone.visible = false; // it is in his hand now
+        next();
+      },
+    },
   };
 
   // --- THINGS: where each usable thing is ----------------------------------------
@@ -221,7 +285,10 @@ export function createChores({ apartment, camera, player, interact, hud, audio, 
     bag: { at: [home.bagPosition.x, 0.22, home.bagPosition.z], look: 0.34 },
     frontDoor: { at: [door.position.x - 0.4, 1.25, door.position.z - 0.02], look: 0.6 },
     bolt: { at: [door.position.x - 0.66, 1.87, door.position.z - 0.05], look: 0.26 },
+    hob: { at: [flame.position.x, 1.0, flame.position.z - 0.03], look: 0.32 },
+    phone: { at: [phone.position.x, phone.position.y + 0.02, phone.position.z], look: 0.26 },
   };
+  const phoneAt = [phone.position.x, phone.position.z]; // where the buzzing comes from
 
   for (const name of Object.keys(THINGS)) {
     interact.add({
@@ -245,6 +312,8 @@ export function createChores({ apartment, camera, player, interact, hud, audio, 
     const step = STEPS[i];
     index = i;
     stepTime = 0;
+    sinceBuzz = TIMES.buzzEvery; // a step with the phone buzzing starts with a buzz
+    phoneScreen.visible = false;
     hud.hint(null);
     if (!step) {
       // That was the last step.
@@ -282,9 +351,33 @@ export function createChores({ apartment, camera, player, interact, hud, audio, 
       bag.scale.setScalar(heldSize);
     }
 
+    // A lit ring never burns quite steadily.
+    if (ringLit) {
+      const flicker = Math.random();
+      flame.scale.y = 0.8 + flicker * 0.45;
+      ringLight.intensity = RING_LIGHT * (0.88 + flicker * 0.24);
+    }
+
     const step = STEPS[index];
     if (!step) return;
     stepTime += dt;
+
+    // A step that is only a wait.
+    if (step.wait !== undefined) {
+      if (stepTime >= step.wait) next();
+      return;
+    }
+
+    // The phone: two buzzes, and its screen lights the desk for a moment.
+    if (step.buzzing) {
+      sinceBuzz += dt;
+      if (sinceBuzz >= TIMES.buzzEvery) {
+        sinceBuzz = 0;
+        audio.buzz(phoneAt[0], phoneAt[1]);
+      }
+      phoneScreen.visible = sinceBuzz < TIMES.screenStaysLit;
+    }
+
     // The hint for a player who is taking a long time.
     let words = null;
     for (const [seconds, text] of step.hints || []) if (stepTime >= seconds) words = text;
@@ -308,6 +401,13 @@ export function createChores({ apartment, camera, player, interact, hud, audio, 
     binBarrier.minZ = home.barrierMinZ;
     door.rotation.y = 0;
     bolt.position.x = 0;
+    ringLit = false;
+    flame.visible = false;
+    ringLight.intensity = 0;
+    audio.setRing(false);
+    phone.visible = true;
+    phoneScreen.visible = false;
+    sinceBuzz = 0;
     hud.clear();
     redrawShadows();
   }
@@ -323,6 +423,6 @@ export function createChores({ apartment, camera, player, interact, hud, audio, 
     reset,
     update,
     // For tests: where the chores have got to.
-    state: () => ({ step: index, of: STEPS.length, does: STEPS[index] ? STEPS[index].does : null, busy, holding, moves: moves.length }),
+    state: () => ({ step: index, of: STEPS.length, does: STEPS[index] ? STEPS[index].does || 'wait' : null, busy, holding, ringLit, moves: moves.length }),
   };
 }

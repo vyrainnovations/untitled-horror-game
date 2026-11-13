@@ -16,6 +16,7 @@ const HUMS = {
   bulb: { at: [4.95, 8.4], carries: 1.5, loud: 0.04 },
   pc: { at: [1.9, 0.45], carries: 1.4, loud: 0.06 },
   strip: { at: [0.88, 11.52], carries: 1.2, loud: 0.03 },
+  ring: { at: [1.47, 11.65], carries: 1.3, loud: 0.07 }, // the gas ring on the hob: silent until it is lit
 };
 // How bright a footstep sounds on each kind of floor (a filter frequency).
 const FLOORS = { mosaic: 720, tile: 1500, cement: 1000 };
@@ -34,6 +35,8 @@ export function createAudio() {
   let stepNoise = null;
   let street = null;
   let lastTick = 0;
+  let ringLit = false; // is the gas ring burning
+  const ears = [0, 0]; // where the listener stands on the plan
   const hums = {};
 
   // A stretch of hiss. Brown noise is the deep, soft kind (wind, distant
@@ -138,12 +141,15 @@ export function createAudio() {
     hums.bulb = drone([[100, 'square', 1]], 900); // a filament buzzing
     hums.strip = drone([[100, 'sine', 1], [200, 'sine', 0.5]]);
     hums.pc = loopNoise(white, 'bandpass', 900, 0.6, 0); // the PC's fans
+    hums.ring = loopNoise(white, 'bandpass', 2300, 0.9, 0); // gas burning: a thin hiss
     street = loopNoise(brown, 'bandpass', 140, 0.5, 0); // the street, through the glass
   }
 
   // Call every frame with where the listener is, and how brightly the
   // corridor bulb is burning (0 to 1), so its buzz cuts out when it does.
   function update(x, z, bulbLevel = 1) {
+    ears[0] = x;
+    ears[1] = z;
     if (!ctx) return;
     const now = ctx.currentTime;
     for (const name of Object.keys(HUMS)) {
@@ -151,6 +157,7 @@ export function createAudio() {
       const distance = Math.hypot(x - hum.at[0], z - hum.at[1]);
       let level = hum.loud / (1 + (distance / hum.carries) ** 2);
       if (name === 'bulb') level *= bulbLevel;
+      if (name === 'ring' && !ringLit) level = 0;
       hums[name].gain.setTargetAtTime(level, now, 0.1);
     }
     const nearWindows = Math.max(0, Math.min(1, 1 - x / 4.2)); // the west rooms only
@@ -175,6 +182,7 @@ export function createAudio() {
     const now = ctx.currentTime + delay;
     const source = ctx.createBufferSource();
     source.buffer = stepNoise;
+    source.loop = true; // the stretch of hiss is short: go round again for a long burst
     const filter = ctx.createBiquadFilter();
     filter.type = kind;
     filter.frequency.value = cutoff;
@@ -201,6 +209,28 @@ export function createAudio() {
     gain.gain.setValueAtTime(level, now);
     gain.gain.exponentialRampToValueAtTime(0.0008, now + seconds);
     osc.connect(gain);
+    gain.connect(bus);
+    osc.start(now);
+    osc.stop(now + seconds + 0.03);
+  }
+
+  // A steady tone that starts and stops cleanly: something buzzing. It is
+  // dulled a little, as if heard through a table top.
+  function buzzTone(bus, frequency, seconds, level, delay = 0) {
+    const now = ctx.currentTime + delay;
+    const osc = ctx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.value = frequency;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 1100;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.linearRampToValueAtTime(level, now + 0.015);
+    gain.gain.setValueAtTime(level, now + seconds - 0.04);
+    gain.gain.linearRampToValueAtTime(0.0001, now + seconds);
+    osc.connect(filter);
+    filter.connect(gain);
     gain.connect(bus);
     osc.start(now);
     osc.stop(now + seconds + 0.03);
@@ -246,9 +276,37 @@ export function createAudio() {
       burst(world, 1700, 0.05, 0.3, 'lowpass', 0.14);
       slide(world, 330, 200, 0.06, 0.16, 'triangle', 0.14);
     },
+    // A gas ring being lit: the lighter ticks three times, then the gas catches.
+    ignite() {
+      for (const at of [0, 0.11, 0.22]) slide(world, 3400, 2600, 0.012, 0.07, 'square', at);
+      burst(world, 480, 0.3, 0.2, 'lowpass', 0.34);
+      slide(world, 130, 70, 0.22, 0.1, 'sine', 0.34);
+    },
+    // A phone lifted off a desk.
+    phoneUp() {
+      burst(world, 1500, 0.04, 0.08);
+      slide(world, 620, 500, 0.03, 0.04, 'triangle');
+    },
   };
   function act(kind) {
     if (ctx && ACTS[kind]) ACTS[kind]();
+  }
+
+  // The gas ring on the hob, lit or out. Lit, it hisses when you stand near.
+  function setRing(on) {
+    ringLit = on;
+  }
+
+  // A phone buzzing on a wooden desk at (x, z): two short buzzes. It is
+  // louder the nearer the listener stands, but it carries a long way.
+  function buzz(x, z) {
+    if (!ctx) return;
+    const distance = Math.hypot(x - ears[0], z - ears[1]);
+    const level = 0.05 + 0.28 / (1 + (distance / 6) ** 2);
+    for (const at of [0, 0.5]) {
+      buzzTone(world, 158, 0.36, level, at); // the motor
+      burst(world, 900, 0.36, level * 0.5, 'lowpass', at); // the desk rattling under it
+    }
   }
 
   // The menu's sounds: 'move' (onto another option), 'tick' (dragging a
@@ -284,5 +342,5 @@ export function createAudio() {
     return { running: ctx.state === 'running', peak, average: Math.sqrt(sum / samples.length) };
   }
 
-  return { start, update, setScene, setVolume, step, act, click, level };
+  return { start, update, setScene, setVolume, step, act, setRing, buzz, click, level };
 }
