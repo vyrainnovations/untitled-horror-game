@@ -69,7 +69,16 @@ export function dressStudy(b, M, f, F) {
   b.box(3.06, 3.2, 0.75, 0.78, 0.18, 0.36, M.blackPlastic);
   b.box(3.07, 3.19, 0.78, 0.81, 0.19, 0.35, M.steel);
   f.led(3.1, 0.795, 0.352, M.ledBlue, 0.008);
-  b.box(3.06, 3.13, 0.75, 0.758, 0.5, 0.64, M.blackPlastic, { cast: false });
+  // His phone. Its screen is dark until it buzzes (src/chores.js).
+  b.tag('phone', b.group(3.095, 0.75, 0.57, 0, () => {
+    b.box(-0.035, 0.035, 0, 0.008, -0.07, 0.07, M.blackPlastic, { cast: false });
+    const lit = b.group(0, 0, 0, 0, () => {
+      b.panel(0, 0.0086, 0, 0.058, 0.126, '+y', M.phoneScreen);
+      b.glow(0, 0.03, 0, 0.3, M.hazeBlue.clone());
+    });
+    lit.visible = false;
+    b.tag('phoneScreen', lit);
+  }));
   F.tumbler(3.21, 0.44, 0.75, M.chai);
   F.mug(3.19, 0.68, 0.75, M.ceramic, M.liquid);
 

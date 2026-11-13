@@ -36,6 +36,7 @@ scene.fog = new THREE.Fog(DARK, 1.5, 11);
 const settings = createSettings();
 const camera = new THREE.PerspectiveCamera(settings.get('fieldOfView'), 1, 0.05, 40);
 camera.rotation.order = 'YXZ';
+scene.add(camera); // so that something carried in the hand can hang from the camera
 
 const apartment = buildApartment(scene);
 const player = createPlayer(camera, renderer.domElement, apartment.colliders, apartment.start);
@@ -161,11 +162,10 @@ resize();
 // --- The loop -------------------------------------------------------------------
 let debugView = null; // only used while developing, see below
 let last = 0;
-function frame(ms) {
-  const now = ms / 1000;
-  const dt = Math.min(0.05, Math.max(0, now - last)); // never jump far after a hitch
-  last = now;
 
+// Move the game on by dt seconds. Everything that happens over time goes
+// through here, so that pausing stops all of it at once.
+function tick(dt) {
   if (mode === 'playing') {
     player.update(dt);
     playTime += dt;
@@ -175,12 +175,20 @@ function frame(ms) {
     worldTime += dt;
   }
   // Paused: nothing moves, and the camera stays where it was.
+  if (mode !== 'paused') apartment.update(worldTime, dt);
+}
+
+function frame(ms) {
+  const now = ms / 1000;
+  const dt = Math.min(0.05, Math.max(0, now - last)); // never jump far after a hitch
+  last = now;
+
+  tick(dt);
   if (debugView) {
     camera.position.set(debugView[0], debugView[1], debugView[2]);
     camera.rotation.set(debugView[4], debugView[3], 0);
   }
 
-  if (mode !== 'paused') apartment.update(worldTime, dt);
   audio.update(camera.position.x, camera.position.z, apartment.lights.bulb.intensity / BULB_FULL);
   menu.setClock(playTime);
   vhs.render(scene, camera, now);
@@ -207,6 +215,7 @@ if (import.meta.env.DEV) {
     audio,
     menu,
     frame,
+    tick, // move the game on by so many seconds without waiting: __game.tick(0.05)
     play,
     pause,
     toTitle,

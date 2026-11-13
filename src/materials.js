@@ -147,6 +147,8 @@ export function createMaterials() {
     bulbOn: lit(0xffe2b0),
     tubeOn: lit(0xcfe6c8),
     lampHead: lit(0xffb060),
+    flame: new THREE.MeshBasicMaterial({ color: 0x5f8cff, fog: false, side: both }), // a gas ring, burning
+    phoneScreen: lit(0xc4d6ff), // a phone lighting up
     hazeWarm: haze(0xffb060, 0.5),
     hazeCold: haze(0xbfe0b8, 0.35),
     hazeBlue: haze(0x8fb0e8, 0.25),

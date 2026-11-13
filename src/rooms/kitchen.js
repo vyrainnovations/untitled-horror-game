@@ -42,6 +42,14 @@ export function dressKitchen(b, M, f, F) {
   b.cyl(1.466, 11.65, 0.94, 1.015, 0.085, M.steel, { sides: 10 });
   b.cyl(1.466, 11.65, 1.005, 1.018, 0.078, M.chai, { sides: 10, cast: false });
   b.box(1.36, 1.4, 0.99, 1.005, 11.48, 11.6, M.blackPlastic);
+  // The flame under it: a ring of blue round the bottom of the pan, with a
+  // soft glow. It is out until the player lights the ring (src/chores.js).
+  const flame = b.group(1.466, 0.94, 11.65, 0, () => {
+    b.cyl(0, 0, 0, 0.024, 0.1, M.flame, { sides: 12, open: true, top: 0.089, cast: false, receive: false });
+    b.glow(0, 0.03, 0, 0.42, M.hazeBlue.clone());
+  });
+  flame.visible = false;
+  b.tag('ringFlame', flame);
   // A kadhai in the middle.
   b.cyl(1.705, 11.65, 0.94, 1.0, 0.06, M.darkMetal, { sides: 10, top: 0.13 });
   // The pressure cooker on the right.
@@ -105,10 +113,19 @@ export function dressKitchen(b, M, f, F) {
   // --- Bin, rubbish bag and broom, by the fridge ---------------------------------------
   b.cyl(3.9, 10.98, 0, 0.4, 0.13, M.greenPlastic, { sides: 10, top: 0.15 });
   b.cyl(3.9, 10.98, 0.4, 0.42, 0.155, M.blackPlastic, { sides: 10 });
-  F.heap(3.84, 0, 10.7, 0.36, 0.38, 0.34, M.blackPlastic); // a full bag, waiting to go out
+  // A full bag, waiting to go out. It is the first thing the player picks
+  // up (src/chores.js), so it is built as one piece that can be carried: the
+  // bag, its tied neck, and the yellow tie that makes it easy to spot.
+  b.tag('rubbishBag', b.group(3.84, 0, 10.7, 0.5, () => {
+    F.heap(0, 0, 0, 0.36, 0.38, 0.34, M.blackPlastic);
+    b.cyl(0, 0, 0.35, 0.45, 0.028, M.blackPlastic, { sides: 6, top: 0.055 });
+    b.cyl(0, 0, 0.345, 0.37, 0.036, M.yellowPlastic, { sides: 6 });
+  }));
   b.rod([4.08, 0.05, 11.12], [4.1, 1.25, 11.16], 0.012, M.woodLight);
   b.box(4.02, 4.12, 0, 0.12, 11.06, 11.18, M.sack);
-  b.block(3.6, 4.14, 10.55, 11.2);
+  // One barrier for the bin, the bag and the broom. When the bag is taken
+  // away, the game pulls this barrier back to the bin (src/chores.js).
+  b.tag('binBarrier', b.block(3.6, 4.14, 10.55, 11.2));
 
   // --- The dining table ------------------------------------------------------------------
   b.box(1.4, 2.7, 0.72, 0.76, 8.15, 8.95, M.woodMid);

@@ -7,6 +7,11 @@ import { CEILING, DOOR_HEIGHT, HALF } from './plan.js';
 const NORMAL = { '+x': [1, 0], '-x': [-1, 0], '+z': [0, 1], '-z': [0, -1] };
 
 export function createFittings(b, M) {
+  // Every piece of wall, as a box: { min: [x, y, z], max: [x, y, z] }. The
+  // game uses this list to tell whether a wall stands between the player
+  // and something they are looking at (src/interact.js).
+  const walls = [];
+
   // A wall along a line. axis 'x' runs east-west at z = at. axis 'z' runs
   // north-south at x = at. `low` is the surface seen from the north or west
   // side, `high` the one seen from the south or east side. Openings are
@@ -14,8 +19,13 @@ export function createFittings(b, M) {
   function wall(axis, at, from, to, low, high, openings = []) {
     const piece = (a, c, y0, y1, solid) => {
       if (c - a < 0.001 || y1 - y0 < 0.001) return;
-      if (axis === 'x') b.box(a, c, y0, y1, at - HALF, at + HALF, b.sides(M.plaster, { north: low, south: high }), { solid });
-      else b.box(at - HALF, at + HALF, y0, y1, a, c, b.sides(M.plaster, { west: low, east: high }), { solid });
+      if (axis === 'x') {
+        b.box(a, c, y0, y1, at - HALF, at + HALF, b.sides(M.plaster, { north: low, south: high }), { solid });
+        walls.push({ min: [a, y0, at - HALF], max: [c, y1, at + HALF] });
+      } else {
+        b.box(at - HALF, at + HALF, y0, y1, a, c, b.sides(M.plaster, { west: low, east: high }), { solid });
+        walls.push({ min: [at - HALF, y0, a], max: [at + HALF, y1, c] });
+      }
     };
     let cursor = from;
     for (const o of openings) {
@@ -152,5 +162,5 @@ export function createFittings(b, M) {
     return b.ball(x, y, z, 0.045, material, { cast: false });
   }
 
-  return { wall, doorFrame, doorLeaf, windowAt, curtain, hung, led, switchboard, tube, ceilingFan, hangingBulb };
+  return { wall, walls, doorFrame, doorLeaf, windowAt, curtain, hung, led, switchboard, tube, ceilingFan, hangingBulb };
 }

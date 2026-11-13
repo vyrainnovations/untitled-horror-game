@@ -87,14 +87,29 @@ export function buildApartment(scene) {
   doorLeaf(5.78, 4.5, 0.5, -0.866, M.doorBath, { edge: M.whitePlastic }); // bathroom
   doorLeaf(5.78, 7.6, 0.985, 0.174, M.doorWood); // store room
 
-  // The front door is shut. Lock, bolt and handle are on the inside.
-  b.box(4.55, 5.35, 0.01, DOOR_HEIGHT - 0.06, 11.95, 11.99, b.sides(M.woodDark, { north: M.doorFront }));
+  // The front door is shut. Lock, bolt and handle are on the inside. The
+  // whole door is one piece hung from its hinge, which is on the east side
+  // at (5.35, 11.97), so that it can swing. Positions inside are measured
+  // from the hinge. It opens outwards, onto the landing, so it never swings
+  // into the player. The way through stays blocked: he cannot leave.
+  // None of it casts a shadow, because it moves and shadows are drawn once.
+  const moves = { cast: false };
+  b.tag('frontDoor', b.group(5.35, 0, 11.97, 0, () => {
+    b.box(-0.8, 0, 0.01, DOOR_HEIGHT - 0.06, -0.02, 0.02, b.sides(M.woodDark, { north: M.doorFront }), moves);
+    b.box(-0.75, -0.63, 1.0, 1.14, -0.06, -0.02, M.darkMetal, moves); // lock
+    b.rod([-0.69, 1.07, -0.06], [-0.69, 1.07, -0.09], 0.016, M.steel, moves);
+    b.box(-0.75, -0.61, 0.92, 0.94, -0.07, -0.05, M.steel, moves); // handle
+    // The bolt, near the top: a plate, two loops, and the bar that slides
+    // through them. The bar starts drawn back (the door is not bolted yet).
+    // Slid 8.5 cm to the west, its end goes into the door frame.
+    b.box(-0.775, -0.49, 1.845, 1.9, -0.028, -0.02, M.darkMetal, moves);
+    for (const x of [-0.7475, -0.5775]) b.box(x - 0.0075, x + 0.0075, 1.853, 1.892, -0.052, -0.028, M.steel, moves);
+    b.tag('bolt', b.group(0, 0, 0, 0, () => {
+      b.rod([-0.77, 1.8725, -0.039], [-0.5, 1.8725, -0.039], 0.011, M.steel, { cast: false, sides: 6 });
+      b.rod([-0.615, 1.8725, -0.039], [-0.615, 1.8725, -0.09], 0.009, M.steel, moves); // the knob you push it by
+    }));
+  }));
   b.block(4.5, 5.4, 11.94, 12.06);
-  b.box(4.6, 4.72, 1.0, 1.14, 11.91, 11.95, M.darkMetal); // lock
-  b.rod([4.66, 1.07, 11.91], [4.66, 1.07, 11.88], 0.016, M.steel, { cast: false });
-  b.box(4.6, 4.74, 0.92, 0.94, 11.9, 11.92, M.steel); // handle
-  b.box(4.58, 4.78, 1.86, 1.885, 11.925, 11.95, M.steel); // bolt, top
-  b.box(4.52, 4.58, 1.845, 1.9, 11.92, 11.95, M.steel);
 
   // --- Windows ----------------------------------------------------------------
   windowAt(0, 0.9, 2.5, 0.95, 2.15, 1); // study
@@ -174,6 +189,14 @@ export function buildApartment(scene) {
   drawn.position.set(8.9, 1.5, 1.8);
   scene.add(vent, drawn);
 
+  // The gas ring under the pan of chai. It gives no light until the player
+  // lights it (src/chores.js). The light is in the flat from the start,
+  // turned down to nothing, because adding a light later makes the game
+  // stop for a moment while it works out how to draw everything again.
+  const ring = new THREE.PointLight(0x7f9cff, 0, 2.2, 1.8);
+  ring.position.set(1.466, 1.03, 11.56);
+  scene.add(ring);
+
   // --- Furniture and clutter ----------------------------------------------------
   dressStudy(b, M, f, F);
   dressBedroom(b, M, f, F);
@@ -204,8 +227,10 @@ export function buildApartment(scene) {
 
   return {
     colliders: b.colliders,
+    walls: f.walls, // every piece of wall, as a box: for telling what is behind a wall
+    things: b.things, // the few objects the game moves or switches on, by name (see b.tag)
     start: { x: 2.5, z: 2.2, yaw: 0, pitch: -0.1 }, // in the study, behind the chair, facing the desk
-    lights: { bulb, strip, screen, beams, bounce, vent, drawn },
+    lights: { bulb, strip, screen, beams, bounce, vent, drawn, ring },
     update(t, dt) {
       for (const tick of b.updaters) tick(t, dt);
     },

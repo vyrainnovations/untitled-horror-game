@@ -21,6 +21,7 @@ const UP = new THREE.Vector3(0, 1, 0);
 export function createBuilder(scene) {
   const colliders = []; // everything the player cannot walk through
   const updaters = []; // things that move or flicker, called every frame
+  const things = {}; // the few objects the game picks up, moves or switches on, by name
   let parent = scene;
 
   const first = (m) => (Array.isArray(m) ? m[0] : m);
@@ -146,13 +147,26 @@ export function createBuilder(scene) {
   }
 
   // Invisible barriers. block() is a rectangle on the floor. blockLine() is a
-  // thin straight barrier at any angle (an open door).
+  // thin straight barrier at any angle (an open door). Both hand back the
+  // barrier, so that it can be moved later along with the thing it guards.
   function block(minX, maxX, minZ, maxZ) {
-    colliders.push({ minX, maxX, minZ, maxZ });
+    const barrier = { minX, maxX, minZ, maxZ };
+    colliders.push(barrier);
+    return barrier;
   }
   function blockLine(ax, az, bx, bz, half = 0.03) {
-    colliders.push({ ax, az, bx, bz, half });
+    const barrier = { ax, az, bx, bz, half };
+    colliders.push(barrier);
+    return barrier;
   }
 
-  return { box, sides, cyl, rod, ball, panel, cloth, group, glow, block, blockLine, colliders, updaters, add: (object) => parent.add(object) };
+  // Give something a name, so the game can find it again later to pick it
+  // up, move it or switch it on: b.tag('rubbishBag', ...). The names end up
+  // in apartment.things. Most of the flat never moves and has no name.
+  function tag(name, object) {
+    things[name] = object;
+    return object;
+  }
+
+  return { box, sides, cyl, rod, ball, panel, cloth, group, glow, block, blockLine, tag, things, colliders, updaters, add: (object) => parent.add(object) };
 }

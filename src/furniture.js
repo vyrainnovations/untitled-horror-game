@@ -188,7 +188,7 @@ export function createFurniture(b, M, f) {
 
   // A soft heap: clothes on the floor, a full rubbish bag, a sack.
   function heap(x, y, z, w, h, d, material) {
-    b.ball(x, y + h / 2, z, 0.5, material, { squash: [w, h, d], sides: 7 });
+    return b.ball(x, y + h / 2, z, 0.5, material, { squash: [w, h, d], sides: 7 });
   }
 
   // A sheet thrown over something, hanging to the floor on all sides.
