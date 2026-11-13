@@ -142,7 +142,8 @@ export function buildApartment(scene) {
   };
 
   // A little light everywhere, so black is never completely black.
-  scene.add(new THREE.HemisphereLight(0x2b3347, 0x120f0c, 0.65));
+  const sky = new THREE.HemisphereLight(0x2b3347, 0x120f0c, 0.65);
+  scene.add(sky);
 
   // The corridor bulb: the only warm light in the flat, and it is not well.
   const bulbMaterial = M.bulbOn.clone();
@@ -201,13 +202,17 @@ export function buildApartment(scene) {
   scene.add(ring);
 
   // --- Furniture and clutter ----------------------------------------------------
-  dressStudy(b, M, f, F);
-  dressBedroom(b, M, f, F);
-  dressSpareRoom(b, M, f, F);
-  dressKitchen(b, M, f, F);
-  dressBathroom(b, M, f, F);
-  dressStore(b, M, f, F);
-  dressCorridor(b, M, f, F);
+  // Each room's things are one group, so that the tapes (src/footage.js) can
+  // show the flat as it is a year later: cleared out.
+  const rooms = {};
+  const room = (name, dress) => { rooms[name] = b.group(0, 0, 0, 0, () => dress(b, M, f, F)); };
+  room('study', dressStudy);
+  room('bedroom', dressBedroom);
+  room('spareRoom', dressSpareRoom);
+  room('kitchen', dressKitchen);
+  room('bathroom', dressBathroom);
+  room('store', dressStore);
+  room('corridor', dressCorridor);
 
   // --- Things that change over time ---------------------------------------------
   const bulbLit = new THREE.Color(0xffe2b0);
@@ -232,8 +237,11 @@ export function buildApartment(scene) {
     colliders: b.colliders,
     walls: f.walls, // every piece of wall, as a box: for telling what is behind a wall
     things: b.things, // the few objects the game moves or switches on, by name (see b.tag)
+    rooms, // each room's furniture and clutter, as one group
     start: { x: 2.5, z: 2.2, yaw: 0, pitch: -0.1 }, // in the study, behind the chair, facing the desk
-    lights: { bulb, strip, screen, beams, bounce, vent, drawn, ring },
+    lights: { bulb, strip, screen, screenFill, beams, bounce, vent, drawn, ring, sky },
+    // The corridor bulb's own glow, so a tape can show it switched off.
+    bulbLook: { material: bulbMaterial, haze: bulbHaze, dead: bulbDead },
     update(t, dt) {
       for (const tick of b.updaters) tick(t, dt);
     },
