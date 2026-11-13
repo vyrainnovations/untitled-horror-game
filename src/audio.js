@@ -240,6 +240,12 @@ export function createAudio() {
       slide(world, 85, 45, 0.17, 0.3);
       slide(world, 1700, 1100, 0.03, 0.06, 'square', 0.03);
     },
+    // The bolt on the front door: a scrape of steel, then it hits home.
+    bolt() {
+      burst(world, 2600, 0.15, 0.1, 'bandpass');
+      burst(world, 1700, 0.05, 0.3, 'lowpass', 0.14);
+      slide(world, 330, 200, 0.06, 0.16, 'triangle', 0.14);
+    },
   };
   function act(kind) {
     if (ctx && ACTS[kind]) ACTS[kind]();

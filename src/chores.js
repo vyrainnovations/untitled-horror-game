@@ -37,6 +37,13 @@ const STEPS = [
     does: 'putBagOut',
     hints: [[20, 'Take it to the front door, at the end of the corridor.']],
   },
+  {
+    task: 'Lock up',
+    prompt: 'Slide the bolt',
+    thing: 'bolt',
+    does: 'slideBolt',
+    hints: [[15, 'The bolt is near the top of the front door.']],
+  },
 ];
 
 // --- How long things take, in seconds -----------------------------------------
@@ -46,9 +53,11 @@ const TIMES = {
   bagGoesOut: 0.55, // the bag going out through the gap
   doorHolds: 0.3, // the door standing open afterwards
   doorShuts: 0.4, // the door swinging shut again
+  boltSlides: 0.18, // the bolt going across
 };
 
 const DOOR_OPEN = 0.7; // how far the front door opens: 0.7 is about 40 degrees, a wide crack
+const BOLT_TRAVEL = 0.085; // how far the bolt slides, in metres: far enough for its end to go into the frame
 // Where the carried bag is seen: right of centre and low, as if 62 cm in
 // front of the eyes, so that only the top of it shows. [right, up, forward
 // is negative]. These are for the usual field of view (64 degrees): the
@@ -72,6 +81,7 @@ export function createChores({ apartment, camera, player, interact, hud, audio, 
   const { things } = apartment;
   const bag = things.rubbishBag;
   const door = things.frontDoor;
+  const bolt = things.bolt;
   const binBarrier = things.binBarrier;
 
   // How things are at the start, so reset() can put them back.
@@ -190,6 +200,18 @@ export function createChores({ apartment, camera, player, interact, hud, audio, 
         });
       },
     },
+
+    // The bolt on the front door slides across, into the frame.
+    slideBolt: {
+      run() {
+        busy = true;
+        audio.act('bolt');
+        move(TIMES.boltSlides, (k) => { bolt.position.x = -BOLT_TRAVEL * k; }, () => {
+          busy = false;
+          next();
+        });
+      },
+    },
   };
 
   // --- THINGS: where each usable thing is ----------------------------------------
@@ -198,6 +220,7 @@ export function createChores({ apartment, camera, player, interact, hud, audio, 
   const THINGS = {
     bag: { at: [home.bagPosition.x, 0.22, home.bagPosition.z], look: 0.34 },
     frontDoor: { at: [door.position.x - 0.4, 1.25, door.position.z - 0.02], look: 0.6 },
+    bolt: { at: [door.position.x - 0.66, 1.87, door.position.z - 0.05], look: 0.26 },
   };
 
   for (const name of Object.keys(THINGS)) {
@@ -284,6 +307,7 @@ export function createChores({ apartment, camera, player, interact, hud, audio, 
     setCastsShadow(bag, true);
     binBarrier.minZ = home.barrierMinZ;
     door.rotation.y = 0;
+    bolt.position.x = 0;
     hud.clear();
     redrawShadows();
   }
