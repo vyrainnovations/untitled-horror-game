@@ -237,3 +237,59 @@ The best surprise was how much of it was already standing in the flat. Every clo
 **Next**
 
 Eshan reads the story and says yes, no, or what to change. He also owes it two names and a title. The build starts the moment he answers: using things, the task line, the three chores, the phone buzzing.
+
+---
+
+## Day 3: 13 November 2026. The first gameplay, and the first tape
+
+Eshan read the story. Asked "Is this the story the game gets built around?", he answered "Yes, build it". The build started straight away, and by the end of the day the game can be played from the title screen to the first tape marked.
+
+**What happened**
+
+- **Using things.** Look at something within about a metre and a half and a prompt appears low on the screen, "E  Pick up the rubbish". E or a click does it. A wall in the way hides the prompt. The Controls page lists the keys.
+- **The task line.** One small line at the top left says what to do now. When it is done it is ticked and struck out, and the next one takes its place. A quieter hint appears under it if the player seems lost: first the walking keys, later where things are.
+- **The three chores** (STORY.md, Part 1). Pick up the rubbish bag by the kitchen bin and carry it down the corridor; the front door opens onto a landing that is pitch black, the bag goes out, the door shuts. "Lock up": the bolt slides across. "Make chai": the ring under the pan ticks, catches, and burns. "Wait for it to boil", and before it can, the phone buzzes in the study, loud enough to hear from the kitchen. The chai line is never ticked off, and the ring is never put out. Each has its own sounds, made in code.
+- **The phone** (Part 2, beat 6). It comes up into his hand: "Unknown number", two messages already there, each stamped 3:07. The replies are sent with E, the other side types, and three files arrive. The phone is a real object in the hand with the messages painted on its screen, so it gets the same VHS look as everything else.
+- **The PC.** "Sit down at the PC". The view glides into the chair and settles on the monitor, which now shows an editing program with the first clip loaded. Looking away opens the view out again, so the room can still be looked round from the chair (the last clip will need that). Q stands up.
+- **The first tape** (beats 7 and 8). The footage is not a video: it is the flat itself, drawn from where Hamza's camera stood, as it was on the date in the corner. A year on, it is emptied and lit only by the camera's infra-red lamp, so it is black and white and dark at the far end. Played forward, the moment the rubbish bag slides out of the kitchen and down to the front door is lost in static. Each scrub back takes the tape one step further into the past: the date in the corner goes back, his doormat and shoe rack return, then his pictures and the rest of the flat, and the static thins. At NOV 16 2026 the corridor is in colour under the flickering bulb, and the bag can be seen moving with nobody touching it. Mark that frame, and a message comes in across the top of the screen: "That's it. That's exactly it. Keep going."
+- **A play test** next to the walking test: `tools/play-test.js` plays everything above by the test hooks and makes 57 checks.
+
+Partway through the day Eshan switched the session from Claude Fable 5.2 to Claude Opus 5.5, so the later commits name a different model.
+
+**Choices Claude made that Eshan has not seen yet**
+
+- The dates the first tape steps back through (AUG 02 2027, APR 19 2027, JAN 07 2027, then NOV 16 2026) are Claude's. STORY.md only says the date gets earlier.
+- The tape's look is Claude's: black and white under the camera's lamp, colour coming back as it goes back in time. Black plastic shows up pale on the night picture, so the bag can be seen at the far end.
+- Once the static has been seen, the timeline shows where the tape is damaged, in red. It is a help, and could go.
+- The task line "Your phone is buzzing in the study" was "Your phone." in the first draft of the story. The longer one tells a new player where to go. STORY.md was changed to match.
+- The dot in the middle of the screen was not asked for. It lights up over something that can be used. One rule in `src/hud.css` removes it.
+
+**Checked**
+
+- The play test passes: chores, phone, sitting down, the first clip from the static to the mark, standing up and sitting again, pausing, back to the title, and a second game from the start that begins clean. The walking test passes, before and after the chores (the bag moves, and the barrier round the bin moves with it).
+- Pause in the middle of every chore and of the tape: nothing moves. Back to title, then Start: everything is where it began.
+- Real key presses in the browser panel: E for the chores; Space, Esc, Enter and Q at the PC.
+- The words at Eshan's window size (2400 x 1300): the task line is 30 pixels tall, the keys along the bottom 27, and the whole editing program fits in the view.
+- Sound levels by measurement: every new sound is clearly above the room tone and far from distorting. The loudest is the phone buzzing next to you.
+- `npm run build` works. No errors in the console.
+
+**What went wrong**
+
+- **The usage limit cut the session off again**, in the middle of checking the chores. They had been committed one by one, so nothing was lost.
+- **Hours went on pictures that lied.** Screenshots of the hidden browser panel kept showing the game wrong: the bag too big, things out of place. Measured from inside the page, the game was right. The panel sometimes captures only part of the page, and stale frames. Pictures are now taken a particular way, and numbers from the page win any argument with a picture.
+- **The first tape could not show what it is about.** The bag at the front door was invisible on the night picture: a black bag at the dark end of a corridor. Fixed by making the camera's lamp reach further and the bag show up pale under it.
+- **The monitor's stand poked through the bottom of its own screen.** It had been there since the study was furnished. Nobody saw it until the screen had something on it.
+- **Smaller ones, all fixed:** the carried bag filled too much of the view; through the open front door the landing showed as dark blue instead of black; the lit ring washed the kitchen tiles blue; on a squarer window the editing program was cut off at the sides, and the task line sat on top of its title bar.
+- **Cut, as planned:** the figure at the far end of the first tape. It is the first thing on the story's cut list. The figure is due tomorrow anyway, for the last tape.
+- **Not checked:** how any of it sounds (Claude cannot hear); real mouse capture (the panel cannot do it); the frame rate (the panel's timings are nonsense: half a millisecond one moment, 38 the next); how it looks in Chrome on his own screen.
+
+**Eshan's notes**
+
+- On the story, asked "Is this the story the game gets built around?": "Yes, build it".
+- On yesterday's menu, as passed on by the session that built it: asked "Does the menu work in your Chrome, sound included?", he answered "It works".
+- On today: "Please continue the work and also extend the gameplay as well and dont stop until a big milestone or story chapter change."
+- On the gameplay itself: not yet. He has not played it at the time of writing.
+
+**Next**
+
+Eshan plays it in Chrome: the chores, the phone, the first tape. What he says goes in the next commit. Then the rest of Part 2, as STORY.md plans it for the 14th: clips 2, 3 and 4, the figure, and the hammering on the door. Still his to decide: the two names, the title, how the two of them text, and the setting.

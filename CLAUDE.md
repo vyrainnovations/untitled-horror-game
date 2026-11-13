@@ -19,7 +19,7 @@ Original story, lo-fi PS1/VHS look (low-poly models, small textures, low render 
 
 The five lines below are his first outline. The story keeps all five in this order. Where the two differ (the order of the chores, the pool), `STORY.md` is the newer one and wins.
 
-1. **The apartment.** The player is a freelance video editor living alone in a flat that is too big for one person: a study with the PC, his bedroom, a spare bedroom, a kitchen with the dining table in it, a bathroom, a store room, and a 12 m corridor joining them. One location only. (Eshan enlarged it on 10 November from the original four small rooms.) The spare bedroom is the room of a flatmate who moved out: this is Claude's suggestion and Eshan has not confirmed it yet.
+1. **The apartment.** The player is a freelance video editor living alone in a flat that is too big for one person: a study with the PC, his bedroom, a spare bedroom, a kitchen with the dining table in it, a bathroom, a store room, and a 12 m corridor joining them. One location only. (Eshan enlarged it on 10 November from the original four small rooms.) The spare bedroom was Hamza's, the friend who moved out (`STORY.md`, which Eshan approved).
 2. **Chores.** Three short everyday tasks (ideas: take out the trash, make chai, lock the door). They teach the controls and make the place feel safe.
 3. **The phone.** An anonymous client messages with an editing job that pays too well, and sends files.
 4. **The edit.** The player sits at the PC and scrubs through the footage on a timeline. The footage is liminal (empty corridors, a pool at night) and gets more wrong each time the player scrubs back. Something in it slowly notices it is being watched.
@@ -45,7 +45,17 @@ Out of scope for now: voice acting, multiple endings, a second location, multipl
 - `src/settings.js`: the settings and their limits, saved in the browser. `src/main.js` says what each one does (`apply`).
 - `src/audio.js`: every sound, made by code.
 - `src/attract.js`: the camera shots behind the title screen.
+- `src/hud.js`, `src/hud.css`: the words on the screen while playing (task line, hint, prompt, keys row, message banner). Nothing in it knows the story.
+- `src/interact.js`: looking at something within reach and using it (E or click).
+- `src/chores.js`: Part 1, the three chores. Wording, order and timings at the top.
+- `src/job.js`: Part 2 in order (phone, sitting down, the clips). The place where clip 2 will start is marked THE NEXT PART OF THE GAME STARTS HERE.
+- `src/phone.js`: the phone in the hand; the messages are in `TONIGHT` at the top.
+- `src/seat.js`: sitting at the desk, and the view settling on the monitor.
+- `src/editor.js`: the editing program on the monitor: play, scrub, mark.
+- `src/footage.js`: how a tape is drawn: the flat from the tape camera, as it was on the date in the corner.
+- `src/clips.js`: what is on each tape: camera, dates, the moment, what moves. Only clip 1 so far.
 - `tools/walk-test.js`: the walking test (see Things to know).
+- `tools/play-test.js`: the play test (see Things to know).
 - `src/plan.js`: the floor plan (drawn in text at the top) and shared measurements.
 - `src/apartment.js`: floors, walls, doors, windows and all the lights. Calls the room files.
 - `src/rooms/`: furniture and clutter, one file per room (`study`, `bedrooms`, `kitchen`, `bathroom`, `store`, `corridor`). Each file also places the invisible barriers for its furniture.
@@ -77,7 +87,7 @@ The repo is a showcase of a game made with AI, told as a story with the mistakes
 
 ## Status
 
-As of the evening of 12 November 2026: the whole flat is built, furnished, textured, lit and shadowed, and can be walked end to end. The game opens on a title screen and has a pause menu, settings that are remembered, and sound. The story is written (`STORY.md`) and waiting for Eshan to approve it. No chores, phone, PC interaction or footage yet: the player can only walk and look. Four days remain (counting the 16th) and no gameplay exists: that is the risk. The game also has no name: the menu says "Untitled", with "working title" under it. `STORY.md` offers three.
+As of the evening of 13 November 2026: the flat, the menu, the settings and the sound are done, and the game plays from the title to the first tape marked. Part 1 (the three chores) is complete. Part 2 has its first beats: the phone conversation, sitting at the PC, the editing program, and clip 1 (the corridor) working from start to finish. Still to build: clips 2, 3 and 4, the figure, the hammering on the door, and all of Part 3 (the thread, the gas, the door, the last shot). Three days remain, counting the 16th. Eshan has not played any of the gameplay yet. The game has no name: the menu says "Untitled", with "working title" under it. `STORY.md` offers three.
 
 Look decisions Eshan has made (do not undo without asking):
 
@@ -93,7 +103,11 @@ Things to know:
 - The browser panel inside the Claude app cannot capture the mouse, so the game falls back to hold-and-drag to look there. It also renders on the weak built-in graphics chip and slows right down when hidden, so do not trust frame rates measured in it.
 - Browsers have rules about the mouse that the menu works around. A page can only take the mouse straight after a click or a key press. The Esc key never counts, so Esc cannot resume the game (the pause screen says to press Enter or click Resume). And for about a second after Esc the browser refuses outright, so `play()` in `src/main.js` waits and asks once more.
 - Real mouse capture and full screen cannot be tested in the Claude app's browser panel. Eshan has to confirm those in Chrome.
-- Dev-only test hooks on `window.__game`: `mode()` says which state the game is in, `play()`, `pause()` and `toTitle()` change it, `testMode()` skips the menu and silences the feet so the player can be walked by hand with `player.update(dt, input)`, `bright(true)` floods the flat with light, `view(x, y, z, yaw, pitch)` looks from anywhere (from above it hides the ceiling), `frame(ms)` draws one frame for timing, `settings.set(name, value)` changes a setting, `audio.level()` measures how loud the output is.
+- Dev-only test hooks on `window.__game`: `mode()` says which state the game is in, `play()`, `pause()` and `toTitle()` change it, `testMode()` skips the menu and silences the feet so the player can be walked by hand with `player.update(dt, input)`, `bright(true)` floods the flat with light, `view(x, y, z, yaw, pitch)` looks from anywhere (from above it hides the ceiling), `frame(ms)` draws one frame for timing, `settings.set(name, value)` changes a setting, `audio.level()` measures how loud the output is. For the gameplay: `hold(true)` stops the game's own clock, `tick(seconds)` moves it on by hand and `draw()` draws without moving it on; `hud.says()` is what the screen says; `chores.state()` and `job.state()` say where the story has got to, and `job.parts` reaches the phone, the seat, the editor and the footage.
+- The play test is `tools/play-test.js`: `(await import('/tools/play-test.js')).run()`. It plays the game so far by the hooks and checks every step (57 checks). Run it after changing anything in the gameplay. Its helpers (`toEditor()`, `stand()`, `key()`, `tick()`) are handy for getting to one moment and looking at it.
+- Things the game moves are named with `b.tag(name, object)` and found in `apartment.things`. Each room's furniture is one group in `apartment.rooms`, so a tape can hide it; the corridor's things are in two sets (`hallByDoor`, `hallWalls`). `apartment.walls` is every wall as a box, for telling whether a wall is in the way.
+- A tape is drawn by changing the flat (hiding furniture, turning lights down) for one picture and putting it all back at once (`film()` in `src/footage.js`). It never lets that picture redraw the shadows. Things that move on a tape are copies that only the tape sees, so the real ones stay where the player left them.
+- Pictures of the browser panel lie while it is hidden: they can show only the top-left two thirds of the page, or a stale frame, and the static from a cut only fades as frames are drawn in real time. Before a picture: scale the page by `1 / devicePixelRatio`, draw a few frames a tenth of a second apart, and switch off the HUD's fades. To see a tape full size, `view(2.5, 1.078, 0.6, 0, 0)` puts the eye in front of the monitor.
 - Collision rule used so far: never leave a gap between two solid things that is narrower than the player (0.5 m). Close it with `b.block(...)`.
 - The walking test is `tools/walk-test.js`. With the game running in dev, type `(await import('/tools/walk-test.js')).run()` in the browser's console. It walks to every room, lets random walkers loose and checks the footstep floors. Run it after anything that moves a wall, a door or a piece of furniture, and reload the page afterwards.
 - Screenshots of the browser panel are often one frame stale. Draw a frame by hand (`__game.frame(performance.now())`), wait a second, then look, and trust what the page reports over what the picture shows.
@@ -101,6 +115,6 @@ Things to know:
 - The mirrors are fakes (dark glossy panels).
 - The game is played in Chrome in a big window (roughly 2400 x 1300). Check the look at that size.
 
-**Next step:** Eshan reads `STORY.md` and says yes, no, or what to change, and gives it two names and a title. Then gameplay starts at once, in the order `STORY.md` gives under "What this needs built": using things (look at it, press E), the task line, the three chores (rubbish, bolt, chai) and the phone buzzing. Nothing else goes in front of that. Still owed from before: his note on the menu and the sound, which he has to try in Chrome.
+**Next step:** Eshan plays the chores, the phone and the first tape in Chrome, and says what he thinks; his words go in the next commit. Then the rest of Part 2, as `STORY.md` plans it for 14 November: clip 2 (the front door, then the tape jumps to 3:07 and the door is hammered on), the real hammering and the peephole, clip 3 (the kitchen, the flame dying at 01:10, then the hiss), clip 4 (the study, live, the figure coming nearer, and Saad asleep at the desk). Still owed by Eshan: the two names, the title, how the two of them text, and the setting.
 
-Things the story will need from the flat that are not there yet, so nobody is surprised: each room's furniture has to be hideable as one group (the footage shows the flat emptied), the front door has to open, its bolt has to slide, a ring on the hob has to light, and there has to be a figure that can stand in a few places. All of these move or appear, so all of them touch the rule about shadows being drawn once.
+Things the rest of the story needs that are not there yet, so nobody is surprised: the kitchen's things split into what was built in (the hob, the counters) and what he owned, as the corridor's are, so clip 3 can show an emptied kitchen with its hob; the front door's wood split round the lock on the tapes from 2027; a figure (Hamza) that can sit and stand in a few places, and Saad asleep at the desk; a peephole. All of these appear or move, so all of them touch the rule about shadows being drawn once.

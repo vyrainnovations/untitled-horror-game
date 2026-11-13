@@ -2,7 +2,7 @@
 
 A short first-person lo-fi horror game that runs in the browser. You play a freelance video editor who takes a job from an anonymous client, and the footage is not what it seems.
 
-**Status:** in development. The game opens on a title screen and you can walk around the whole flat: seven furnished rooms and a long corridor, textured, lit and shadowed, with a view out of the windows and the VHS look on. It has a pause menu, settings that are remembered, and sound. The story is written and waiting for the director's yes. No gameplay yet, and no name. Target: shipped by 16 November 2026.
+**Status:** in development. The game opens on a title screen, in a flat of seven furnished rooms and a long corridor, textured, lit and shadowed, with the VHS look on, a pause menu, settings that are remembered, and sound. The first part of the story plays from start to finish: three chores, the phone, sitting down at the PC, and the first of the tapes, scrubbed back and marked. The rest of the tapes and the ending are next. No name yet. Target: shipped by 16 November 2026.
 
 Every texture is painted by code and every sound is made by code. The game holds no image or sound files.
 
@@ -26,12 +26,16 @@ npm install
 npm run dev
 ```
 
-Then open http://localhost:5173 and choose Start. Mouse to look, WASD to walk, Shift to walk faster, Esc to pause. Mouse speed, volume, brightness and the rest are under Settings.
+Then open http://localhost:5173 and choose Start. Mouse to look, WASD to walk, Shift to walk faster, E or a click to use what you are looking at, Esc to pause. At the PC: Space plays and pauses a clip, A and D scrub back and forward, E marks a frame, Q stands up. Mouse speed, volume, brightness and the rest are under Settings.
 
-To check that nothing can be walked through or got stuck in, open the browser's console while the game is running and type:
+Two tests run in the browser's console while the game is running. The first checks that nothing can be walked through or got stuck in; the second plays the game so far, step by step, and checks each step:
 
 ```js
 (await import('/tools/walk-test.js')).run()
+```
+
+```js
+(await import('/tools/play-test.js')).run()
 ```
 
 ## Layout
@@ -47,7 +51,14 @@ To check that nothing can be walked through or got stuck in, open the browser's 
 | `src/menu.js`, `src/menu.css` | The title screen and the pause screen |
 | `src/settings.js` | The settings, and remembering them |
 | `src/audio.js` | Every sound, made by code |
+| `src/hud.js`, `src/hud.css`, `src/interact.js` | The words on the screen while playing, and using things |
+| `src/chores.js` | Part 1: the three chores |
+| `src/job.js` | Part 2, in order: the phone, the PC, the tapes |
+| `src/phone.js` | The phone and the messages on it |
+| `src/seat.js` | Sitting at the desk |
+| `src/editor.js`, `src/footage.js`, `src/clips.js` | The editing program, how the tapes are drawn, and what is on each tape |
 | `tools/walk-test.js` | The test that walks every room and tries to get stuck |
+| `tools/play-test.js` | The test that plays the game so far |
 | `public/models/`, `public/textures/`, `public/audio/` | Game assets |
 | `blender/` | Source Blender files for the models |
 | `DEVLOG.md` | The build diary |
