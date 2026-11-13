@@ -1,0 +1,154 @@
+/* What is on the screen while you play: one small line saying what to do
+   now, a prompt when you look at something you can use, and a dot in the
+   middle of the screen to aim with.
+
+   It borrows the menu's colours and fonts (the variables at the top of
+   menu.css), so the two look like one thing. It is built by src/hud.js. */
+
+.hud {
+  position: fixed;
+  inset: 0;
+  pointer-events: none; /* clicks go straight through to the game */
+  color: var(--phosphor);
+  font-family: var(--signage);
+  font-stretch: 87.5%;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+  /* The same smear to the right as the menu's words, and a dark edge so the
+     words can still be read over a lit wall. */
+  text-shadow: 1.5px 0 0 rgba(232, 148, 58, 0.32), 0 0 0.5em rgba(var(--tape-black), 0.95);
+}
+.hud[hidden] {
+  display: none;
+}
+
+/* --- The task line: top left, small, in line with the menu's column --- */
+.hud__task {
+  position: absolute;
+  left: clamp(28px, 6.5vw, 150px);
+  top: 7vh;
+  font-size: clamp(15px, 2.3vh, 30px);
+  line-height: 1.2;
+}
+.hud__line {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  opacity: 0;
+  transition: opacity 380ms ease;
+}
+.hud__line.is-in {
+  opacity: 0.92;
+}
+/* The little square in front of the words. It fills in when the job is done. */
+.hud__box {
+  box-sizing: border-box;
+  flex: none;
+  width: 0.58em;
+  height: 0.58em;
+  margin-right: 0.62em;
+  border: 0.09em solid var(--dim);
+  transition: background-color 180ms ease, border-color 180ms ease;
+}
+.hud__words {
+  position: relative;
+  transition: color 300ms ease;
+}
+/* The line that strikes the words out, drawn from left to right. */
+.hud__words::after {
+  content: "";
+  position: absolute;
+  left: -0.12em;
+  right: -0.12em;
+  top: 54%;
+  height: 0.085em;
+  background: var(--lamp);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 320ms ease-out;
+}
+.hud__line.is-done .hud__box {
+  background: var(--lamp);
+  border-color: var(--lamp);
+}
+.hud__line.is-done .hud__words {
+  color: var(--dim);
+}
+.hud__line.is-done .hud__words::after {
+  transform: scaleX(1);
+}
+/* A line that is not a job (a note from the game): no square. */
+.hud__line.is-plain .hud__box {
+  display: none;
+}
+.hud__line.is-plain {
+  color: var(--dim);
+}
+
+/* A quieter line under it, for a player who looks lost. */
+.hud__hint {
+  margin: 0.55em 0 0 1.2em;
+  font-size: 0.74em;
+  color: var(--dim);
+  opacity: 0;
+  transition: opacity 600ms ease;
+}
+.hud__hint.is-in {
+  opacity: 0.95;
+}
+
+/* --- The dot to aim with. It lights up over something you can use. --- */
+.hud__dot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: clamp(3px, 0.42vh, 6px);
+  height: clamp(3px, 0.42vh, 6px);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: var(--phosphor);
+  opacity: 0.3;
+  transition: opacity 120ms ease, background-color 120ms ease;
+}
+.hud__dot.is-on {
+  background: var(--lamp);
+  opacity: 0.95;
+}
+
+/* --- The prompt: low on the screen, in the middle --- */
+.hud__prompt {
+  position: absolute;
+  left: 50%;
+  bottom: 16vh;
+  display: flex;
+  align-items: center;
+  margin: 0;
+  transform: translateX(-50%);
+  font-size: clamp(16px, 2.6vh, 34px);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.hud__prompt.is-in {
+  opacity: 1;
+}
+/* The key to press, drawn as a key. */
+.hud__key {
+  margin-right: 0.8em;
+  padding: 0.16em 0.5em 0.1em;
+  border: 0.08em solid currentColor;
+  font-family: var(--counter);
+  font-size: 0.78em;
+  color: var(--lamp);
+}
+
+/* For people who have asked their computer for less movement. */
+@media (prefers-reduced-motion: reduce) {
+  .hud__line,
+  .hud__hint,
+  .hud__prompt,
+  .hud__dot,
+  .hud__words::after {
+    transition: none;
+  }
+}

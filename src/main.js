@@ -14,6 +14,8 @@ import { createSettings } from './settings.js';
 import { createAudio } from './audio.js';
 import { createMenu } from './menu.js';
 import { createAttract } from './attract.js';
+import { createHud } from './hud.js';
+import { createInteract } from './interact.js';
 import { floorAt } from './plan.js';
 
 // The VHS filter never draws more lines than this, to stay fast on 4K screens.
@@ -43,6 +45,8 @@ const player = createPlayer(camera, renderer.domElement, apartment.colliders, ap
 const vhs = createVhs(renderer);
 const audio = createAudio();
 const attract = createAttract(camera, () => vhs.cut());
+const hud = createHud(); // the words on the screen while playing
+const interact = createInteract({ camera, walls: apartment.walls, hud }); // looking at a thing and using it
 
 // --- The three states ------------------------------------------------------
 let mode = 'title';
@@ -84,6 +88,7 @@ async function play() {
   vhs.setPaused(false);
   audio.setScene('playing');
   menu.hide();
+  hud.show(true);
 }
 
 function pause() {
@@ -92,6 +97,7 @@ function pause() {
   vhs.setPaused(true);
   audio.setScene('paused');
   audio.click('back');
+  hud.show(false);
   menu.show('pause');
 }
 
@@ -102,6 +108,7 @@ function toTitle() {
   vhs.setPaused(false);
   vhs.cut();
   audio.setScene('title');
+  hud.show(false);
   menu.show('title');
 }
 
@@ -122,6 +129,30 @@ window.addEventListener('blur', () => {
 for (const first of ['pointerdown', 'keydown']) window.addEventListener(first, () => audio.start(), { once: true, capture: true });
 
 player.setStepListener((x, z, fast) => audio.step(floorAt(x, z), fast));
+
+// --- Using things -----------------------------------------------------------
+// E, or the left mouse button, uses whatever the player is looking at. Only
+// while playing: while the menu is up, neither does anything.
+window.addEventListener('keydown', (e) => {
+  if (e.code === 'KeyE' && !e.repeat && mode === 'playing') interact.use();
+});
+// Where the game has the mouse, a press of the button is a click. In windows
+// that cannot capture the mouse, holding the button is how you look around,
+// so there a click only counts if the mouse was let go again at once,
+// without having moved.
+let press = null;
+document.addEventListener('mousedown', (e) => {
+  if (e.button !== 0 || mode !== 'playing') return;
+  if (document.pointerLockElement) interact.use();
+  else press = { x: e.clientX, y: e.clientY, at: e.timeStamp };
+});
+document.addEventListener('mouseup', (e) => {
+  if (e.button !== 0 || !press) return;
+  const quick = e.timeStamp - press.at < 350;
+  const still = Math.hypot(e.clientX - press.x, e.clientY - press.y) < 6;
+  press = null;
+  if (quick && still && mode === 'playing') interact.use();
+});
 
 // --- Settings: what each one does -------------------------------------------
 function resize() {
@@ -168,6 +199,8 @@ let last = 0;
 function tick(dt) {
   if (mode === 'playing') {
     player.update(dt);
+    interact.update();
+    hud.update(dt);
     playTime += dt;
     worldTime += dt;
   } else if (mode === 'title') {
@@ -214,6 +247,8 @@ if (import.meta.env.DEV) {
     settings,
     audio,
     menu,
+    hud,
+    interact,
     frame,
     tick, // move the game on by so many seconds without waiting: __game.tick(0.05)
     play,

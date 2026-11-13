@@ -171,6 +171,7 @@ export function createMenu({ settings, audio, onPlay, onTitle }) {
       control('W A S D', 'Walk'),
       control('Mouse', 'Look around'),
       control('Shift', 'Walk faster'),
+      control('E / Click', 'Use what you are looking at'),
       control('Esc', 'Pause, and get your mouse back'),
       back(),
     ],
