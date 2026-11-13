@@ -15,9 +15,9 @@ Original story, lo-fi PS1/VHS look (low-poly models, small textures, low render 
 
 **The full story is in `STORY.md`. Read it before building anything.** Eshan's rule, 12 November: "We need everything to happen for a meaning ... reason behind every action we make the player do ... and the sudden feeling of everything clicking at the very end of the game. Build everything around it. I want you to first decide the full story before making the game." He also said the storyline must be kept intact: do not change it, or add anything it does not need, without him saying so.
 
-`STORY.md` was written by Claude on 12 November and **Eshan has not approved it yet**. Until he does, build nothing that depends on it. When he does, change this paragraph and the status line at the top of `STORY.md`, and write down what he decided: the names, the title, how the characters text, and the setting.
+`STORY.md` was written by Claude on 12 November and **approved by Eshan on 13 November** ("Yes, build it"). It is fixed. Still his to decide, and listed at the bottom of that file: the two names, the title, how the characters text, and the setting. The working versions stand until he does.
 
-The five lines below are his first outline. The story keeps all five in this order. Where the two differ (the order of the chores, the pool), `STORY.md` is the newer one, once approved.
+The five lines below are his first outline. The story keeps all five in this order. Where the two differ (the order of the chores, the pool), `STORY.md` is the newer one and wins.
 
 1. **The apartment.** The player is a freelance video editor living alone in a flat that is too big for one person: a study with the PC, his bedroom, a spare bedroom, a kitchen with the dining table in it, a bathroom, a store room, and a 12 m corridor joining them. One location only. (Eshan enlarged it on 10 November from the original four small rooms.) The spare bedroom is the room of a flatmate who moved out: this is Claude's suggestion and Eshan has not confirmed it yet.
 2. **Chores.** Three short everyday tasks (ideas: take out the trash, make chai, lock the door). They teach the controls and make the place feel safe.

@@ -4,7 +4,9 @@
 
 It was written on 12 November 2026, before any gameplay was built, because Eshan stopped the build and asked for it: "We need everything to happen for a meaning, flashbacks, backstory, reason behind every action we make the player do ... and the sudden feeling of everything clicking at the very end of the game. Build everything around it."
 
-**Status: proposed by Claude. Eshan has not approved it yet.** Once he does, it is fixed. Nothing in the game may contradict it, and nothing goes into the game that it does not need. The names, the title and the wording of the messages are placeholders until he says otherwise.
+**Status: approved by Eshan on 13 November 2026.** Asked "Is this the story the game gets built around?", he answered "Yes, build it". So it is fixed. Nothing in the game may contradict it, and nothing goes into the game that it does not need. Changing it takes his say-so.
+
+He has not yet decided the five things listed at the bottom: the names, the title, how the two of them text, and the setting. The working versions in this file stand until he does. The wording of the task lines and the messages can still be polished, as long as what they mean stays the same.
 
 His five beats are all still here, in his order: the flat, the chores, the phone, the edit, the payoff.
 
@@ -70,7 +72,7 @@ The flat feels safe. That is the job of this part, and the trap.
 2. **The rubbish.** Pick up the full bag by the kitchen bin, carry it down the corridor, put it out. The front door opens a crack. The landing outside is pitch black. The door shuts.
 3. **The bolt.** "Lock up." Slide the bolt on the front door.
 4. **The chai.** "Make chai." Light the ring under the pan. "Wait for it to boil."
-5. **The phone.** A few seconds later his phone buzzes in the study, loud enough to hear from the kitchen. "Your phone." The player walks away from a lit ring. The game does not mention it again until the end.
+5. **The phone.** A few seconds later his phone buzzes in the study, loud enough to hear from the kitchen. "Your phone is buzzing in the study." The chai line is the only one in the game that never gets ticked off. The player walks away from a lit ring. The game does not mention it again until the end.
 
 ### Part 2. The job (about 8 minutes)
 
@@ -232,6 +234,8 @@ The flat, the menu and the sound are done. Everything below is new.
 **Still out:** voices, faces, people who move, a second ending, anything outside the flat.
 
 ## What only Eshan can decide
+
+The first is answered: yes, on 13 November. The other four are still open.
 
 1. **Is this the story?** In particular the ending: he has been dead for a year, and the stranger in the footage is his friend. "He was dead all along" has been done in films. What is ours is how you find out: you did the haunting yourself in the first three minutes, and the game showed it back to you as somebody else's footage.
 2. **The names.** Saad and Hamza are placeholders.
