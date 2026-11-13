@@ -38,6 +38,8 @@ export function createAudio() {
   let ringLit = false; // is the gas ring burning
   const ears = [0, 0]; // where the listener stands on the plan
   const hums = {};
+  const tapeLoops = {}; // the tape in the editing program: its motor, the rewind whirr, static
+  const tapeWants = { motor: 0, rewind: 0, snow: 0 };
 
   // A stretch of hiss. Brown noise is the deep, soft kind (wind, distant
   // traffic); white is the bright kind (a fan, a footstep).
@@ -143,6 +145,10 @@ export function createAudio() {
     hums.pc = loopNoise(white, 'bandpass', 900, 0.6, 0); // the PC's fans
     hums.ring = loopNoise(white, 'bandpass', 2300, 0.9, 0); // gas burning: a thin hiss
     street = loopNoise(brown, 'bandpass', 140, 0.5, 0); // the street, through the glass
+    tapeLoops.motor = drone([[60, 'sine', 1], [120, 'sine', 0.35]]); // the tape turning
+    tapeLoops.rewind = loopNoise(white, 'bandpass', 1900, 3, 0); // the whirr of scrubbing back
+    tapeLoops.snow = loopNoise(white, 'highpass', 2600, 0.7, 0); // the hiss of static
+    setTape(tapeWants);
   }
 
   // Call every frame with where the listener is, and how brightly the
@@ -167,6 +173,19 @@ export function createAudio() {
   function setScene(name) {
     scene = name;
     if (ctx) world.gain.setTargetAtTime(SCENES[name], ctx.currentTime, 0.08);
+    if (name !== 'playing') setTape({ motor: 0, rewind: 0, snow: 0 }); // a paused game stops the tape too
+  }
+
+  // The tape in the editing program. motor: 1 while it plays. rewind: 1
+  // while scrubbing back, less scrubbing forward. snow: how much static is
+  // on the screen. Each from 0 to 1.
+  function setTape({ motor = 0, rewind = 0, snow = 0 }) {
+    Object.assign(tapeWants, { motor, rewind, snow });
+    if (!ctx || !tapeLoops.motor) return;
+    const now = ctx.currentTime;
+    tapeLoops.motor.gain.setTargetAtTime(0.025 * motor, now, 0.05);
+    tapeLoops.rewind.gain.setTargetAtTime(0.06 * rewind, now, 0.04);
+    tapeLoops.snow.gain.setTargetAtTime(0.075 * snow, now, 0.03);
   }
 
   function setVolume(value) {
@@ -292,6 +311,60 @@ export function createAudio() {
     if (ctx && ACTS[kind]) ACTS[kind]();
   }
 
+  // The phone in his hand: message('in'), 'out' (one sent), 'files', and
+  // 'pocket' (a message arriving while it is in his pocket).
+  const MESSAGES = {
+    in() {
+      buzzTone(world, 158, 0.16, 0.07);
+      slide(world, 1320, 1290, 0.1, 0.05, 'sine', 0.02);
+      slide(world, 1760, 1730, 0.14, 0.045, 'sine', 0.13);
+    },
+    out() {
+      burst(world, 2300, 0.09, 0.05, 'bandpass');
+      slide(world, 700, 1500, 0.08, 0.03, 'sine', 0.01);
+    },
+    files() {
+      buzzTone(world, 158, 0.16, 0.07);
+      for (const [at, pitch] of [[0.02, 1180], [0.14, 1320], [0.26, 1580]]) slide(world, pitch, pitch - 20, 0.1, 0.045, 'sine', at);
+    },
+    pocket() {
+      for (const at of [0, 0.42]) buzzTone(world, 150, 0.28, 0.12, at);
+    },
+  };
+  function message(kind) {
+    if (ctx && MESSAGES[kind]) MESSAGES[kind]();
+  }
+
+  // The tape's buttons and what it does: tape('load'), 'play', 'stop',
+  // 'jump' (back a step in time), 'mark' and 'no' (nothing to mark there).
+  const TAPE = {
+    load() {
+      burst(world, 900, 0.05, 0.12);
+      slide(world, 140, 70, 0.09, 0.12, 'sine', 0.04);
+    },
+    play() {
+      burst(world, 700, 0.04, 0.1);
+      slide(world, 110, 80, 0.06, 0.1);
+    },
+    stop() {
+      burst(world, 600, 0.04, 0.09);
+    },
+    jump() {
+      burst(world, 3200, 0.32, 0.08, 'highpass');
+      slide(world, 320, 55, 0.38, 0.07, 'sawtooth');
+    },
+    mark() {
+      slide(world, 1000, 1000, 0.13, 0.05, 'square');
+      burst(world, 800, 0.05, 0.12);
+    },
+    no() {
+      slide(world, 230, 190, 0.13, 0.07, 'triangle');
+    },
+  };
+  function tape(kind) {
+    if (ctx && TAPE[kind]) TAPE[kind]();
+  }
+
   // The gas ring on the hob, lit or out. Lit, it hisses when you stand near.
   function setRing(on) {
     ringLit = on;
@@ -342,5 +415,5 @@ export function createAudio() {
     return { running: ctx.state === 'running', peak, average: Math.sqrt(sum / samples.length) };
   }
 
-  return { start, update, setScene, setVolume, step, act, setRing, buzz, click, level };
+  return { start, update, setScene, setVolume, step, act, setRing, buzz, message, tape, setTape, click, level };
 }

@@ -142,12 +142,67 @@
   color: var(--lamp);
 }
 
+/* --- A row of keys along the very bottom, at the PC --- */
+.hud__keys {
+  position: absolute;
+  left: 50%;
+  bottom: 5vh;
+  display: flex;
+  gap: 1.9em;
+  margin: 0;
+  transform: translateX(-50%);
+  font-size: clamp(14px, 2.1vh, 28px);
+  color: var(--dim);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+.hud__keys.is-in {
+  opacity: 0.95;
+}
+.hud__pair {
+  display: flex;
+  align-items: center;
+}
+.hud__pair .hud__key {
+  margin-right: 0.55em;
+}
+
+/* --- A message arriving while the phone is in his pocket: across the top --- */
+.hud__banner {
+  position: absolute;
+  top: 3vh;
+  left: 50%;
+  max-width: 62vw;
+  margin: 0;
+  padding: 0.5em 1.1em 0.6em;
+  transform: translateX(-50%);
+  border-left: 0.16em solid var(--lamp);
+  background: rgba(var(--tape-black), 0.8);
+  font-size: clamp(15px, 2.4vh, 32px);
+  opacity: 0;
+  transition: opacity 500ms ease;
+}
+.hud__banner.is-in {
+  opacity: 1;
+}
+.hud__from {
+  display: block;
+  margin-bottom: 0.25em;
+  font-size: 0.66em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
 /* For people who have asked their computer for less movement. */
 @media (prefers-reduced-motion: reduce) {
   .hud__line,
   .hud__hint,
   .hud__prompt,
   .hud__dot,
+  .hud__keys,
+  .hud__banner,
   .hud__words::after {
     transition: none;
   }

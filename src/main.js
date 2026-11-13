@@ -17,6 +17,7 @@ import { createAttract } from './attract.js';
 import { createHud } from './hud.js';
 import { createInteract } from './interact.js';
 import { createChores } from './chores.js';
+import { createJob } from './job.js';
 import { floorAt } from './plan.js';
 
 // The VHS filter never draws more lines than this, to stay fast on 4K screens.
@@ -60,16 +61,20 @@ const chores = createChores({
   redrawShadows: () => { renderer.shadowMap.needsUpdate = true; },
   onDone: afterTheChores,
 });
+// The second part of the game: the phone, the PC and the tapes.
+const job = createJob({ renderer, scene, camera, apartment, player, settings, interact, hud, audio, onDone: afterTheFirstClip });
 
-// --- THE NEXT PART OF THE GAME STARTS HERE --------------------------------------
 // The chores are done: the rubbish is out, the door is bolted, a ring is
 // burning under the chai, and the player has just picked up the buzzing
-// phone in the study. This function is called at that moment, once.
-//
-// What comes next is STORY.md, Part 2, beat 6, "The unknown number": the
-// phone fills the screen and the messages begin. It is not built yet. When
-// it is, open it from here, in place of the line below.
+// phone in the study. Part 2 begins (src/job.js).
 function afterTheChores() {
+  job.start();
+}
+
+// The first clip is marked and answered. That is as far as the game is
+// built. The place where the next part starts is marked "THE NEXT PART OF
+// THE GAME STARTS HERE" in src/job.js.
+function afterTheFirstClip() {
   hud.task('That is as far as the game goes for now.', { plain: true });
 }
 
@@ -131,6 +136,7 @@ function pause() {
 function toTitle() {
   mode = 'title';
   playTime = 0;
+  job.reset();
   chores.reset(); // the title screen shows the flat as it is before anything has been done
   attract.restart();
   vhs.setPaused(false);
@@ -160,18 +166,25 @@ player.setStepListener((x, z, fast) => audio.step(floorAt(x, z), fast));
 
 // --- Using things -----------------------------------------------------------
 // E, or the left mouse button, uses whatever the player is looking at. Only
-// while playing: while the menu is up, neither does anything.
+// while playing: while the menu is up, neither does anything. While the
+// phone is up, or the player is sat at the PC, the keys go to those instead.
 window.addEventListener('keydown', (e) => {
-  if (e.code === 'KeyE' && !e.repeat && mode === 'playing') interact.use();
+  if (mode !== 'playing' || e.repeat) return;
+  if (job.keyDown(e.code)) e.preventDefault();
+  else if (e.code === 'KeyE') interact.use();
 });
+window.addEventListener('keyup', (e) => job.keyUp(e.code));
 // Where the game has the mouse, a press of the button is a click. In windows
 // that cannot capture the mouse, holding the button is how you look around,
 // so there a click only counts if the mouse was let go again at once,
 // without having moved.
 let press = null;
+const clickUse = () => {
+  if (!job.click()) interact.use();
+};
 document.addEventListener('mousedown', (e) => {
   if (e.button !== 0 || mode !== 'playing') return;
-  if (document.pointerLockElement) interact.use();
+  if (document.pointerLockElement) clickUse();
   else press = { x: e.clientX, y: e.clientY, at: e.timeStamp };
 });
 document.addEventListener('mouseup', (e) => {
@@ -179,7 +192,7 @@ document.addEventListener('mouseup', (e) => {
   const quick = e.timeStamp - press.at < 350;
   const still = Math.hypot(e.clientX - press.x, e.clientY - press.y) < 6;
   press = null;
-  if (quick && still && mode === 'playing') interact.use();
+  if (quick && still && mode === 'playing') clickUse();
 });
 
 // --- Settings: what each one does -------------------------------------------
@@ -224,11 +237,16 @@ let last = 0;
 
 // Move the game on by dt seconds. Everything that happens over time goes
 // through here, so that pausing stops all of it at once.
+const STILL = { forward: 0, right: 0, fast: false }; // looking about, but not walking
 function tick(dt) {
   if (mode === 'playing') {
-    player.update(dt);
+    // Who has the controls: walking, the phone, or the desk (src/job.js).
+    const hands = job.hands();
+    if (hands === 'walk') player.update(dt);
+    else if (hands === 'phone') player.update(dt, STILL);
     chores.update(dt);
-    interact.update();
+    job.update(dt);
+    if (hands === 'walk') interact.update();
     hud.update(dt);
     playTime += dt;
     worldTime += dt;
@@ -248,6 +266,7 @@ function draw(now) {
   }
   audio.update(camera.position.x, camera.position.z, apartment.lights.bulb.intensity / BULB_FULL);
   menu.setClock(playTime);
+  job.film(); // the tape on the monitor, drawn before the picture it is part of
   vhs.render(scene, camera, now);
 }
 
@@ -286,6 +305,7 @@ if (import.meta.env.DEV) {
     hud,
     interact,
     chores,
+    job,
     frame,
     tick, // move the game on by so many seconds without waiting: __game.tick(0.05)
     draw: () => draw(performance.now() / 1000),

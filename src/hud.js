@@ -23,8 +23,12 @@ export function createHud() {
       <p class="hud__hint"></p>
     </div>
     <span class="hud__dot"></span>
-    <p class="hud__prompt"><span class="hud__key">E</span><span class="hud__does"></span></p>`;
+    <p class="hud__prompt"><span class="hud__key">E</span><span class="hud__does"></span></p>
+    <p class="hud__keys"></p>
+    <p class="hud__banner"><span class="hud__from"></span><span class="hud__says"></span></p>`;
   document.body.appendChild(root);
+  const keysEl = root.querySelector('.hud__keys');
+  const bannerEl = root.querySelector('.hud__banner');
   const taskEl = root.querySelector('.hud__task');
   const hintEl = root.querySelector('.hud__hint');
   const dotEl = root.querySelector('.hud__dot');
@@ -48,6 +52,10 @@ export function createHud() {
   }
 
   function update(dt) {
+    if (bannerLeft > 0) {
+      bannerLeft -= dt;
+      if (bannerLeft <= 0) bannerEl.classList.remove('is-in');
+    }
     if (wait > 0) {
       wait -= dt;
       if (wait > 0) return;
@@ -115,6 +123,36 @@ export function createHud() {
     dotEl.classList.toggle('is-on', !!text);
   }
 
+  // A row of keys along the bottom, for when there is more than one thing
+  // to press: keys([['Space', 'Play'], ['A  D', 'Scrub']]). keys(null) hides it.
+  let keyed = '';
+  function keys(list) {
+    const said = JSON.stringify(list);
+    if (said === keyed) return;
+    keyed = said;
+    keysEl.replaceChildren();
+    for (const [key, does] of list || []) {
+      const item = document.createElement('span');
+      item.className = 'hud__pair';
+      const cap = document.createElement('span');
+      cap.className = 'hud__key';
+      cap.textContent = key;
+      item.append(cap, does);
+      keysEl.append(item);
+    }
+    keysEl.classList.toggle('is-in', !!list);
+  }
+
+  // A message arriving while the phone is in his pocket: a line across the
+  // top of the screen for a few seconds (STORY.md, "Between clips").
+  let bannerLeft = 0;
+  function banner(from, text, seconds = 7) {
+    bannerEl.querySelector('.hud__from').textContent = from;
+    bannerEl.querySelector('.hud__says').textContent = text;
+    bannerEl.classList.add('is-in');
+    bannerLeft = seconds;
+  }
+
   // Wipe everything at once: used when the game goes back to the start.
   function clear() {
     queue.length = 0;
@@ -125,12 +163,17 @@ export function createHud() {
     lineEl.textContent = '';
     hint(null);
     prompt(null);
+    keys(null);
+    bannerLeft = 0;
+    bannerEl.classList.remove('is-in');
   }
 
   return {
     task,
     hint,
     prompt,
+    keys,
+    banner,
     update,
     clear,
     show: (on) => { root.hidden = !on; },
@@ -141,6 +184,8 @@ export function createHud() {
       ticked: lineEl.classList.contains('is-done'),
       hint: hintEl.classList.contains('is-in') ? hintEl.textContent : null,
       prompt: prompted,
+      keys: keysEl.classList.contains('is-in') ? keysEl.textContent : null,
+      banner: bannerEl.classList.contains('is-in') ? bannerEl.textContent : null,
       waiting: queue.length,
       top: taskEl.getBoundingClientRect().top,
     }),

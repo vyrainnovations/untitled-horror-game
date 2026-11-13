@@ -43,7 +43,7 @@ export function dressStudy(b, M, f, F) {
   f.led(2.12, 0.032, 0.17, M.ledRed, 0.012);
   // The monitor. The picture on it is painted in textures.js.
   b.box(2.4, 2.6, 0.75, 0.765, 0.2, 0.36, M.blackPlastic);
-  b.box(2.48, 2.52, 0.765, 0.95, 0.24, 0.27, M.blackPlastic);
+  b.box(2.48, 2.52, 0.765, 0.95, 0.19, 0.22, M.blackPlastic); // the neck, behind the screen
   b.box(2.18, 2.82, 0.86, 1.24, 0.225, 0.255, M.blackPlastic);
   b.panel(2.5, 1.05, 0.257, 0.6, 0.34, '+z', M.screen);
   f.led(2.79, 0.873, 0.257, M.ledBlue, 0.01);
