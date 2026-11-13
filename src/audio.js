@@ -6,7 +6,8 @@
 // The sounds: a faint room tone; hums that grow as you walk towards what is
 // making them (the fridge, the corridor bulb, the PC, the kitchen strip light,
 // the street beyond the west windows); footsteps that change with the floor;
-// and the clunks and ticks of the menu.
+// the sounds of the player's hands (a bag, a door, a bolt); and the clunks
+// and ticks of the menu.
 
 // Where each hum comes from, how far it carries (metres) and how loud it is
 // when you stand right next to it.
@@ -167,12 +168,15 @@ export function createAudio() {
   }
 
   // A short burst of hiss through a filter: the body of a footstep or a clunk.
-  function burst(bus, cutoff, seconds, level) {
-    const now = ctx.currentTime;
+  // kind is which part of the hiss is kept: 'lowpass' keeps the dull part
+  // below the cutoff (a thud), 'highpass' the bright part above it (a rustle),
+  // 'bandpass' a narrow part round it (a scrape). delay is seconds from now.
+  function burst(bus, cutoff, seconds, level, kind = 'lowpass', delay = 0) {
+    const now = ctx.currentTime + delay;
     const source = ctx.createBufferSource();
     source.buffer = stepNoise;
     const filter = ctx.createBiquadFilter();
-    filter.type = 'lowpass';
+    filter.type = kind;
     filter.frequency.value = cutoff;
     const gain = ctx.createGain();
     gain.gain.setValueAtTime(0.0001, now);
@@ -185,9 +189,10 @@ export function createAudio() {
     source.stop(now + seconds + 0.03);
   }
 
-  // A tone that slides from one pitch to another and dies away.
-  function slide(bus, from, to, seconds, level, shape = 'sine') {
-    const now = ctx.currentTime;
+  // A tone that slides from one pitch to another and dies away. delay is
+  // seconds from now.
+  function slide(bus, from, to, seconds, level, shape = 'sine', delay = 0) {
+    const now = ctx.currentTime + delay;
     const osc = ctx.createOscillator();
     osc.type = shape;
     osc.frequency.setValueAtTime(from, now);
@@ -206,6 +211,38 @@ export function createAudio() {
     if (!ctx) return;
     burst(world, FLOORS[floor] * (0.85 + Math.random() * 0.3), 0.11, fast ? 0.34 : 0.24);
     slide(world, 95, 48, 0.08, fast ? 0.24 : 0.17); // the heel
+  }
+
+  // The sounds of the player's hands: act('bag'), act('doorShut') and so on.
+  // Each is put together from the same two pieces as a footstep: bursts of
+  // hiss, and tones that slide.
+  const ACTS = {
+    // A full bin bag picked up: plastic rustling.
+    bag() {
+      burst(world, 3200, 0.09, 0.11, 'highpass');
+      burst(world, 2600, 0.12, 0.09, 'highpass', 0.08);
+      burst(world, 380, 0.07, 0.1);
+    },
+    // The front door opening: the latch, then the hinges.
+    doorOpen() {
+      slide(world, 1900, 1300, 0.025, 0.07, 'square');
+      burst(world, 700, 0.05, 0.12);
+      slide(world, 230, 170, 0.42, 0.03, 'sawtooth', 0.06);
+    },
+    // The bag set down on the landing.
+    bagDown() {
+      burst(world, 320, 0.13, 0.2);
+      burst(world, 2800, 0.1, 0.07, 'highpass', 0.03);
+    },
+    // A heavy door pulled shut.
+    doorShut() {
+      burst(world, 420, 0.15, 0.34);
+      slide(world, 85, 45, 0.17, 0.3);
+      slide(world, 1700, 1100, 0.03, 0.06, 'square', 0.03);
+    },
+  };
+  function act(kind) {
+    if (ctx && ACTS[kind]) ACTS[kind]();
   }
 
   // The menu's sounds: 'move' (onto another option), 'tick' (dragging a
@@ -241,5 +278,5 @@ export function createAudio() {
     return { running: ctx.state === 'running', peak, average: Math.sqrt(sum / samples.length) };
   }
 
-  return { start, update, setScene, setVolume, step, click, level };
+  return { start, update, setScene, setVolume, step, act, click, level };
 }

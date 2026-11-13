@@ -110,6 +110,9 @@ export function buildApartment(scene) {
     }));
   }));
   b.block(4.5, 5.4, 11.94, 12.06);
+  // The landing outside it. Its light is out: all that shows through the
+  // open door is black, blacker than anything inside the flat.
+  b.tag('landing', b.box(2.9, 7.0, -1, 4, 12.9, 13.0, M.void));
 
   // --- Windows ----------------------------------------------------------------
   windowAt(0, 0.9, 2.5, 0.95, 2.15, 1); // study

@@ -97,7 +97,10 @@ export function createHud() {
   }
 
   // The quieter line under the task. hint(null) takes it away.
+  let hinted = null;
   function hint(text) {
+    if (text === hinted) return;
+    hinted = text;
     if (text) hintEl.textContent = text;
     hintEl.classList.toggle('is-in', !!text);
   }

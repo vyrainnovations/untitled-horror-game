@@ -13,7 +13,6 @@ const WIDEST = 0.7; // and never further off to the side than this (about 35 deg
 export function createInteract({ camera, walls, hud }) {
   const things = [];
   let current = null; // what the player is looking at now, if it can be used
-  let frozen = false;
 
   // Add something that can be used:
   //   at      where it is, [x, y, z], or a function that says where
@@ -54,34 +53,32 @@ export function createInteract({ camera, walls, hud }) {
   function update() {
     current = null;
     let label = null;
-    if (!frozen) {
-      const eye = [camera.position.x, camera.position.y, camera.position.z];
-      const pitch = camera.rotation.x;
-      const yaw = camera.rotation.y;
-      // The way the player is looking.
-      const fx = -Math.sin(yaw) * Math.cos(pitch);
-      const fy = Math.sin(pitch);
-      const fz = -Math.cos(yaw) * Math.cos(pitch);
-      let best = 1;
-      for (const thing of things) {
-        const words = typeof thing.prompt === 'function' ? thing.prompt() : thing.prompt;
-        if (!words) continue;
-        const at = typeof thing.at === 'function' ? thing.at() : thing.at;
-        const dx = at[0] - eye[0];
-        const dy = at[1] - eye[1];
-        const dz = at[2] - eye[2];
-        if (Math.hypot(dx, dz) > (thing.reach ?? REACH)) continue; // standing too far away
-        const ahead = dx * fx + dy * fy + dz * fz; // how far in front of the eye it is
-        if (ahead <= 0) continue;
-        // How far the line of sight passes from it.
-        const off = Math.sqrt(Math.max(0, dx * dx + dy * dy + dz * dz - ahead * ahead));
-        const score = off / (thing.look ?? LOOK);
-        if (score >= best || off > ahead * WIDEST) continue; // not looking at it, or something else is nearer the middle
-        if (behindWall(eye, at)) continue;
-        best = score;
-        current = thing;
-        label = words;
-      }
+    const eye = [camera.position.x, camera.position.y, camera.position.z];
+    const pitch = camera.rotation.x;
+    const yaw = camera.rotation.y;
+    // The way the player is looking.
+    const fx = -Math.sin(yaw) * Math.cos(pitch);
+    const fy = Math.sin(pitch);
+    const fz = -Math.cos(yaw) * Math.cos(pitch);
+    let best = 1;
+    for (const thing of things) {
+      const words = typeof thing.prompt === 'function' ? thing.prompt() : thing.prompt;
+      if (!words) continue;
+      const at = typeof thing.at === 'function' ? thing.at() : thing.at;
+      const dx = at[0] - eye[0];
+      const dy = at[1] - eye[1];
+      const dz = at[2] - eye[2];
+      if (Math.hypot(dx, dz) > (thing.reach ?? REACH)) continue; // standing too far away
+      const ahead = dx * fx + dy * fy + dz * fz; // how far in front of the eye it is
+      if (ahead <= 0) continue;
+      // How far the line of sight passes from it.
+      const off = Math.sqrt(Math.max(0, dx * dx + dy * dy + dz * dz - ahead * ahead));
+      const score = off / (thing.look ?? LOOK);
+      if (score >= best || off > ahead * WIDEST) continue; // not looking at it, or something else is nearer the middle
+      if (behindWall(eye, at)) continue;
+      best = score;
+      current = thing;
+      label = words;
     }
     hud.prompt(label);
   }
@@ -96,12 +93,5 @@ export function createInteract({ camera, walls, hud }) {
     return true;
   }
 
-  return {
-    add,
-    update,
-    use,
-    // While something is in the middle of happening (a door swinging), nothing can be used.
-    freeze: (on) => { frozen = on; },
-    looking: () => current,
-  };
+  return { add, update, use, looking: () => current };
 }

@@ -158,5 +158,6 @@ export function createMaterials() {
     facade: lit(0xffffff, T.facade),
     lane: lit(0xffffff, T.lane),
     silhouette: lit(0x050608),
+    void: lit(0x000000), // true black: the unlit landing outside the front door
   };
 }

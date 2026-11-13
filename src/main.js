@@ -16,6 +16,7 @@ import { createMenu } from './menu.js';
 import { createAttract } from './attract.js';
 import { createHud } from './hud.js';
 import { createInteract } from './interact.js';
+import { createChores } from './chores.js';
 import { floorAt } from './plan.js';
 
 // The VHS filter never draws more lines than this, to stay fast on 4K screens.
@@ -47,6 +48,25 @@ const audio = createAudio();
 const attract = createAttract(camera, () => vhs.cut());
 const hud = createHud(); // the words on the screen while playing
 const interact = createInteract({ camera, walls: apartment.walls, hud }); // looking at a thing and using it
+// The chores that open the game. Shadows are drawn once, so when a chore
+// takes something away it asks for them to be drawn again.
+const chores = createChores({
+  apartment,
+  camera,
+  player,
+  interact,
+  hud,
+  audio,
+  redrawShadows: () => { renderer.shadowMap.needsUpdate = true; },
+  onDone: afterTheChores,
+});
+
+// --- THE NEXT PART OF THE GAME STARTS HERE --------------------------------------
+// The chores are done. Whatever comes next in STORY.md begins in this
+// function. For now it only says that the game stops here.
+function afterTheChores() {
+  hud.task('That is as far as the game goes for now.', { plain: true });
+}
 
 // --- The three states ------------------------------------------------------
 let mode = 'title';
@@ -80,7 +100,9 @@ async function play() {
     return;
   }
   if (mode === 'title') {
+    // A new game: the player and everything in the flat go back to the start.
     player.reset(apartment.start);
+    chores.start();
     playTime = 0;
     vhs.cut();
   }
@@ -104,6 +126,7 @@ function pause() {
 function toTitle() {
   mode = 'title';
   playTime = 0;
+  chores.reset(); // the title screen shows the flat as it is before anything has been done
   attract.restart();
   vhs.setPaused(false);
   vhs.cut();
@@ -199,6 +222,7 @@ let last = 0;
 function tick(dt) {
   if (mode === 'playing') {
     player.update(dt);
+    chores.update(dt);
     interact.update();
     hud.update(dt);
     playTime += dt;
@@ -211,20 +235,23 @@ function tick(dt) {
   if (mode !== 'paused') apartment.update(worldTime, dt);
 }
 
-function frame(ms) {
-  const now = ms / 1000;
-  const dt = Math.min(0.05, Math.max(0, now - last)); // never jump far after a hitch
-  last = now;
-
-  tick(dt);
+// Draw the game as it stands, without moving it on.
+function draw(now) {
   if (debugView) {
     camera.position.set(debugView[0], debugView[1], debugView[2]);
     camera.rotation.set(debugView[4], debugView[3], 0);
   }
-
   audio.update(camera.position.x, camera.position.z, apartment.lights.bulb.intensity / BULB_FULL);
   menu.setClock(playTime);
   vhs.render(scene, camera, now);
+}
+
+function frame(ms) {
+  const now = ms / 1000;
+  const dt = Math.min(0.05, Math.max(0, now - last)); // never jump far after a hitch
+  last = now;
+  tick(dt);
+  draw(now);
 }
 renderer.setAnimationLoop(frame);
 
@@ -235,6 +262,10 @@ renderer.setAnimationLoop(frame);
 //                         with the ceiling hidden. __game.view() goes back.
 //   __game.frame(ms)      draws one frame by hand, for timing tests.
 //   __game.mode()         'title', 'playing' or 'paused'.
+//   __game.hold(true)     stops the game's own clock, so that a test can move
+//                         time on by hand with __game.tick(seconds) and look at
+//                         one exact moment with __game.draw(). hold(false)
+//                         lets it run again.
 if (import.meta.env.DEV) {
   const flood = new THREE.AmbientLight(0xffffff, 2.2);
   const fog = scene.fog;
@@ -249,8 +280,11 @@ if (import.meta.env.DEV) {
     menu,
     hud,
     interact,
+    chores,
     frame,
     tick, // move the game on by so many seconds without waiting: __game.tick(0.05)
+    draw: () => draw(performance.now() / 1000),
+    hold: (on) => renderer.setAnimationLoop(on ? null : frame),
     play,
     pause,
     toTitle,
