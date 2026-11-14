@@ -133,6 +133,9 @@ async function play() {
     chores.start();
     playTime = 0;
     vhs.cut();
+    audio.music(null, { fade: 2.5 }); // the title's theme fades: the first part of the game has no music
+    audio.setTension(0, 0.5);
+    audio.setPower(true);
   }
   mode = 'playing';
   vhs.setPaused(false);
@@ -161,6 +164,9 @@ function toTitle() {
   vhs.setPaused(false);
   vhs.cut();
   audio.setScene('title');
+  audio.setTension(0, 1);
+  audio.setPower(true);
+  audio.music('theme', { fade: 3 });
   hud.show(false);
   menu.show('title');
 }
@@ -179,7 +185,12 @@ window.addEventListener('blur', () => {
 // Sound is not allowed until the first click or key press anywhere. Start it
 // on that, before anything else hears the click, so the very first menu
 // sound is not lost.
-for (const first of ['pointerdown', 'keydown']) window.addEventListener(first, () => audio.start(), { once: true, capture: true });
+for (const first of ['pointerdown', 'keydown']) {
+  window.addEventListener(first, () => {
+    audio.start();
+    if (mode === 'title') audio.music('theme', { fade: 4 }); // the title screen has its theme
+  }, { once: true, capture: true });
+}
 
 player.setStepListener((x, z, fast) => audio.step(floorAt(x, z), fast));
 
