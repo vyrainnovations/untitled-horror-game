@@ -327,3 +327,32 @@ Asked "How does it feel when you play it?", he chose "Build clip 2 next". He has
 **Next**
 
 Clip 3, the kitchen (beat 11): the ring that lights by itself, the chai boiling over, the flame dying at 01:10, and from then on a hiss in the real kitchen. It needs the kitchen's things split from what is built in, the way the corridor's are. Then clip 4 and the figure, then Part 3.
+
+### Later the same day: clip 3, the kitchen
+
+Asked "Build clip 3, the kitchen, next?", Eshan chose "Build clip 3 next".
+
+**What happened**
+
+- **Clip 3** (STORY.md, beat 11). The camera looks down at the hob from across the kitchen. A year on (OCT 30 2027, the night of Hamza's message "A ring on the hob was lit tonight") the kitchen is emptied to what was built into the flat, and in the moment a ring lights by itself on the bare hob. Scrubbed back, his things come back, and on the night itself the pan of chai is on the ring, its foam rising. In the moment it boils over, runs down the pan into a puddle on the hob, and the flame gutters and goes out: 01:10:01 in the corner. Marked, three messages come in one after another: "1:10." "Two hours." "There is one more. I did not want to send it."
+- **The real kitchen changes too.** At that mark, the chai the player left on the ring in Part 1 boils over in the real kitchen: the flame is out, the puddle is there, the knob is still turned on, and near the hob the gas hisses. Nothing announces it. It is there for the player to find, and Part 3 ("Turn off the gas") will need all of it.
+- **The kitchen is split** the way the corridor is: what was built in (cabinets, worktop, hob, sink) is on every tape, his things come and go, and the pan of chai is a set of its own because the night itself is the only date it stands on the hob.
+- **The gas knob** for that ring now has a white mark and turns when the player lights the ring.
+- **One table for the flat's history.** What of his is in the flat on each date is now a single table that every tape reads, so the tapes cannot contradict each other.
+- The play test now covers clip 3, the boil-over and the three messages: 122 checks.
+
+**Checked**
+
+- The play test and the walking test pass; `npm run build` works.
+- By eye, for the first time today. The browser panel still would not draw on screen, so the pictures were read straight out of the game's own canvas and saved through a small helper on this computer. They show the emptied kitchen a year on with the ring lighting by itself, the night in colour with the foam rising over a blue flame, the boil-over, the flame out with the puddle round the pan, and the real kitchen afterwards matching the tape.
+- The hiss, measured: standing at the hob it lifts the level by about a third; at the dining table it is barely there; from the corridor and the study, nothing. Faint, and only in the kitchen, as the story asks.
+
+**What went wrong**
+
+- **A light that leaked onto the tapes.** The glow of the lit gas ring was being switched on in the tapes' version of the night at 00:40, twenty minutes before the chai went on. It would have shown as a faint blue on the hob through the kitchen archway in clip 1. Found while building the kitchen tape; the ring's glow now follows its flame on every tape.
+- **The first hiss was too quiet to hear** over the fridge (it lifted the level at the hob by a fifteenth). It is twice as loud now, and still only near the hob.
+- **Still not checked:** how any of it sounds, and the look in Chrome on Eshan's screen.
+
+**Next**
+
+Clip 4, the study (beats 12 to 14): a fourth file arrives, the tape is live, a figure sits in the spare room and comes nearer at every scrub back, and at the very end of it Saad is asleep at the desk. It needs the figure, built from simple shapes. Then Part 3: the thread, the gas, the door, the last shot.

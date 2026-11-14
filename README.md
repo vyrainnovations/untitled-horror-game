@@ -2,7 +2,7 @@
 
 A short first-person lo-fi horror game that runs in the browser. You play a freelance video editor who takes a job from an anonymous client, and the footage is not what it seems.
 
-**Status:** in development. The game opens on a title screen, in a flat of seven furnished rooms and a long corridor, textured, lit and shadowed, with the VHS look on, a pause menu, settings that are remembered, and sound. The first part of the story plays from start to finish, and the second is under way: the phone, sitting down at the PC, the first two tapes scrubbed back and marked, and what the second one sets off at the front door. The last two tapes and the ending are next. No name yet. Target: shipped by 16 November 2026.
+**Status:** in development. The game opens on a title screen, in a flat of seven furnished rooms and a long corridor, textured, lit and shadowed, with the VHS look on, a pause menu, settings that are remembered, and sound. The first part of the story plays from start to finish, and the second is under way: the phone, sitting down at the PC, three of the four tapes scrubbed back and marked, what the second one sets off at the front door, and what the third leaves in the kitchen. The last tape and the ending are next. No name yet. Target: shipped by 16 November 2026.
 
 Every texture is painted by code and every sound is made by code. The game holds no image or sound files.
 
