@@ -128,6 +128,10 @@ export function createFootage({ renderer, scene, apartment }) {
     hallWalls: things.hallWalls,
     rooms: otherRooms,
   };
+  // And what only the tapes show, because it happened after that night.
+  const AFTER = {
+    splitWood: [things.splitWood], // the door frame, forced
+  };
   // The flat's own lights: off in the emptied flat. The street lamp outside,
   // and the neighbours' lights, still shine in.
   const OWN_LIGHTS = [lights.bulb, lights.strip, lights.screen, lights.screenFill, lights.ring];
@@ -152,15 +156,21 @@ export function createFootage({ renderer, scene, apartment }) {
   };
   const material = new THREE.ShaderMaterial({ uniforms, vertexShader, fragmentShader, fog: false });
 
-  // Where the moving things are at a moment of the tape.
+  // Where the moving things are at a moment of the tape. set() is film()'s
+  // way of changing something so that it is put back afterwards.
   const smooth = (k) => k * k * (3 - 2 * k);
-  function stage(clip, t) {
+  function stage(clip, t, set) {
     for (const move of clip.moves) {
+      const u = Math.max(0, Math.min(1, (t - clip.moment.from) / (clip.moment.to - clip.moment.from)));
+      // Pushed by nobody: it starts, catches, and goes on again.
+      const k = u < 0.45 ? smooth(u / 0.45) * 0.42 : 0.42 + smooth((u - 0.45) / 0.55) * 0.58;
+      if (move.thing === 'bolt') {
+        // The real bolt on the real door, slid to where it is on the tape.
+        set(things.bolt.position, 'x', move.from + (move.to - move.from) * k);
+        continue;
+      }
       const thing = props[move.thing];
       thing.visible = true;
-      const u = Math.max(0, Math.min(1, (t - clip.moment.from) / (clip.moment.to - clip.moment.from)));
-      // Dragged, not carried: it starts, catches, and goes on again.
-      const k = u < 0.45 ? smooth(u / 0.45) * 0.42 : 0.42 + smooth((u - 0.45) / 0.55) * 0.58;
       const a = (1 - k) * (1 - k);
       const b = 2 * (1 - k) * k;
       const c = k * k;
@@ -174,9 +184,10 @@ export function createFootage({ renderer, scene, apartment }) {
   }
 
   // Draw one frame of a tape: clip at t seconds, the past at step `depth`.
+  // shake (0 to 1): the front door shaking in its frame, as it is hammered on.
   // Everything changed for it is put back straight afterwards.
   const unlit = new THREE.Color();
-  function film(clip, t, depth) {
+  function film(clip, t, depth, shake = 0) {
     const look = clip.past[depth];
     const shows = new Set(look.shows);
     const undo = [];
@@ -186,7 +197,14 @@ export function createFootage({ renderer, scene, apartment }) {
     };
 
     for (const [name, groups] of Object.entries(SETS)) for (const g of groups) set(g, 'visible', shows.has(name));
+    for (const [name, groups] of Object.entries(AFTER)) for (const g of groups) set(g, 'visible', shows.has(name));
     set(things.ringFlame, 'visible', false); // nobody has lit a ring on these tapes, yet
+    if (shake > 0) {
+      // Bolted, it can only rattle in its frame.
+      const door = things.frontDoor;
+      set(door.rotation, 'y', door.rotation.y - shake * 0.012 * (0.5 + Math.random()));
+      set(door.position, 'z', door.position.z - shake * 0.006);
+    }
     for (const light of OWN_LIGHTS) set(light, 'intensity', light.intensity * look.lights);
     set(lights.sky, 'intensity', lights.sky.intensity * (0.25 + 0.75 * look.lights));
     if (!shows.has('bulb')) {
@@ -204,7 +222,7 @@ export function createFootage({ renderer, scene, apartment }) {
       camera.fov = clip.camera.fov;
       camera.updateProjectionMatrix();
     }
-    stage(clip, t);
+    stage(clip, t, set);
     wearNight(look.colour < 0.5);
 
     // Shadows are drawn once, for the flat as it is now. Never let a tape

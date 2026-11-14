@@ -15,6 +15,8 @@
 //   toEditor()   plays up to sitting at the PC with the first clip loaded
 //   key(code)    presses and lets go of a key, e.g. key('Space')
 
+import { CLIPS } from '/src/clips.js';
+
 const STEP = 0.05; // seconds of game time per tick
 
 const g = () => window.__game;
@@ -104,39 +106,88 @@ export async function toEditor() {
   return problems.length === 0;
 }
 
-// Part 2, beats 7 and 8: the first clip.
-export function doClipOne() {
+// Part 2, beats 7 to 9: a clip, from the static to the mark.
+export function doClip(index) {
   const ed = () => g().job.parts.editor.state();
+  const clip = CLIPS[index];
+  const { from, to } = clip.moment;
+  const name = `clip ${index + 1}`;
+  expect(`${name} is loaded`, ed().clip, index);
+  expect(`${name} starts at the beginning, a year on`, [ed().t, ed().depth].join(), '0,0');
   key('Space');
-  tick(12.4); // to the middle of the moment
-  expect('static while playing over the moment', ed().static, (s) => s > 0.9);
+  tick((from + to) / 2); // to the middle of the moment
+  expect(`${name}: static while playing over the moment`, ed().static, (s) => s > 0.9);
   key('KeyE');
-  expect('cannot mark through the static', ed().marked, null);
-  tick(12);
-  expect('the tape played to the end', ed().t, 24);
-  expect('the timeline shows the damage', ed().damageSeen, true);
+  expect(`${name}: cannot mark through the static`, ed().marked, null);
+  tick(clip.length);
+  expect(`${name}: the tape played to the end`, ed().t, clip.length);
+  expect(`${name}: the timeline shows the damage`, ed().damageSeen, true);
   // Each scrub back from after the moment takes the tape a step further into the past.
-  for (let pass = 1; pass <= 3; pass++) {
+  for (let pass = 1; pass < clip.past.length; pass++) {
     key('KeyA', 1.6);
-    expect(`one step further back on scrub ${pass}`, ed().depth, pass);
+    expect(`${name}: one step further back on scrub ${pass}`, ed().depth, pass);
     tick(0.2);
-    if (pass < 3) key('KeyD', 2.5); // forward again
+    if (pass < clip.past.length - 1) key('KeyD', 2.5); // forward again
   }
   key('KeyA', 0.5);
-  expect('no further back than the night itself', ed().depth, 3);
+  expect(`${name}: no further back than the night itself`, ed().depth, clip.past.length - 1);
   // Now at the night itself. Come back into the moment from after it, and stop in it.
-  key('KeyD', 3);
+  key('KeyD', clip.length);
   const t0 = ed().t;
   window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyA', bubbles: true }));
-  for (let i = 0; i < 400 && ed().t > 13.2; i++) tick(STEP);
+  for (let i = 0; i < 600 && ed().t > to - 0.6 * (to - from); i++) tick(STEP);
   window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyA', bubbles: true }));
-  expect('stopped inside the moment', ed().t, (t) => t > 11.6 && t < 14.2);
-  expect('the static has gone, this far back', ed().static, (s) => s < 0.3);
-  expect('the moment was reached from after it', t0, (t) => t > 14.2);
+  expect(`${name}: stopped inside the moment`, ed().t, (t) => t > from && t < to);
+  expect(`${name}: the static has gone, this far back`, ed().static, (s) => s < 0.3);
+  expect(`${name}: the moment was reached from after it`, t0, (t) => t > to);
   key('KeyE');
-  expect('the frame is marked', ed().marked, (m) => m !== null);
+  expect(`${name}: the frame is marked`, ed().marked, (m) => m !== null);
+}
+
+// What follows the mark on clip 1: the answer, and clip 2.
+export function doAnswerOne() {
   tick(2.5);
-  expect('the answer comes in', g().hud.says().banner, (b) => !!b && b.includes("That's it. That's exactly it. Keep going."));
+  expect('clip 1 is answered', g().hud.says().banner, (b) => !!b && b.includes(CLIPS[0].reply));
+  tick(2.5);
+  expect('then clip 2 is loaded', g().job.parts.editor.state().clip, 1);
+  expect('task for clip 2', g().hud.says().task, 'Find the frame where it goes wrong');
+}
+
+// What follows the mark on clip 2: the tape jumps on to 3:07 and its door
+// is hammered on; then the real front door (beat 10).
+export function doDoor() {
+  const ed = () => g().job.parts.editor.state();
+  const door = () => g().job.parts.door.state();
+  tick(1.2);
+  expect('the tape jumps on by itself', ed().jumpedOn, (s) => s > 0);
+  expect('and plays', ed().playing, true);
+  tick(CLIPS[1].jumpsOn.seconds);
+  expect('then the tape runs out', ed().ended, true);
+  tick(1.5);
+  expect('the real door is hammered on', door().stage, 'hammering');
+  expect('task while it is hammered on', g().hud.says().task, 'Someone is at the front door');
+  tick(5.5);
+  expect('a hint to get up', g().hud.says().hint, 'Press Q to stand up.');
+  expect('still hammering while he sits', door().stage, 'hammering');
+  key('KeyQ');
+  tick(1.2);
+  expect('stood up', g().job.hands(), 'walk');
+  stand(4.95, 9.0, 4.95, 1.5, 11.9);
+  expect('still hammering from the far end of the corridor', door().stage, 'hammering');
+  stand(4.95, 9.6, 4.95, 1.5, 11.9);
+  expect('it stops when he gets near', door().stage, 'stopped');
+  expect('the door is still again', door().shake, 0);
+  tick(0.5);
+  expect('no prompt from out of reach', g().hud.says().prompt, null);
+  expect('prompt at the peephole', stand(4.95, 10.9, 4.95, 1.52, 11.936), 'Look through the peephole');
+  key('KeyE');
+  tick(0.1);
+  expect('an eye to the peephole', g().job.hands(), 'door');
+  tick(3);
+  expect('back from the peephole', g().job.hands(), 'walk');
+  expect('the view is normal again', g().camera.fov, g().settings.get('fieldOfView'));
+  tick(2.2);
+  expect('then the answer comes', g().hud.says().banner, (b) => !!b && b.includes(CLIPS[1].reply));
   tick(3);
   expect('the end of what is built', g().hud.says().task, 'That is as far as the game goes for now.');
 }
@@ -163,7 +214,8 @@ export async function run() {
   checks = 0;
   const started = performance.now();
   await toEditor();
-  doClipOne();
+  doClip(0);
+  doAnswerOne();
   // Standing up and sitting down again.
   key('KeyQ');
   tick(1.2);
@@ -173,6 +225,13 @@ export async function run() {
   key('KeyE');
   tick(1.2);
   expect('sat down again', g().job.parts.seat.state().seated, true);
+  expect('sat down again, the task is still the clip', g().hud.says().task, 'Find the frame where it goes wrong');
+  doClip(1);
+  doDoor();
+  // Sit down again, to have something to pause.
+  stand(2.5, 1.9, 2.5, 1.05, 0.26);
+  key('KeyE');
+  tick(1.2);
   await doPauseAndRestart();
   // And once more from the start, to show a second game starts clean.
   await toEditor();

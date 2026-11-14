@@ -108,8 +108,27 @@ export function buildApartment(scene) {
       b.rod([-0.77, 1.8725, -0.039], [-0.5, 1.8725, -0.039], 0.011, M.steel, { cast: false, sides: 6 });
       b.rod([-0.615, 1.8725, -0.039], [-0.615, 1.8725, -0.09], 0.009, M.steel, moves); // the knob you push it by
     }));
+    // The peephole, at eye height.
+    b.rod([-0.4, 1.52, -0.02], [-0.4, 1.52, -0.034], 0.012, M.steel, { ...moves, sides: 8 });
+    b.panel(-0.4, 1.52, -0.0345, 0.013, 0.013, '-z', M.void);
   }));
   b.block(4.5, 5.4, 11.94, 12.06);
+
+  // The wood of the door frame split round the bolt and the lock: forced,
+  // the night Saad died. It is never there in the flat the player walks
+  // through, which is that night before 3:07. Only the tapes, filmed after
+  // it, show it (src/clips.js, "shows").
+  const split = b.group(0, 0, 0, 0, () => {
+    const raw = { cast: false };
+    for (const y of [1.87, 1.07]) {
+      b.box(4.5, 4.552, y - 0.09, y + 0.1, 11.906, 11.921, M.woodLight, raw); // torn face, pale raw wood
+      b.rod([4.53, y - 0.12, 11.912], [4.546, y + 0.07, 11.888], 0.005, M.woodLight, raw); // splinters standing out
+      b.rod([4.515, y - 0.05, 11.912], [4.508, y + 0.13, 11.893], 0.004, M.woodLight, raw);
+      b.box(4.546, 4.553, y - 0.14, y + 0.16, 11.9, 11.922, M.darkMetal, raw); // the crack along the edge
+    }
+  });
+  split.visible = false;
+  b.tag('splitWood', split);
   // The landing outside it. Its light is out: all that shows through the
   // open door is black, blacker than anything inside the flat.
   b.tag('landing', b.box(2.9, 7.0, -1, 4, 12.9, 13.0, M.void));
@@ -219,7 +238,9 @@ export function buildApartment(scene) {
   const bulbDead = new THREE.Color(0x3a2c1c);
   let dropoutUntil = 0;
   let nextDropout = 8;
+  let now = 0;
   b.updaters.push((t) => {
+    now = t;
     // The corridor bulb flickers, and now and then cuts out for a moment.
     if (t > nextDropout) {
       dropoutUntil = t + 0.05 + Math.random() * 0.25;
@@ -244,6 +265,11 @@ export function buildApartment(scene) {
     bulbLook: { material: bulbMaterial, haze: bulbHaze, dead: bulbDead },
     update(t, dt) {
       for (const tick of b.updaters) tick(t, dt);
+    },
+    // Make the corridor bulb cut out for a moment, as when the front door
+    // is hammered on.
+    cutBulb(seconds) {
+      dropoutUntil = Math.max(dropoutUntil, now + seconds);
     },
   };
 }

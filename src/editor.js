@@ -43,7 +43,7 @@ const DIGITS = '"Cascadia Mono", Consolas, "Courier New", monospace';
 
 const pad2 = (n) => String(Math.floor(n)).padStart(2, '0');
 
-export function createEditor({ scene, footage, audio, hud, onMarked }) {
+export function createEditor({ scene, footage, audio, hud, onMarked, onTapeEnd }) {
   // --- The program on the monitor ----------------------------------------------------
   const canvas = document.createElement('canvas');
   canvas.width = UI[0];
@@ -78,6 +78,8 @@ export function createEditor({ scene, footage, audio, hud, onMarked }) {
   let clock = 0; // seconds since the program was opened: for the grain
   let drawn = ''; // what the program's picture last showed
   let active = false; // is the player sat at it, looking at it
+  let jumped = null; // after a mark, a tape that jumps on by itself: { time, knocked }
+  let ended = false; // the tape has run out: the screen shows a blank blue
   const marks = []; // every file marked so far
 
   function load(i) {
@@ -94,6 +96,8 @@ export function createEditor({ scene, footage, audio, hud, onMarked }) {
     damageSeen = false;
     hintTime = 0;
     say = 0;
+    jumped = null;
+    ended = false;
     screen.visible = true;
     audio.tape('load');
   }
@@ -173,7 +177,38 @@ export function createEditor({ scene, footage, audio, hud, onMarked }) {
       hud.hint(null);
       audio.tape('mark');
       onMarked(index, clip);
+      if (clip.jumpsOn) {
+        // The tape jumps on by itself, past its end.
+        jumped = { time: -0.8, knocked: 0 };
+      }
     }
+  }
+
+  // After a mark: the tape that jumps on by itself, and something hammering
+  // on the door in it. Answers how hard the door is shaking (0 to 1).
+  function runOn(dt) {
+    const after = clip.jumpsOn;
+    const before = jumped.time;
+    jumped.time += dt;
+    if (before < 0 && jumped.time >= 0) {
+      t = clip.length;
+      jump = JUMP;
+      audio.tape('jump');
+      playing = true;
+    }
+    while (jumped.knocked < after.knocks.length && jumped.time >= after.knocks[jumped.knocked]) {
+      audio.knock('tape');
+      jumped.knocked += 1;
+    }
+    if (jumped.time >= after.seconds && !ended) {
+      ended = true;
+      playing = false;
+      audio.tape('stop');
+      onTapeEnd(index, clip);
+    }
+    let shake = 0;
+    for (const k of after.knocks) if (jumped.time >= k) shake += Math.exp(-(jumped.time - k) * 14);
+    return Math.min(1, shake);
   }
 
   // --- Moving the tape on -----------------------------------------------------------------
@@ -183,7 +218,10 @@ export function createEditor({ scene, footage, audio, hud, onMarked }) {
     clock += dt;
     jump = Math.max(0, jump - dt);
     const before = t;
-    if (scrub !== 0 && marked === null) {
+    shaking = 0;
+    if (jumped) {
+      shaking = runOn(dt);
+    } else if (scrub !== 0 && marked === null) {
       held += dt;
       const speed = SCRUB.slow + (SCRUB.fast - SCRUB.slow) * Math.min(1, held / SCRUB.ramp) ** 2;
       t = Math.max(0, Math.min(clip.length, t + scrub * speed * dt));
@@ -213,19 +251,17 @@ export function createEditor({ scene, footage, audio, hud, onMarked }) {
     const snow = staticNow();
     audio.setTape({ motor: playing ? 1 : 0, rewind: scrub < 0 && moving ? 1 : scrub > 0 && moving ? 0.6 : 0, snow: moving ? snow : snow * 0.3 });
     const look = clip.past[depth];
-    footage.set({ time: clock, static: snow, colour: look.colour, rewind: scrub < 0 && moving ? 1 : 0, jump: jump / JUMP });
-    footage.caption(
-      scrub < 0 ? 'REW' : scrub > 0 ? 'FWD' : playing ? 'PLAY' : 'PAUSE',
-      look.date,
-      timeOnTape(),
-    );
+    footage.set({ time: clock, static: snow, colour: look.colour, rewind: scrub < 0 && moving ? 1 : 0, jump: jump / JUMP, on: ended ? 0 : 1 });
+    if (ended) footage.caption('', '', '');
+    else if (jumped && jumped.time >= 0) footage.caption('PLAY', look.date, timeOnTape(jumped.time, clip.jumpsOn.clock));
+    else footage.caption(scrub < 0 ? 'REW' : scrub > 0 ? 'FWD' : playing ? 'PLAY' : 'PAUSE', look.date, timeOnTape(t));
     draw();
   }
 
   // The time burnt into the corner: the clock at the first frame, plus the tape so far.
-  function timeOnTape() {
-    const [h, m, s] = clip.clock;
-    const total = h * 3600 + m * 60 + s + Math.floor(t);
+  function timeOnTape(seconds, start = clip.clock) {
+    const [h, m, s] = start;
+    const total = h * 3600 + m * 60 + s + Math.floor(seconds);
     return `${pad2(total / 3600)}:${pad2((total / 60) % 60)}:${pad2(total % 60)}`;
   }
   const timecode = (seconds) => `00:00:${pad2(seconds)}:${pad2((seconds * FPS) % FPS)}`;
@@ -344,9 +380,11 @@ export function createEditor({ scene, footage, audio, hud, onMarked }) {
     picture.needsUpdate = true;
   }
 
-  // Draw the tape into its picture. Only needed while someone can see it.
+  // Draw the tape into its picture. Only needed while someone can see it,
+  // and not once the tape has run out.
+  let shaking = 0; // how hard the door on the tape is shaking just now
   function film() {
-    if (clip) footage.film(clip, t, depth);
+    if (clip && !ended) footage.film(clip, t, depth, shaking);
   }
 
   function reset() {
@@ -360,6 +398,8 @@ export function createEditor({ scene, footage, audio, hud, onMarked }) {
     marks.length = 0;
     drawn = '';
     active = false;
+    jumped = null;
+    ended = false;
     screen.visible = false;
     footage.set({ time: 0, on: 0 });
     audio.setTape({ motor: 0, rewind: 0, snow: 0 });
@@ -382,6 +422,6 @@ export function createEditor({ scene, footage, audio, hud, onMarked }) {
     },
     isOn: () => !!clip,
     // For tests: where the edit has got to.
-    state: () => ({ clip: index, t: +t.toFixed(2), playing, scrub, depth, marked, damageSeen, static: +staticNow().toFixed(2), active }),
+    state: () => ({ clip: index, t: +t.toFixed(2), playing, scrub, depth, marked, damageSeen, static: +staticNow().toFixed(2), active, jumpedOn: jumped ? +jumped.time.toFixed(2) : null, ended }),
   };
 }

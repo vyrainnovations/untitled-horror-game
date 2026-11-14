@@ -3,36 +3,49 @@
 //   1. The phone. The unknown number, and three files (src/phone.js).
 //   2. "Sit down at the PC". The editing program is on the monitor.
 //   3. "Find the frame where it goes wrong", for each clip (src/editor.js,
-//      src/clips.js). So far only the first clip is built.
+//      src/clips.js). Each mark is answered by a message across the top of
+//      the screen, and the next clip is loaded.
+//   4. After clip 2, the tape jumps on to 3:07 and its door is hammered on;
+//      then his own front door is hammered on, for real (src/door.js).
+//      Only after he has looked through the peephole does the answer come.
 //
-// This file only says what comes after what. The pieces are in the files
-// named above, and src/seat.js (sitting at the desk) and src/footage.js
-// (drawing the tapes).
+// So far clips 1 and 2 are built. This file only says what comes after
+// what. The pieces are in the files named above, and src/seat.js (sitting
+// at the desk) and src/footage.js (drawing the tapes).
 import { createPhone } from './phone.js';
 import { createSeat } from './seat.js';
 import { createFootage } from './footage.js';
 import { createEditor } from './editor.js';
+import { createDoor } from './door.js';
+import { CLIPS } from './clips.js';
 
 // The words on the task line.
 const TASKS = {
   sit: 'Sit down at the PC',
   clip: 'Find the frame where it goes wrong',
+  door: 'Someone is at the front door',
 };
 const REPLY_AFTER = 1.8; // seconds after a frame is marked before the answer comes in
+const HAMMER_AFTER = 1.2; // seconds after the second tape runs out before the real door is hammered on
+const REPLY_AFTER_PEEPHOLE = 1.6; // seconds after looking through the peephole before the answer comes in
 
 // The keys along the bottom of the screen while sat at the desk.
 const AT_SCREEN = [['Space', 'Play / pause'], ['A  D', 'Scrub'], ['E', 'Mark this frame'], ['Q', 'Stand up']];
 const LOOKING_AWAY = [['Q', 'Stand up']];
 
 export function createJob({ renderer, scene, camera, apartment, player, settings, interact, hud, audio, onDone }) {
-  let stage = 'waiting'; // 'waiting' for the chores, 'phone', 'sit', 'edit', then 'after' a clip is marked
-  let replyIn = 0; // seconds until the unknown number answers a mark
-  let replyFor = null; // the clip it is answering
+  let stage = 'waiting'; // 'waiting' for the chores, 'phone', 'sit', 'edit', 'after' a clip is marked, 'door'
+  let clipIndex = 0; // the clip the player is on
+  const timers = []; // things that happen after a wait, on the game's clock
 
   const phone = createPhone({ camera, audio, hud, onDone: phoneDone });
   const seat = createSeat({ camera, player, settings });
   const footage = createFootage({ renderer, scene, apartment });
-  const editor = createEditor({ scene, footage, audio, hud, onMarked: marked });
+  const editor = createEditor({ scene, footage, audio, hud, onMarked: marked, onTapeEnd: tapeEnded });
+  const door = createDoor({ apartment, camera, player, settings, interact, audio, onLooked: looked });
+
+  // Do something after a wait. Paused, the wait stops too.
+  const later = (seconds, then) => timers.push({ left: seconds, then });
 
   // --- 1. The phone ------------------------------------------------------------------
   function start() {
@@ -66,42 +79,84 @@ export function createJob({ renderer, scene, camera, apartment, player, settings
   // --- 3. The clips -----------------------------------------------------------------------
   function marked(index, clip) {
     stage = 'after';
-    replyIn = REPLY_AFTER;
-    replyFor = clip;
     hud.task(null, { ticked: true });
+    // A tape that jumps on by itself is answered later, after the door.
+    if (!clip.jumpsOn) later(REPLY_AFTER, () => answer(index, clip));
+  }
+
+  // The unknown number answers a mark. Then the next clip.
+  function answer(index, clip) {
+    audio.message('pocket');
+    hud.banner('Unknown number', clip.reply);
+    const next = index + 1;
+    if (next < CLIPS.length) {
+      clipIndex = next;
+      editor.load(next);
+      if (seat.isSeated()) {
+        stage = 'edit';
+        hud.task(TASKS.clip);
+      } else {
+        stage = 'sit';
+        hud.task(TASKS.sit);
+      }
+      return;
+    }
+    // --- THE NEXT PART OF THE GAME STARTS HERE -------------------------
+    // Clips 1 and 2 are marked and answered. Clip 3, the kitchen
+    // (STORY.md, Part 2, beat 11), is not built yet: when it is, add it to
+    // src/clips.js and the lines above load it by themselves.
+    stage = 'done';
+    onDone();
+  }
+
+  // --- 4. The door -------------------------------------------------------------------------
+  // The second tape has run out, after its hammering. Now his own door.
+  function tapeEnded() {
+    later(HAMMER_AFTER, () => {
+      stage = 'door';
+      hud.task(TASKS.door);
+      door.start();
+    });
+  }
+
+  // He has looked through the peephole: nobody. Then the answer comes.
+  function looked() {
+    hud.task(null, { ticked: true });
+    later(REPLY_AFTER_PEEPHOLE, () => answer(clipIndex, CLIPS[clipIndex]));
   }
 
   // --- Every frame ----------------------------------------------------------------------
   // Who has the controls: 'walk', 'phone' (the phone is up: look, but no
-  // walking) or 'seat' (sat at the desk).
+  // walking), 'seat' (sat at the desk) or 'door' (an eye to the peephole).
   function hands() {
     if (phone.isUp()) return 'phone';
+    if (door.isLooking()) return 'door';
     if (seat.isSeated() || seat.isMoving()) return 'seat';
     return 'walk';
   }
 
   function update(dt) {
+    for (const timer of [...timers]) {
+      timer.left -= dt;
+      if (timer.left <= 0) {
+        timers.splice(timers.indexOf(timer), 1);
+        timer.then();
+      }
+    }
     phone.update(dt);
     seat.update(dt);
+    door.update(dt, seat.isSeated() || seat.isMoving());
     const working = seat.isSeated() && seat.atScreen();
     editor.setActive(working);
     if (editor.isOn()) editor.update(dt);
     hud.keys(seat.isSeated() ? (working && stage === 'edit' ? AT_SCREEN : LOOKING_AWAY) : null);
 
-    if (replyFor) {
-      replyIn -= dt;
-      if (replyIn <= 0) {
-        const clip = replyFor;
-        replyFor = null;
-        audio.message('pocket');
-        hud.banner('Unknown number', clip.reply);
-        // --- THE NEXT PART OF THE GAME STARTS HERE -------------------------
-        // Clip 1 is marked and answered. Clip 2, the front door (STORY.md,
-        // Part 2, beat 9), is not built yet: when it is, load it here with
-        // editor.load(1) instead of handing on.
-        onDone();
-      }
-    }
+    // While the door is hammered on, a word for a player who stays put.
+    if (door.isHammering()) {
+      if (seat.isSeated() && door.hammeredFor() > 5) hud.hint('Press Q to stand up.');
+      else if (!seat.isSeated() && door.hammeredFor() > 14) hud.hint('The front door is at the end of the corridor.');
+      else hud.hint(null);
+    } else if (stage === 'door') hud.hint(null);
   }
 
   // Draw the tape into its picture, if anyone can see the monitor: that is,
@@ -112,13 +167,14 @@ export function createJob({ renderer, scene, camera, apartment, player, settings
   }
 
   // --- Keys ------------------------------------------------------------------------------
-  // Answers true if the key was for the phone or the desk.
+  // Answers true if the key was for the phone, the desk or the peephole.
   function keyDown(code) {
     const where = hands();
     if (where === 'phone') {
       if (code === 'KeyE') phone.use();
       return code === 'KeyE';
     }
+    if (where === 'door') return true;
     if (where === 'seat') {
       if (seat.isMoving()) return true;
       if (code === 'KeyQ') {
@@ -140,10 +196,12 @@ export function createJob({ renderer, scene, camera, apartment, player, settings
 
   function reset() {
     stage = 'waiting';
-    replyFor = null;
+    clipIndex = 0;
+    timers.length = 0;
     phone.reset();
     seat.reset();
     editor.reset();
+    door.reset();
     hud.keys(null);
   }
 
@@ -157,7 +215,7 @@ export function createJob({ renderer, scene, camera, apartment, player, settings
     hands,
     reset,
     // For tests.
-    parts: { phone, seat, footage, editor },
-    state: () => ({ stage, hands: hands(), phone: phone.state(), seat: seat.state(), editor: editor.state() }),
+    parts: { phone, seat, footage, editor, door },
+    state: () => ({ stage, clip: clipIndex, timers: timers.length, hands: hands(), phone: phone.state(), seat: seat.state(), editor: editor.state(), door: door.state() }),
   };
 }

@@ -62,7 +62,7 @@ const chores = createChores({
   onDone: afterTheChores,
 });
 // The second part of the game: the phone, the PC and the tapes.
-const job = createJob({ renderer, scene, camera, apartment, player, settings, interact, hud, audio, onDone: afterTheFirstClip });
+const job = createJob({ renderer, scene, camera, apartment, player, settings, interact, hud, audio, onDone: afterTheLastClip });
 
 // The chores are done: the rubbish is out, the door is bolted, a ring is
 // burning under the chai, and the player has just picked up the buzzing
@@ -71,10 +71,10 @@ function afterTheChores() {
   job.start();
 }
 
-// The first clip is marked and answered. That is as far as the game is
-// built. The place where the next part starts is marked "THE NEXT PART OF
-// THE GAME STARTS HERE" in src/job.js.
-function afterTheFirstClip() {
+// The last clip built so far is marked and answered. That is as far as the
+// game is built. The place where the next part starts is marked "THE NEXT
+// PART OF THE GAME STARTS HERE" in src/job.js.
+function afterTheLastClip() {
   hud.task('That is as far as the game goes for now.', { plain: true });
 }
 
@@ -197,6 +197,9 @@ document.addEventListener('mouseup', (e) => {
 
 // --- Settings: what each one does -------------------------------------------
 function resize() {
+  // A window with no size at all (a hidden panel) has nothing to draw into:
+  // keep the last size until it has one.
+  if (!window.innerWidth || !window.innerHeight) return;
   const aspect = window.innerWidth / window.innerHeight;
   // How many real pixels tall the window is. Past the limit, draw at half
   // (or a third...) so each drawn pixel is a whole number of real pixels.

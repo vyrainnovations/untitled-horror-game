@@ -335,6 +335,25 @@ export function createAudio() {
     if (ctx && MESSAGES[kind]) MESSAGES[kind]();
   }
 
+  // A fist hammering on the front door. knock('door', x, z) is the real
+  // door at (x, z): loud from anywhere in the flat, louder near it.
+  // knock('tape') is the same on a tape, small and thin, out of the PC's
+  // speakers.
+  function knock(kind, x = 4.95, z = 11.95) {
+    if (!ctx) return;
+    if (kind === 'tape') {
+      burst(world, 1100, 0.15, 0.2, 'bandpass');
+      slide(world, 260, 150, 0.12, 0.14, 'triangle');
+      return;
+    }
+    const distance = Math.hypot(x - ears[0], z - ears[1]);
+    const level = 0.55 + 0.45 / (1 + (distance / 5) ** 2); // a door hammered on carries through the whole flat
+    burst(world, 170, 0.3, 0.85 * level); // the blow
+    slide(world, 72, 36, 0.28, 0.7 * level); // the whole door booming
+    burst(world, 1300, 0.07, 0.2 * level, 'bandpass', 0.005); // rattling in its frame
+    slide(world, 2500, 1900, 0.03, 0.05 * level, 'square', 0.01); // the bolt jumping in its loops
+  }
+
   // The tape's buttons and what it does: tape('load'), 'play', 'stop',
   // 'jump' (back a step in time), 'mark' and 'no' (nothing to mark there).
   const TAPE = {
@@ -415,5 +434,5 @@ export function createAudio() {
     return { running: ctx.state === 'running', peak, average: Math.sqrt(sum / samples.length) };
   }
 
-  return { start, update, setScene, setVolume, step, act, setRing, buzz, message, tape, setTape, click, level };
+  return { start, update, setScene, setVolume, step, act, setRing, buzz, message, knock, tape, setTape, click, level };
 }

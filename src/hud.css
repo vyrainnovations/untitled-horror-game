@@ -195,6 +195,19 @@
   color: var(--dim);
 }
 
+/* --- An eye to the peephole: black all round a circle of lens (src/door.js) --- */
+.peephole {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 48%, transparent 0, transparent 30vh, rgba(140, 150, 170, 0.07) 31.5vh, transparent 33vh),
+    radial-gradient(circle at 50% 48%, transparent 0, transparent 29vh, rgba(0, 0, 0, 0.8) 33vh, #000 36vh);
+}
+.peephole[hidden] {
+  display: none;
+}
+
 /* For people who have asked their computer for less movement. */
 @media (prefers-reduced-motion: reduce) {
   .hud__line,
