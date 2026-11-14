@@ -2,7 +2,7 @@
 
 A short first-person lo-fi horror game that runs in the browser. You play a freelance video editor who takes a job from an anonymous client, and the footage is not what it seems.
 
-**Status:** in development. The game opens on a title screen, in a flat of seven furnished rooms and a long corridor, textured, lit and shadowed, with the VHS look on, a pause menu, settings that are remembered, and sound. The first part of the story plays from start to finish: three chores, the phone, sitting down at the PC, and the first of the tapes, scrubbed back and marked. The rest of the tapes and the ending are next. No name yet. Target: shipped by 16 November 2026.
+**Status:** in development. The game opens on a title screen, in a flat of seven furnished rooms and a long corridor, textured, lit and shadowed, with the VHS look on, a pause menu, settings that are remembered, and sound. The first part of the story plays from start to finish, and the second is under way: the phone, sitting down at the PC, the first two tapes scrubbed back and marked, and what the second one sets off at the front door. The last two tapes and the ending are next. No name yet. Target: shipped by 16 November 2026.
 
 Every texture is painted by code and every sound is made by code. The game holds no image or sound files.
 
@@ -57,6 +57,7 @@ Two tests run in the browser's console while the game is running. The first chec
 | `src/phone.js` | The phone and the messages on it |
 | `src/seat.js` | Sitting at the desk |
 | `src/editor.js`, `src/footage.js`, `src/clips.js` | The editing program, how the tapes are drawn, and what is on each tape |
+| `src/door.js` | The front door, hammered on |
 | `tools/walk-test.js` | The test that walks every room and tries to get stuck |
 | `tools/play-test.js` | The test that plays the game so far |
 | `public/models/`, `public/textures/`, `public/audio/` | Game assets |

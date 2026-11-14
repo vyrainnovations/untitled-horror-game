@@ -293,3 +293,37 @@ Partway through the day Eshan switched the session from Claude Fable 5.2 to Clau
 **Next**
 
 Eshan plays it in Chrome: the chores, the phone, the first tape. What he says goes in the next commit. Then the rest of Part 2, as STORY.md plans it for the 14th: clips 2, 3 and 4, the figure, and the hammering on the door. Still his to decide: the two names, the title, how the two of them text, and the setting.
+
+---
+
+## Day 4: 14 November 2026. Clip 2, and the door
+
+Asked how the first gameplay felt to play, Eshan chose "Build clip 2 next". So the morning went on the second tape and on what it sets off.
+
+**What happened**
+
+- **Clip 2: the front door** (STORY.md, beat 9). Hamza's camera stands close on the front door, looking up at the bolt. A year on, the wood of the door frame is split round the bolt and the lock, where the door was forced the night Saad died. Played, the moment the bolt slides across by itself is lost in static. Scrubbed back, the tape steps through JUN 09 2027, FEB 14 2027 and NOV 23 2026 to the night itself: the wood whole again, the bulb on, the colour back, and the bolt sliding home with nobody touching it. Mark it, and the tape jumps on by itself to 03:07, and the door on it is hammered on from outside hard enough to shake it. Then the tape runs out to a blank blue screen.
+- **The door, for real** (beat 10, the loud scare). A moment later his own front door is hammered on, down the corridor behind him. "Someone is at the front door". It is loud anywhere in the flat; the door rattles against its bolt and the corridor bulb cuts out at every blow. It keeps on, in bursts, until he walks up to it, and then stops dead. "E  Look through the peephole": an empty, black landing. Nobody. Only then does the phone buzz: "That bolt. I have thought about that bolt every day."
+- **The dates on the tapes now come from the thread.** The dates a tape steps back through are the dates of Hamza's messages at the end of the story wherever one fits (9 June: "I found the bolt on"; 14 February: "The landlord wants to let the flat"; 23 November: "They gave me your phone today"), so they click when the thread is read. And every tape agrees about the flat on every date: the story's second rule is that the tape shows what is really there. That changed one of clip 1's dates from yesterday, JAN 07 2027 to NOV 23 2026, and clip 1 now shows the forced door frame too.
+- **The play test** plays both clips, the hammering and the peephole: 93 checks.
+
+**Checked**
+
+- The play test and the walking test pass. `npm run build` works.
+- The tape, read straight out of the graphics card as a small text picture: the door fills it, the bolt is the bright bar near the top, and between the start and the end of the tape it moves across into the frame.
+- The hammering, measured: from the desk it is about as loud as the phone buzzing beside you, the loudest sound in the game; standing at the door, louder still, and well clear of distorting. On the tape it is small and thin, out of the PC's speakers.
+
+**What went wrong**
+
+- **No pictures today.** The browser panel stopped drawing altogether while the Claude window was not on screen, so every screenshot timed out. The tape was checked from its pixels instead, and the rest by the play test. Nobody has looked at the peephole view, the split wood or the door shaking with eyes yet.
+- **A warning flood from a window with no size.** The hidden panel sometimes has a width and height of zero, and the game then made pictures with no size, hundreds of WebGL warnings. It now waits for the window to have a size. A real browser window never has none, so players never saw this.
+- **A story slip, found, not fixed.** STORY.md says both that he bolted the door at 00:40 and that "the bolt went on at 00:52". The tape follows the minute-by-minute part: the bolt goes on at 00:41, straight after the rubbish. The 00:52 line is for Eshan to keep or drop.
+- **Not checked:** how the hammering actually sounds, the peephole view, and the look of any of it in Chrome.
+
+**Eshan's note**
+
+Asked "How does it feel when you play it?", he chose "Build clip 2 next". He has not said how it plays yet.
+
+**Next**
+
+Clip 3, the kitchen (beat 11): the ring that lights by itself, the chai boiling over, the flame dying at 01:10, and from then on a hiss in the real kitchen. It needs the kitchen's things split from what is built in, the way the corridor's are. Then clip 4 and the figure, then Part 3.
