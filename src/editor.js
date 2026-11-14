@@ -22,6 +22,7 @@ const SCRUB = { slow: 0.6, fast: 4, ramp: 1.2 }; // scrubbing speed, from a tap 
 const JUMP = 0.45; // seconds the picture takes to roll when the tape jumps back in time
 const PAD = 0.35; // seconds of static either side of the moment
 const CLEAR = 0.3; // the static has to be thinner than this for the moment to be marked
+const DROPOUT = 0.17; // seconds either side of a dropout: a worn tape loses its picture for a moment here and there
 
 // The monitor in the study (src/rooms/study.js): its middle and its size.
 const MONITOR = { x: 2.5, y: 1.05, z: 0.257, w: 0.6, h: 0.34 };
@@ -36,7 +37,6 @@ const COLOURS = {
   words: '#c9ccd2',
   dim: '#6d7480',
   lamp: '#e8943a',
-  damage: '#7a2b25',
 };
 const WORDS = '"Bahnschrift", "Arial Narrow", "Liberation Sans Narrow", sans-serif';
 const DIGITS = '"Cascadia Mono", Consolas, "Courier New", monospace';
@@ -78,7 +78,7 @@ export function createEditor({ scene, footage, audio, hud, onMarked, onTapeEnd, 
   let lastWay = 1; // the way the tape last moved: 1 forward, -1 back
   let jump = 0; // the picture rolling, after a jump back in time
   let marked = null; // the second of tape that was marked
-  let damageSeen = false; // has the static been seen yet: then the timeline shows where it is
+  let damageSeen = false; // has the static been seen yet: then a hint can talk about it
   let clock = 0; // seconds since the program was opened: for the grain
   let drawn = ''; // what the program's picture last showed
   let active = false; // is the player sat at it, looking at it
@@ -112,7 +112,15 @@ export function createEditor({ scene, footage, audio, hud, onMarked, onTapeEnd, 
   const inMoment = (pad = 0) => t >= moment().from - pad && t <= moment().to + pad;
   // How much static is on the screen right now.
   function staticNow() {
-    if (!clip || clip.live || !inMoment(PAD)) return 0; // the live tape is never damaged
+    if (!clip || clip.live) return 0; // the live tape is never damaged
+    // A dropout: the tape is worn, and nothing is hidden under it. It never
+    // clears, however far back the tape goes. It is there so that static
+    // alone does not say "mark here".
+    for (const at of clip.dropouts || []) {
+      const off = Math.abs(t - at);
+      if (off < DROPOUT) return Math.min(1, (DROPOUT - off) / 0.05);
+    }
+    if (!inMoment(PAD)) return 0;
     const edge = Math.min(t - (moment().from - PAD), moment().to + PAD - t);
     const fade = Math.min(1, edge / PAD);
     return (lastWay > 0 ? 1 : clip.past[depth].static) * fade;
@@ -299,7 +307,7 @@ export function createEditor({ scene, footage, audio, hud, onMarked, onTapeEnd, 
   // --- Painting the program ------------------------------------------------------------------
   function draw() {
     const frame = Math.floor(t * FPS);
-    const said = [index, frame, playing, scrub, depth, marked, damageSeen].join('|');
+    const said = [index, frame, playing, scrub, depth, marked].join('|');
     if (said === drawn) return;
     drawn = said;
     const [W, H] = UI;
@@ -390,11 +398,7 @@ export function createEditor({ scene, footage, audio, hud, onMarked, onTapeEnd, 
     const at = (s) => left + (s / clip.length) * width;
     p.fillStyle = COLOURS.panel;
     p.fillRect(left, top, width, 44);
-    if (damageSeen) {
-      // Once the static has been seen, the timeline shows where the tape is damaged.
-      p.fillStyle = COLOURS.damage;
-      p.fillRect(at(moment().from - PAD), top + 4, at(moment().to + PAD) - at(moment().from - PAD), 36);
-    }
+    // Nothing on the timeline says where the tape goes wrong: finding it is the job.
     p.fillStyle = COLOURS.line;
     for (let s = 0; s <= clip.length; s++) p.fillRect(at(s), top + (s % 5 === 0 ? 30 : 36), 2, s % 5 === 0 ? 14 : 8);
     if (marked !== null) {
@@ -452,6 +456,10 @@ export function createEditor({ scene, footage, audio, hud, onMarked, onTapeEnd, 
       }
     },
     isOn: () => !!clip,
+    // For tests: put the tape at a given second, without playing it there.
+    seek(seconds) {
+      t = Math.max(0, Math.min(clip.length, seconds));
+    },
     // For tests: where the edit has got to.
     state: () => ({ clip: index, t: +t.toFixed(2), playing, scrub, depth, marked, damageSeen, static: +staticNow().toFixed(2), active, jumpedOn: jumped ? +jumped.time.toFixed(2) : null, ended }),
   };

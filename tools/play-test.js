@@ -123,7 +123,15 @@ export function doClip(index) {
   expect(`${name}: cannot mark through the static`, ed().marked, null);
   tick(clip.length);
   expect(`${name}: the tape played to the end`, ed().t, clip.length);
-  expect(`${name}: the timeline shows the damage`, ed().damageSeen, true);
+  expect(`${name}: the static has been seen`, ed().damageSeen, true);
+  // A worn tape drops out here and there. Nothing is under those, and nothing can be marked there.
+  const back = ed().t;
+  g().job.parts.editor.seek(clip.dropouts[0]);
+  expect(`${name}: a dropout is static too`, ed().static, (s) => s > 0.9);
+  key('KeyE');
+  expect(`${name}: but nothing is marked on a dropout`, [ed().marked, g().hud.says().hint].join(), ',Nothing goes wrong in this frame.');
+  g().job.parts.editor.seek(back);
+  expect(`${name}: the moments are in different places`, CLIPS.filter((c) => !c.live && Math.abs(c.moment.from - clip.moment.from) < 4).length, 1);
   // Each scrub back from after the moment takes the tape a step further into the past.
   for (let pass = 1; pass < clip.past.length; pass++) {
     key('KeyA', 1.6);

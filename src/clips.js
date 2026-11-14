@@ -12,7 +12,11 @@
 //           sees (degrees, top to bottom). [x, y, z] on the plan in src/plan.js.
 //   length  seconds of tape.
 //   clock   the time burnt into the corner at the first frame: [h, m, s].
-//   moment  when it goes wrong: from and to, in seconds of tape.
+//   moment  when it goes wrong: from and to, in seconds of tape. A different
+//           place on every tape, so that it has to be looked for.
+//   dropouts  seconds of tape where the picture drops out for a moment: a
+//           worn tape, nothing more. Nothing is hidden under these, and they
+//           never clear. Keep them well away from the moment.
 //   past    the steps back in time. The tape starts on the first; each time
 //           the player scrubs back over the moment it moves on to the next.
 //     date    the date burnt into the corner. What of his is in the flat on
@@ -71,8 +75,9 @@ export const CLIPS = [
     // down to the front door. The kitchen archway is on the right.
     camera: { at: [5.36, 1.52, 6.3], look: [4.86, 0.78, 11.9], fov: 46 },
     length: 24,
-    clock: [0, 39, 58],
-    moment: { from: 11.6, to: 14.2 },
+    clock: [0, 39, 50],
+    moment: { from: 17.0, to: 19.6 }, // late in the tape
+    dropouts: [4.3, 11.2],
     past: [
       { date: 'AUG 02 2027', lights: 0, colour: 0, static: 1 },
       { date: 'APR 19 2027', lights: 0, colour: 0.06, static: 0.72 },
@@ -89,8 +94,9 @@ export const CLIPS = [
     // Close on the front door, from the lock side, looking up at the bolt.
     camera: { at: [5.05, 1.72, 10.55], look: [4.82, 1.55, 11.97], fov: 44 },
     length: 24,
-    clock: [0, 40, 47],
-    moment: { from: 12.6, to: 14.0 },
+    clock: [0, 40, 55],
+    moment: { from: 4.8, to: 6.2 }, // near the start
+    dropouts: [11.6, 19.3],
     // The frame round the lock was split the night it was forced: on every
     // tape after it, whole again only on the night itself.
     past: [
@@ -110,8 +116,9 @@ export const CLIPS = [
     // In the kitchen, on the far side of the worktop, looking down at the hob.
     camera: { at: [2.25, 1.6, 10.5], look: [1.52, 0.98, 11.66], fov: 46 },
     length: 24,
-    clock: [1, 9, 48],
-    moment: { from: 12.2, to: 14.6 },
+    clock: [1, 9, 49],
+    moment: { from: 10.4, to: 12.8 }, // in the middle
+    dropouts: [3.2, 18.6],
     // A year on, a ring lights by itself on an empty hob. On the night, the
     // pan of chai has been on it since 01:00: it boils over, and the flame dies.
     past: [
