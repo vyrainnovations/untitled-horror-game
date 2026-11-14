@@ -65,6 +65,7 @@ const chores = createChores({
 // The second part of the game: the phone, the PC and the tapes.
 const job = createJob({
   renderer, scene, camera, apartment, player, settings, interact, hud, audio,
+  cut: () => vhs.cut(), // a burst of static across the whole picture
   onFlameOut: () => chores.boilOver(), // the chai left on the ring in Part 1 boils over
   onDone: afterTheLastClip,
 });

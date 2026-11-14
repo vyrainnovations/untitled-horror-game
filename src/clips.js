@@ -31,8 +31,11 @@
 //     adds    more of his things, on top of what FLAT says for the date
 //     hamza   where Hamza is, and how: a pose from src/figures.js, the spot
 //             [x, z] on the plan, and the way he faces (radians: 0 faces
-//             south, -1.57 west)
-//     saad    true: Saad, asleep at his desk
+//             south, -1.57 west, 3.14 north). torch: his head torch is on.
+//     saad    where Saad is, the same way: the pale figure a camera catches
+//             when he stands still (STORY.md, rule 4). On each of the first
+//             three tapes he is there on one pass and gone on the next.
+//             true is short for the night itself: asleep at his desk.
 //   moves   what else moves on the tape, during the moment.
 //   jumpsOn after the moment is marked, the tape jumps on by itself to this
 //           time and plays for so many seconds. knocks: when something
@@ -45,6 +48,9 @@
 //   live    the last tape: it is being filmed now. Its time runs whatever
 //           the tape is doing, it never has static, and there is nothing to
 //           mark: it ends by itself once it has gone all the way back.
+//   torch   on the live tape, after the night: one more step, tonight
+//           again. Hamza has straightened up and turned to the camera, and
+//           his torch is on. The picture burns out to white.
 //
 // The dates a tape steps back through are the dates of Hamza's messages in
 // the thread at the end (STORY.md), where there is one that fits, so that
@@ -69,6 +75,9 @@ const FLAT = {
   'NOV 16 2027': ['splitWood', 'spareChair'],
 };
 
+// Saad at his desk, working: where the player is sitting.
+const AT_DESK = { pose: 'work', at: [2.5, 1.2], facing: Math.PI };
+
 export const CLIPS = [
   {
     file: 'clip_01.mov',
@@ -81,7 +90,9 @@ export const CLIPS = [
     dropouts: [4.3, 11.2],
     past: [
       { date: 'AUG 02 2027', lights: 0, colour: 0, static: 1 },
-      { date: 'APR 19 2027', lights: 0, colour: 0.06, static: 0.72 },
+      // On this pass he is standing at the far end, by the front door,
+      // dead still, facing the camera. On the next he is gone.
+      { date: 'APR 19 2027', lights: 0, colour: 0.06, static: 0.72, saad: { pose: 'stand', at: [4.95, 11.2], facing: Math.PI } },
       { date: 'NOV 23 2026', lights: 0, colour: 0.2, static: 0.42 },
       { date: 'NOV 16 2026', lights: 1, colour: 0.85, static: 0 },
     ],
@@ -103,7 +114,9 @@ export const CLIPS = [
     past: [
       { date: 'JUN 09 2027', lights: 0, colour: 0, static: 1 },
       { date: 'FEB 14 2027', lights: 0, colour: 0.06, static: 0.72 },
-      { date: 'NOV 23 2026', lights: 0, colour: 0.2, static: 0.42 },
+      // On this pass he is right there, a metre from the lens, his back to
+      // the camera, facing the door.
+      { date: 'NOV 23 2026', lights: 0, colour: 0.2, static: 0.42, saad: { pose: 'stand', at: [4.76, 11.68], facing: 0 } },
       { date: 'NOV 16 2026', lights: 1, colour: 0.85, static: 0 },
     ],
     // The bolt slides across by itself, into the frame: from open to shut, in metres.
@@ -124,7 +137,9 @@ export const CLIPS = [
     // pan of chai has been on it since 01:00: it boils over, and the flame dies.
     past: [
       { date: 'OCT 30 2027', lights: 0, colour: 0, static: 1, flame: 'lights' },
-      { date: 'FEB 14 2027', lights: 0, colour: 0.06, static: 0.72, flame: 'lights' },
+      // On this pass he is at the hob, bent over it, looking down at the
+      // ring: waiting for it to boil, as he has been for a year.
+      { date: 'FEB 14 2027', lights: 0, colour: 0.06, static: 0.72, flame: 'lights', saad: { pose: 'bend', at: [1.12, 11.05], facing: 0.3 } },
       { date: 'NOV 23 2026', lights: 0, colour: 0.2, static: 0.42, flame: 'lights' },
       { date: 'NOV 16 2026', lights: 1, colour: 0.85, static: 0, flame: 'dies' },
     ],
@@ -141,18 +156,23 @@ export const CLIPS = [
     clock: [3, 7, 0], // for the last step only: before it, the time is tonight's, live
     live: true,
     moment: { from: 1.5, to: 24 }, // every scrub back after the first second and a half is a step
-    // Tonight, live: an empty room, and far off, through two doorways,
-    // someone in the chair in the spare room. Each scrub back, his things
-    // are back in the study and Hamza is nearer, until he is bending to look
-    // at the screen. Then all the way back: the night, and Saad asleep.
+    // Tonight, live: an empty room, and in it somebody sitting at a desk
+    // that is not there, hands out in front of him: the player, as the
+    // camera sees him. Far off, through two doorways, someone else in the
+    // chair in the spare room. Each scrub back, his things are back in the
+    // study and Hamza is nearer, until he is bending to look at the screen.
+    // Then all the way back: the night, and Saad asleep.
     past: [
-      { date: 'NOV 16 2027', lights: 0, colour: 0, static: 0, hamza: { pose: 'sit', at: [7.62, 2.05], facing: -1.57 } },
-      { date: 'NOV 16 2027', adds: ['study'], lights: 0, colour: 0, static: 0, hamza: { pose: 'stand', at: [5.95, 2.15], facing: -1.57 } },
-      { date: 'NOV 16 2027', adds: ['study'], lights: 0, colour: 0, static: 0, hamza: { pose: 'stand', at: [4.95, 2.15], facing: -1.57 } },
-      { date: 'NOV 16 2027', adds: ['study'], lights: 0, colour: 0, static: 0, hamza: { pose: 'stand', at: [4.05, 2.15], facing: -1.57 } },
-      { date: 'NOV 16 2027', adds: ['study'], lights: 0, colour: 0, static: 0, hamza: { pose: 'bend', at: [3.05, 0.98], facing: -2.49 } },
+      { date: 'NOV 16 2027', lights: 0, colour: 0, static: 0, saad: AT_DESK, hamza: { pose: 'sit', at: [7.62, 2.05], facing: -1.57 } },
+      { date: 'NOV 16 2027', adds: ['study'], lights: 0, colour: 0, static: 0, saad: AT_DESK, hamza: { pose: 'stand', at: [5.95, 2.15], facing: -1.57 } },
+      { date: 'NOV 16 2027', adds: ['study'], lights: 0, colour: 0, static: 0, saad: AT_DESK, hamza: { pose: 'stand', at: [4.95, 2.15], facing: -1.57 } },
+      { date: 'NOV 16 2027', adds: ['study'], lights: 0, colour: 0, static: 0, saad: AT_DESK, hamza: { pose: 'stand', at: [4.05, 2.15], facing: -1.57 } },
+      { date: 'NOV 16 2027', adds: ['study'], lights: 0, colour: 0, static: 0, saad: AT_DESK, hamza: { pose: 'bend', at: [3.05, 0.98], facing: -2.49 } },
       { date: 'NOV 16 2026', lights: 1, colour: 0.85, static: 0, saad: true },
     ],
+    // And then, tonight again: he has straightened up and turned to the
+    // camera, and his torch is on.
+    torch: { date: 'NOV 16 2027', adds: ['study'], lights: 0, colour: 0, static: 0, saad: AT_DESK, hamza: { pose: 'stand', at: [3.1, 1.15], facing: -1.14, torch: true } },
     moves: [],
     reply: [],
   },
@@ -173,4 +193,6 @@ export const LAST_SHOT = {
   moves: [],
 };
 
-for (const clip of [...CLIPS, LAST_SHOT]) for (const step of clip.past) step.shows = FLAT[step.date].concat(step.adds || []);
+for (const clip of [...CLIPS, LAST_SHOT]) {
+  for (const step of [...clip.past, ...(clip.torch ? [clip.torch] : [])]) step.shows = FLAT[step.date].concat(step.adds || []);
+}

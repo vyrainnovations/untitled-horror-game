@@ -137,6 +137,13 @@ export function doClip(index) {
     key('KeyA', 1.6);
     expect(`${name}: one step further back on scrub ${pass}`, ed().depth, pass);
     tick(0.2);
+    // On one pass of each tape, somebody is standing in the picture.
+    const standing = clip.past[pass].saad;
+    if (standing) {
+      g().job.parts.editor.film();
+      const at = g().job.parts.footage.props.saad.root.position;
+      expect(`${name}: somebody is standing there on pass ${pass}`, [ed().figureSeen, at.x, at.z].join(), [pass, ...standing.at].join());
+    } else expect(`${name}: nobody on pass ${pass}`, ed().figureSeen === pass, false);
     if (pass < clip.past.length - 1) key('KeyD', 2.5); // forward again
   }
   key('KeyA', 0.5);
@@ -194,8 +201,13 @@ export function doDoor() {
   key('KeyE');
   tick(0.1);
   expect('an eye to the peephole', g().job.hands(), 'door');
-  tick(3);
+  tick(1.7);
+  expect('nobody on the landing', door().face, false);
+  tick(0.5);
+  expect('then a face at the lens', door().face, true);
+  tick(1.2);
   expect('back from the peephole', g().job.hands(), 'walk');
+  expect('and the face is gone', door().face, false);
   expect('the view is normal again', g().camera.fov, g().settings.get('fieldOfView'));
   tick(2.2);
   expect('then the answer comes', g().hud.says().banner, (b) => !!b && b.includes(CLIPS[1].reply[0]));
@@ -233,6 +245,8 @@ export function doClipFour() {
   expect('clip 4: nothing to mark', [ed().marked, g().hud.says().hint].join(), ',Keep going back.');
   const hamza = g().job.parts.footage.props.hamza.root;
   let before = Infinity;
+  g().job.parts.editor.film();
+  expect('clip 4: somebody is sitting where the player sits', g().job.parts.footage.props.saad.root.position.toArray().join(), '2.5,0,1.2');
   for (let step = 1; step < clip.past.length; step++) {
     key('KeyA', 0.4);
     expect(`clip 4: scrub back ${step}, a step nearer`, ed().depth, step);
@@ -247,7 +261,17 @@ export function doClipFour() {
   expect('clip 4: all the way back, the night itself', clip.past[ed().depth].date, 'NOV 16 2026');
   expect('clip 4: and Saad is at the desk', g().job.parts.footage.props.saad.root.position.x, 2.5);
   expect('clip 4: the task is never ticked', g().hud.says().ticked, false);
-  tick(7.2);
+  tick(4.7);
+  expect('clip 4: the tape tears back to tonight', ed().burning, (b) => b !== null && b < 1);
+  key('KeyA', 0.3);
+  expect('clip 4: and the keys do nothing now', ed().depth, clip.past.length - 1);
+  g().job.parts.editor.film();
+  expect('clip 4: his torch is on', g().job.parts.footage.props.hamza.flare.visible, true);
+  tick(2.4);
+  expect('clip 4: the picture burns out and the screen is dead', ed().ended, true);
+  tick(1.3);
+  expect('clip 4: "I can see you."', g().hud.says().banner, (b) => !!b && b.includes('I can see you.'));
+  tick(5.2);
   expect('Part 3: the phone buzzes', g().job.state().stage, 'thread');
   tick(1.8);
   expect('Part 3: the phone comes up, sat at the desk', [g().job.parts.phone.state().up, g().job.parts.phone.state().mode].join(), 'true,thread');

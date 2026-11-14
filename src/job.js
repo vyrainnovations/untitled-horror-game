@@ -11,7 +11,14 @@
 //   5. After clip 3, the real chai has boiled over and the gas hisses; then
 //      a fourth file: the study, live. Nothing to mark: scrubbing back
 //      brings Hamza nearer, until the tape goes all the way back to the
-//      night and Saad asleep at his desk. That is the end of Part 2.
+//      night and Saad asleep at his desk. Then it tears back to tonight, a
+//      torch comes on, and the picture burns out. That is the end of Part 2.
+//
+// Under all of it a drone rises (TENSION), and there are small frights on
+// the way: the landline rings after clip 1, a figure is standing on one
+// pass of each tape, a face comes to the peephole, the pan boils over out
+// loud. STORY.md, "The scares, and what each one is", says what each
+// really is.
 //
 // All four clips are built. This file only says what comes after
 // what. The pieces are in the files named above, and src/seat.js (sitting
@@ -35,14 +42,28 @@ const BANNER = 9; // seconds a message stays across the top of the screen
 const HAMMER_AFTER = 1.2; // seconds after the second tape runs out before the real door is hammered on
 const REPLY_AFTER_PEEPHOLE = 1.6; // seconds after looking through the peephole before the answer comes in
 const FILE_AFTER = 2.5; // seconds after "One more file" before the fourth file arrives
-const LINGER = 7; // seconds on the last frame of the last tape before the game moves on
+const BODY = 4.5; // seconds on the night itself, and Saad asleep, before the tape tears back to tonight
+const SEEN_AFTER = 1.1; // seconds after the picture burns out before "I can see you."
+const LINGER = 5; // seconds after that before the game moves on
 const THREAD_AFTER = 1.4; // seconds after the phone buzzes before it is in his hand
+// How far up the drone is (0 to 1) at each point of the night.
+const TENSION = {
+  phone: 0.12, // the unknown number
+  clip: [0.2, 0.3, 0.48, 0.64], // each tape, as it is loaded
+  door: 0.62, // the front door being hammered on
+  boil: 0.56, // the pan boiling over
+  step: 0.055, // more, for every step back on the live tape
+  body: 0.95, // the night itself
+};
+// The landline, after the first tape: where it is, how long after the next
+// file arrives it starts, how many times it rings, and how far apart.
+const LANDLINE = { at: [4.73, 0.23], after: 6, rings: 3, every: 2.7 };
 
 // The keys along the bottom of the screen while sat at the desk.
 const AT_SCREEN = [['Space', 'Play / pause'], ['A  D', 'Scrub'], ['E', 'Mark this frame'], ['Q', 'Stand up']];
 const LOOKING_AWAY = [['Q', 'Stand up']];
 
-export function createJob({ renderer, scene, camera, apartment, player, settings, interact, hud, audio, onFlameOut, onDone }) {
+export function createJob({ renderer, scene, camera, apartment, player, settings, interact, hud, audio, cut, onFlameOut, onDone }) {
   let stage = 'waiting'; // 'waiting' for the chores, 'phone', 'sit', 'edit', 'after' a clip is marked, 'door'
   let clipIndex = 0; // the clip the player is on
   const timers = []; // things that happen after a wait, on the game's clock
@@ -50,8 +71,8 @@ export function createJob({ renderer, scene, camera, apartment, player, settings
   const phone = createPhone({ camera, audio, hud, onDone: phoneDone });
   const seat = createSeat({ camera, player, settings });
   const footage = createFootage({ renderer, scene, apartment });
-  const editor = createEditor({ scene, footage, audio, hud, onMarked: marked, onTapeEnd: tapeEnded, onAllTheWayBack: allTheWayBack });
-  const door = createDoor({ apartment, camera, player, settings, interact, audio, onLooked: looked });
+  const editor = createEditor({ scene, footage, audio, hud, onMarked: marked, onTapeEnd: tapeEnded, onAllTheWayBack: allTheWayBack, onDeeper: deeper, onFigure: figure, onBurnt: burnt });
+  const door = createDoor({ apartment, scene, camera, player, settings, interact, audio, cut, onLooked: looked });
 
   // Do something after a wait. Paused, the wait stops too.
   const later = (seconds, then) => timers.push({ left: seconds, then });
@@ -59,6 +80,7 @@ export function createJob({ renderer, scene, camera, apartment, player, settings
   // --- 1. The phone ------------------------------------------------------------------
   function start() {
     stage = 'phone';
+    audio.setTension(TENSION.phone, 6);
     phone.open();
   }
 
@@ -66,6 +88,7 @@ export function createJob({ renderer, scene, camera, apartment, player, settings
   function phoneDone() {
     stage = 'sit';
     hud.task(TASKS.sit);
+    audio.setTension(TENSION.clip[0], 6);
     editor.load(0); // the program opens on the monitor, with the first clip
   }
 
@@ -90,8 +113,13 @@ export function createJob({ renderer, scene, camera, apartment, player, settings
     stage = 'after';
     hud.task(null, { ticked: true });
     // The kitchen tape: the flame died at 01:10, and in the real kitchen
-    // the chai has just boiled over too. From now on the gas hisses.
-    if (clip.hiss) onFlameOut();
+    // the chai has just boiled over too, loud enough to hear from the
+    // study. From now on the gas hisses.
+    if (clip.hiss) {
+      onFlameOut();
+      audio.act('boilOver');
+      audio.setTension(TENSION.boil, 1);
+    }
     // A tape that jumps on by itself is answered later, after the door.
     if (!clip.jumpsOn) later(REPLY_AFTER, () => answer(index, clip));
   }
@@ -110,7 +138,11 @@ export function createJob({ renderer, scene, camera, apartment, player, settings
     const next = index + 1;
     if (next < CLIPS.length) {
       clipIndex = next;
-      if (next >= 3) audio.message('files'); // "There is one more": it arrives
+      if (next >= 3) audio.message('files'); // "One more file": it arrives
+      audio.setTension(TENSION.clip[next], 5);
+      // After the first tape, the landline rings in the corridor behind him.
+      // Nobody has that number. (Hamza, a year ago, outside the door.)
+      if (next === 1) for (let i = 0; i < LANDLINE.rings; i++) later(LANDLINE.after + i * LANDLINE.every, () => audio.ring(...LANDLINE.at));
       editor.load(next);
       if (seat.isSeated()) {
         stage = 'edit';
@@ -127,18 +159,48 @@ export function createJob({ renderer, scene, camera, apartment, player, settings
     onDone();
   }
 
+  // A step further back. On the live tape every one brings him nearer:
+  // a short rush of sound, cut dead, and the drone a little higher.
+  function deeper(index, clip, depth) {
+    if (!clip.live) return;
+    audio.riser(0.9, 0.16 + 0.07 * depth);
+    audio.setTension(TENSION.clip[index] + TENSION.step * depth, 1);
+  }
+
+  // Somebody is standing in the picture, on one of the first three tapes.
+  function figure() {
+    audio.sting('cold');
+  }
+
   // The last tape has gone all the way back: the night, 3:07, and Saad
-  // asleep at his desk. The player looks at it for a moment. Then Part 3.
+  // asleep at his desk. The player looks at it for a moment. Then it tears
+  // back to tonight, where a torch comes on, and the picture burns out.
   function allTheWayBack() {
-    later(LINGER, () => {
-      // Part 2 is over. Part 3 begins (STORY.md, beat 15, "The thread"):
-      // the phone lights up, and the thread scrolls up through a year of
-      // messages to the night itself and the name. Once it is put away,
-      // the rest of the ending is src/ending.js.
+    audio.setTension(TENSION.body, 2);
+    later(BODY, () => {
+      audio.riser(2.0, 0.9);
+      editor.burnOut();
+    });
+  }
+
+  // The screen is dead. "I can see you." Then Part 3.
+  function burnt() {
+    audio.sting('hit');
+    cut();
+    later(SEEN_AFTER, () => {
+      audio.message('pocket');
+      hud.banner('Unknown number', 'I can see you.', BANNER);
+    });
+    later(SEEN_AFTER + LINGER, () => {
+      // Part 2 is over. Part 3 begins: the phone lights up, and the thread
+      // scrolls up through a year of messages to the night itself and the
+      // name. Once it is put away, the rest of the ending is src/ending.js.
       stage = 'thread';
+      audio.setTension(0.3, 4);
       audio.message('pocket');
       later(THREAD_AFTER, () => phone.openThread(() => {
         stage = 'done';
+        audio.setTension(0, 3);
         onDone();
       }));
     });
@@ -150,6 +212,7 @@ export function createJob({ renderer, scene, camera, apartment, player, settings
     later(HAMMER_AFTER, () => {
       stage = 'door';
       hud.task(TASKS.door);
+      audio.setTension(TENSION.door, 0.5);
       door.start();
     });
   }

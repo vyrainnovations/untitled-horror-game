@@ -34,6 +34,7 @@ const fragmentShader = /* glsl */ `
   uniform float uColour;    // 0: night picture, black and white. 1: colour
   uniform float uRewind;    // 1 while scrubbing back: the tape tears
   uniform float uJump;      // 1 for a moment when the tape jumps back in time
+  uniform float uFlare;     // 1: a light straight into the lens has burnt the picture out
   uniform float uOn;        // 0: nothing loaded, a blue screen
   varying vec2 vUv;
 
@@ -70,6 +71,9 @@ const fragmentShader = /* glsl */ `
     float snow = hash(vec3(floor(vUv * vec2(240.0, 180.0)), frame + 50.0));
     float bars = 0.7 + 0.3 * sin(vUv.y * 23.0 + uTime * 21.0);
     col = mix(col, vec3(snow * bars), clamp(uStatic, 0.0, 1.0) * 0.94);
+
+    // A light shone straight into the lens: the picture burns out to white.
+    col = mix(col, vec3(1.0), clamp(uFlare, 0.0, 1.0));
 
     // A blank tape is a flat blue, as a VCR shows it.
     col = mix(vec3(0.07, 0.12, 0.42), col, uOn);
@@ -118,12 +122,42 @@ export function createFootage({ renderer, scene, apartment }) {
     props[name] = twin;
   };
   copy('bag', things.rubbishBag);
-  // The two people on the last tape (src/figures.js): only ever on a tape.
+  // The two people on the tapes (src/figures.js), and how each looks on
+  // the camera's night picture:
+  //   Saad   as a camera sees him (STORY.md, rule 4): pale all over, as if
+  //          lit from inside, whatever the lamp is doing, and no face.
+  //   Hamza  a living man under an infra-red lamp: grey, with a face.
+  const flat = (hex) => new THREE.MeshBasicMaterial({ color: hex });
+  const lit = (hex) => new THREE.MeshLambertMaterial({ color: hex });
+  const glows = (hex, glow) => new THREE.MeshLambertMaterial({ color: hex, emissive: glow }); // pale by itself, and shaped a little by the lamp
+  const NIGHT = {
+    saad: { top: glows(0x8a8a8a, 0x707070), legs: glows(0x767676, 0x585858), skin: flat(0x1c1c1c), hair: flat(0x2c2c2c), shoes: flat(0x7a7a7a), gear: flat(0x505050) },
+    hamza: { top: lit(0x7c7c7c), legs: lit(0x646464), skin: lit(0xc8c8c8), hair: lit(0x2a2a2a), shoes: lit(0x3a3a3a), gear: lit(0x202020) },
+  };
+  // The glare of a torch pointed at the lens.
+  const glare = document.createElement('canvas');
+  glare.width = glare.height = 64;
+  const g2 = glare.getContext('2d');
+  const fall = g2.createRadialGradient(32, 32, 0, 32, 32, 32);
+  fall.addColorStop(0, 'rgba(255,255,255,1)');
+  fall.addColorStop(0.3, 'rgba(255,255,255,0.5)');
+  fall.addColorStop(1, 'rgba(255,255,255,0)');
+  g2.fillStyle = fall;
+  g2.fillRect(0, 0, 64, 64);
   for (const who of ['hamza', 'saad']) {
-    const figure = createFigure(who);
+    const figure = createFigure(who, { torch: who === 'hamza' });
     figure.root.traverse((part) => {
-      if (part.isMesh) nightLook.set(part, [part.material, pale]);
+      const night = part.isMesh && NIGHT[who][part.userData.role];
+      if (night) nightLook.set(part, [part.material, night]);
     });
+    if (figure.lamp) {
+      figure.flare = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(glare), blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+      figure.flare.scale.set(1.5, 1.5, 1);
+      figure.flare.position.copy(figure.lamp.position);
+      figure.flare.position.z += 0.03;
+      figure.flare.visible = false;
+      figure.head.add(figure.flare);
+    }
     figure.root.visible = false;
     scene.add(figure.root);
     props[who] = figure;
@@ -178,6 +212,7 @@ export function createFootage({ renderer, scene, apartment }) {
     uColour: { value: 0 },
     uRewind: { value: 0 },
     uJump: { value: 0 },
+    uFlare: { value: 0 },
     uOn: { value: 0 },
   };
   const material = new THREE.ShaderMaterial({ uniforms, vertexShader, fragmentShader, fog: false });
@@ -244,12 +279,14 @@ export function createFootage({ renderer, scene, apartment }) {
     set(puddle.scale, 'z', 0.35 + 0.65 * spill);
   }
 
-  // Draw one frame of a tape: clip at t seconds, the past at step `depth`.
+  // Draw one frame of a tape: clip at t seconds, the past at step `depth`
+  // (or, instead of a step's number, a step of its own: the same things a
+  // step in src/clips.js says).
   // shake (0 to 1): the front door shaking in its frame, as it is hammered on.
   // Everything changed for it is put back straight afterwards.
   const unlit = new THREE.Color();
   function film(clip, t, depth, shake = 0) {
-    const look = clip.past[depth];
+    const look = typeof depth === 'number' ? clip.past[depth] : depth;
     const shows = new Set(look.shows);
     const undo = [];
     const set = (object, key, value) => {
@@ -305,22 +342,24 @@ export function createFootage({ renderer, scene, apartment }) {
     for (const thing of Object.values(props)) (thing.root || thing).visible = false;
   }
 
-  // The people on the last tape, where its step in the past puts them.
+  // The people on a tape, where its step in the past puts them: a pose
+  // from src/figures.js, a spot [x, z] on the plan, and the way they face.
+  // saad: true is short for the night itself: asleep in his chair, slumped
+  // onto the desk. torch: his head torch is on.
+  const ASLEEP = { pose: 'asleep', at: [2.5, 1.17], facing: Math.PI + 0.28 };
   function placePeople(look) {
-    if (look.hamza) {
-      const { root, pose } = props.hamza;
-      pose(look.hamza.pose);
-      root.position.set(look.hamza.at[0], 0, look.hamza.at[1]);
-      root.rotation.y = look.hamza.facing;
-      root.visible = true;
-    }
-    if (look.saad) {
-      // Asleep in his chair at the desk, slumped onto it.
-      const { root, pose } = props.saad;
-      pose('asleep');
-      root.position.set(2.5, 0, 1.17);
-      root.rotation.y = Math.PI + 0.28;
-      root.visible = true;
+    for (const who of ['hamza', 'saad']) {
+      if (!look[who]) continue;
+      const where = look[who] === true ? ASLEEP : look[who];
+      const figure = props[who];
+      figure.pose(where.pose);
+      figure.root.position.set(where.at[0], 0, where.at[1]);
+      figure.root.rotation.y = where.facing;
+      figure.root.visible = true;
+      if (figure.lamp) {
+        figure.lamp.material.color.set(where.torch ? 0xffffff : 0x1c1c1c);
+        figure.flare.visible = !!where.torch;
+      }
     }
   }
 
@@ -382,12 +421,13 @@ export function createFootage({ renderer, scene, apartment }) {
     film,
     caption,
     // The look on top: how much static, colour, tearing and jumping.
-    set({ time, static: snow = 0, colour = 0, rewind = 0, jump = 0, on = 1 }) {
+    set({ time, static: snow = 0, colour = 0, rewind = 0, jump = 0, flare = 0, on = 1 }) {
       uniforms.uTime.value = time;
       uniforms.uStatic.value = snow;
       uniforms.uColour.value = colour;
       uniforms.uRewind.value = rewind;
       uniforms.uJump.value = jump;
+      uniforms.uFlare.value = flare;
       uniforms.uOn.value = on;
     },
     // Something added to the flat that is part of one of the sets above.

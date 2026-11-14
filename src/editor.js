@@ -43,7 +43,9 @@ const DIGITS = '"Cascadia Mono", Consolas, "Courier New", monospace';
 
 const pad2 = (n) => String(Math.floor(n)).padStart(2, '0');
 
-export function createEditor({ scene, footage, audio, hud, onMarked, onTapeEnd, onAllTheWayBack }) {
+const BURN = { tear: 0.5, white: 1.5, hold: 0.5 }; // the last tape burning out: the picture tears, goes white, and stays white
+
+export function createEditor({ scene, footage, audio, hud, onMarked, onTapeEnd, onAllTheWayBack, onDeeper = () => {}, onFigure = () => {}, onBurnt = () => {} }) {
   // --- The program on the monitor ----------------------------------------------------
   const canvas = document.createElement('canvas');
   canvas.width = UI[0];
@@ -84,6 +86,8 @@ export function createEditor({ scene, footage, audio, hud, onMarked, onTapeEnd, 
   let active = false; // is the player sat at it, looking at it
   let jumped = null; // after a mark, a tape that jumps on by itself: { time, knocked }
   let ended = false; // the tape has run out: the screen shows a blank blue
+  let figureSeen = -1; // the step into the past whose figure has already been noticed
+  let burning = null; // the last tape burning out: seconds since it began
   const marks = []; // every file marked so far
 
   function load(i) {
@@ -104,6 +108,8 @@ export function createEditor({ scene, footage, audio, hud, onMarked, onTapeEnd, 
     say = 0;
     jumped = null;
     ended = false;
+    figureSeen = -1;
+    burning = null;
     screen.visible = true;
     audio.tape('load');
   }
@@ -133,7 +139,7 @@ export function createEditor({ scene, footage, audio, hud, onMarked, onTapeEnd, 
 
   function press(code) {
     idle = 0;
-    if (!clip || !active || marked !== null) return false;
+    if (!clip || !active || marked !== null || burning !== null) return false;
     if (code === 'Space') {
       if (t >= clip.length - 0.01) t = 0;
       playing = !playing;
@@ -151,6 +157,7 @@ export function createEditor({ scene, footage, audio, hud, onMarked, onTapeEnd, 
         // Scrubbing back over the moment, or from after it: one step further into the past.
         if (way < 0 && t > moment().from && depth < clip.past.length - 1) {
           depth += 1;
+          onDeeper(index, clip, depth);
           if (depth === clip.past.length - 1 && clip.live) onAllTheWayBack(index, clip);
           jump = JUMP;
           audio.tape('jump');
@@ -246,7 +253,14 @@ export function createEditor({ scene, footage, audio, hud, onMarked, onTapeEnd, 
     jump = Math.max(0, jump - dt);
     const before = t;
     shaking = 0;
-    if (jumped) {
+    if (burning !== null) {
+      // Tonight again, a torch into the lens, and the picture burns out.
+      burning += dt;
+      if (burning >= BURN.tear + BURN.white + BURN.hold && !ended) {
+        ended = true;
+        onBurnt(index, clip);
+      }
+    } else if (jumped) {
       shaking = runOn(dt);
     } else if (scrub !== 0 && marked === null) {
       held += dt;
@@ -262,6 +276,11 @@ export function createEditor({ scene, footage, audio, hud, onMarked, onTapeEnd, 
       }
     }
     if (staticNow() > 0.5) damageSeen = true;
+    // Somebody is standing in the picture, and it can be seen: say so, once.
+    if (!clip.live && clip.past[depth].saad && figureSeen !== depth && jump === 0 && staticNow() < 0.4) {
+      figureSeen = depth;
+      onFigure(index, clip, depth);
+    }
 
     // Hints, for a player who has not worked it out.
     hintTime += dt;
@@ -287,10 +306,11 @@ export function createEditor({ scene, footage, audio, hud, onMarked, onTapeEnd, 
     const moving = t !== before;
     const snow = staticNow();
     audio.setTape({ motor: playing ? 1 : 0, rewind: scrub < 0 && moving ? 1 : scrub > 0 && moving ? 0.6 : 0, snow: moving ? snow : snow * 0.3 });
-    const look = clip.past[depth];
-    footage.set({ time: clock, static: snow, colour: look.colour, rewind: scrub < 0 && moving ? 1 : 0, jump: jump / JUMP, on: ended ? 0 : 1 });
+    const look = burning !== null ? clip.torch : clip.past[depth];
+    const flare = burning === null ? 0 : Math.max(0, Math.min(1, (burning - BURN.tear) / BURN.white));
+    footage.set({ time: clock, static: snow, colour: look.colour, rewind: (scrub < 0 && moving) || (burning !== null && burning < BURN.tear) ? 1 : 0, jump: jump / JUMP, flare, on: ended ? 0 : 1 });
     if (ended) footage.caption('', '', '');
-    else if (clip.live && depth < last) footage.caption('LIVE', look.date, `03:07:${pad2(Math.min(59, liveTime))}`); // tonight, and 3:07 does not end yet
+    else if (clip.live && (depth < last || burning !== null)) footage.caption('LIVE', look.date, `03:07:${pad2(Math.min(59, liveTime))}`); // tonight, and 3:07 does not end yet
     else if (jumped && jumped.time >= 0) footage.caption('PLAY', look.date, timeOnTape(jumped.time, clip.jumpsOn.clock));
     else footage.caption(scrub < 0 ? 'REW' : scrub > 0 ? 'FWD' : playing ? 'PLAY' : 'PAUSE', look.date, timeOnTape(t));
     draw();
@@ -419,7 +439,21 @@ export function createEditor({ scene, footage, audio, hud, onMarked, onTapeEnd, 
   // and not once the tape has run out.
   let shaking = 0; // how hard the door on the tape is shaking just now
   function film() {
-    if (clip && !ended) footage.film(clip, t, depth, shaking);
+    if (clip && !ended) footage.film(clip, t, burning !== null ? clip.torch : depth, shaking);
+  }
+
+  // The last tape, after the night: it tears back to tonight, where a torch
+  // is pointed at the lens, and the picture burns out to white. Then the
+  // screen is dead (onBurnt).
+  function burnOut() {
+    if (!clip || !clip.torch || burning !== null) return;
+    burning = 0;
+    playing = false;
+    scrub = 0;
+    down.clear();
+    jump = JUMP;
+    audio.tape('jump');
+    hud.hint(null);
   }
 
   function reset() {
@@ -435,6 +469,8 @@ export function createEditor({ scene, footage, audio, hud, onMarked, onTapeEnd, 
     active = false;
     jumped = null;
     ended = false;
+    figureSeen = -1;
+    burning = null;
     screen.visible = false;
     footage.set({ time: 0, on: 0 });
     audio.setTape({ motor: 0, rewind: 0, snow: 0 });
@@ -444,6 +480,7 @@ export function createEditor({ scene, footage, audio, hud, onMarked, onTapeEnd, 
     load,
     update,
     film,
+    burnOut,
     press,
     release,
     reset,
@@ -461,6 +498,6 @@ export function createEditor({ scene, footage, audio, hud, onMarked, onTapeEnd, 
       t = Math.max(0, Math.min(clip.length, seconds));
     },
     // For tests: where the edit has got to.
-    state: () => ({ clip: index, t: +t.toFixed(2), playing, scrub, depth, marked, damageSeen, static: +staticNow().toFixed(2), active, jumpedOn: jumped ? +jumped.time.toFixed(2) : null, ended }),
+    state: () => ({ clip: index, t: +t.toFixed(2), playing, scrub, depth, marked, damageSeen, static: +staticNow().toFixed(2), active, jumpedOn: jumped ? +jumped.time.toFixed(2) : null, ended, figureSeen, burning: burning === null ? null : +burning.toFixed(2) }),
   };
 }
