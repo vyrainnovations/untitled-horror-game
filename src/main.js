@@ -18,6 +18,7 @@ import { createHud } from './hud.js';
 import { createInteract } from './interact.js';
 import { createChores } from './chores.js';
 import { createJob } from './job.js';
+import { createEnding } from './ending.js';
 import { floorAt } from './plan.js';
 
 // The VHS filter never draws more lines than this, to stay fast on 4K screens.
@@ -68,6 +69,14 @@ const job = createJob({
   onDone: afterTheLastClip,
 });
 
+// The end: the gas, the door, the last shot, the title and the credits.
+const ending = createEnding({
+  apartment, camera, interact, hud, audio,
+  footage: job.parts.footage,
+  cut: () => vhs.cut(),
+  onFinished: theEnd,
+});
+
 // The chores are done: the rubbish is out, the door is bolted, a ring is
 // burning under the chai, and the player has just picked up the buzzing
 // phone in the study. Part 2 begins (src/job.js).
@@ -75,11 +84,16 @@ function afterTheChores() {
   job.start();
 }
 
-// Part 2 is over: the last tape has gone all the way back to the night.
-// That is as far as the game is built. The place where Part 3 starts is
-// marked "THE NEXT PART OF THE GAME STARTS HERE" in src/job.js.
+// Part 2 is over and the thread has been read (src/job.js). The rest of
+// Part 3 is src/ending.js.
 function afterTheLastClip() {
-  hud.task('That is as far as the game goes for now.', { plain: true });
+  ending.start();
+}
+
+// After the credits: back to the title screen, and the mouse back to the player.
+function theEnd() {
+  toTitle();
+  player.release();
 }
 
 // --- The three states ------------------------------------------------------
@@ -141,6 +155,7 @@ function toTitle() {
   mode = 'title';
   playTime = 0;
   job.reset();
+  ending.reset();
   chores.reset(); // the title screen shows the flat as it is before anything has been done
   attract.restart();
   vhs.setPaused(false);
@@ -174,7 +189,7 @@ player.setStepListener((x, z, fast) => audio.step(floorAt(x, z), fast));
 // phone is up, or the player is sat at the PC, the keys go to those instead.
 window.addEventListener('keydown', (e) => {
   if (mode !== 'playing' || e.repeat) return;
-  if (job.keyDown(e.code)) e.preventDefault();
+  if (ending.keyDown(e.code) || job.keyDown(e.code)) e.preventDefault();
   else if (e.code === 'KeyE') interact.use();
 });
 window.addEventListener('keyup', (e) => job.keyUp(e.code));
@@ -184,7 +199,7 @@ window.addEventListener('keyup', (e) => job.keyUp(e.code));
 // without having moved.
 let press = null;
 const clickUse = () => {
-  if (!job.click()) interact.use();
+  if (!ending.keyDown('KeyE') && !job.click()) interact.use();
 };
 document.addEventListener('mousedown', (e) => {
   if (e.button !== 0 || mode !== 'playing') return;
@@ -247,12 +262,14 @@ let last = 0;
 const STILL = { forward: 0, right: 0, fast: false }; // looking about, but not walking
 function tick(dt) {
   if (mode === 'playing') {
-    // Who has the controls: walking, the phone, or the desk (src/job.js).
-    const hands = job.hands();
+    // Who has the controls: walking, the phone, the desk (src/job.js), or
+    // the ending (looking, but not walking).
+    const hands = ending.busy() ? 'ending' : job.hands();
     if (hands === 'walk') player.update(dt);
-    else if (hands === 'phone') player.update(dt, STILL);
+    else if (hands === 'phone' || hands === 'ending') player.update(dt, STILL);
     chores.update(dt);
     job.update(dt);
+    ending.update(dt);
     if (hands === 'walk') interact.update();
     hud.update(dt);
     playTime += dt;
@@ -274,6 +291,7 @@ function draw(now) {
   audio.update(camera.position.x, camera.position.z, apartment.lights.bulb.intensity / BULB_FULL);
   menu.setClock(playTime);
   job.film(); // the tape on the monitor, drawn before the picture it is part of
+  ending.film(); // and the last shot, when it is on
   vhs.render(scene, camera, now);
 }
 
@@ -313,6 +331,7 @@ if (import.meta.env.DEV) {
     interact,
     chores,
     job,
+    ending,
     frame,
     tick, // move the game on by so many seconds without waiting: __game.tick(0.05)
     draw: () => draw(performance.now() / 1000),

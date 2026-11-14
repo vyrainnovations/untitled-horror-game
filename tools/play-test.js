@@ -178,6 +178,7 @@ export function doDoor() {
   expect('still hammering from the far end of the corridor', door().stage, 'hammering');
   stand(4.95, 9.6, 4.95, 1.5, 11.9);
   expect('it stops when he gets near', door().stage, 'stopped');
+  tick(0.3); // the last blow dies away
   expect('the door is still again', door().shake, 0);
   tick(0.5);
   expect('no prompt from out of reach', g().hud.says().prompt, null);
@@ -238,8 +239,85 @@ export function doClipFour() {
   expect('clip 4: all the way back, the night itself', clip.past[ed().depth].date, 'NOV 16 2026');
   expect('clip 4: and Saad is at the desk', g().job.parts.footage.props.saad.root.position.x, 2.5);
   expect('clip 4: the task is never ticked', g().hud.says().ticked, false);
-  tick(8.5);
-  expect('the end of what is built', g().hud.says().task, 'That is as far as the game goes for now.');
+  tick(7.2);
+  expect('Part 3: the phone buzzes', g().job.state().stage, 'thread');
+  tick(1.8);
+  expect('Part 3: the phone comes up, sat at the desk', [g().job.parts.phone.state().up, g().job.parts.phone.state().mode].join(), 'true,thread');
+}
+
+// Part 3, beat 15: the thread scrolls up through the year to the night and
+// the name, then the last messages come in.
+export function doThread() {
+  const phone = () => g().job.parts.phone.state();
+  expect('the thread starts with no name', phone().who, 'Unknown number');
+  let sawTheNight = false;
+  let named = false;
+  for (let i = 0; i < 3000 && !phone().finished; i++) {
+    tick(STEP);
+    if (phone().focus === 'OPEN THE DOOR') sawTheNight = true;
+    if (phone().who === 'Hamza') named = true;
+  }
+  expect('the thread reaches the night itself', sawTheNight, true);
+  expect('the thread has a name now', named, true);
+  expect('the last messages are in', phone().finished, true);
+  tick(0.5);
+  expect('prompt when the thread is done', g().hud.says().prompt, 'Put the phone away');
+  key('KeyE');
+  tick(1);
+  expect('the phone is down', phone().up, false);
+  tick(1.5);
+  expect('task after the thread', g().hud.says().task, 'Turn off the gas');
+}
+
+// Part 3, beat 16: the gas.
+export function doGas() {
+  const end = () => g().ending.state();
+  key('KeyQ');
+  tick(1.2);
+  expect('stood up from the desk', g().job.hands(), 'walk');
+  expect('prompt at the gas knob', stand(1.47, 10.85, 1.47, 0.925, 11.43), 'Turn off the gas');
+  key('KeyE');
+  tick(0.8);
+  expect('the knob is off', end().knob, 0);
+  tick(1);
+  expect('the microwave says 3:08', end().microwave, '3:08');
+  tick(3.4); // the gas line is ticked and leaves before the next comes
+  expect('task after the gas', g().hud.says().task, 'Open the door');
+}
+
+// Part 3, beat 17: the door.
+export function doTheDoor() {
+  const end = () => g().ending.state();
+  expect('prompt at the bolt', stand(4.9, 11.2, 4.69, 1.87, 11.92), 'Slide the bolt back');
+  key('KeyE');
+  tick(1);
+  expect('the bolt is back', end().bolt, 0);
+  expect('the ending has the controls', g().ending.busy(), true);
+  tick(3.6);
+  expect('the door is open', end().door, 1.5);
+  expect('the landing light is on', end().landing > 3, true);
+  tick(2.6);
+  expect('the last shot is on', [end().stage, end().tape].join(), 'shot,true');
+}
+
+// Part 3, beat 18: the last shot, then the title and the credits.
+export function doTheEnd() {
+  const end = () => g().ending.state();
+  tick(9.6);
+  expect('the tape stops', end().stage, 'stopped');
+  tick(0.5);
+  expect('the stopped tape says STOP, at 3:08', g().job.parts.footage.says(), 'STOP|NOV 16 2027|03:08:01');
+  tick(3.1);
+  expect('the title, on black', [end().card, end().title].join(), 'true,Untitled');
+  tick(3.6);
+  expect('the credits', end().credits, true);
+  key('Enter');
+  tick(0.2);
+  expect('back at the title screen', g().mode(), 'title');
+  const after = end();
+  expect('back at the title, the door is shut and dark outside', [after.door, after.landing, after.tape, after.card].join(), '0,0,false,false');
+  expect('back at the title, the microwave says 3:07', after.microwave, '3:07');
+  expect('back at the title, the bolt is back and the knob off', [g().chores.state().knob, after.bolt].join(), '0,0');
 }
 
 // Pausing and going back to the title.
@@ -287,6 +365,12 @@ export async function run() {
   doAnswerThree();
   tick(2.5);
   doClipFour();
+  doThread();
+  doGas();
+  doTheDoor();
+  doTheEnd();
+  // A second game, paused at the desk, then back to the title.
+  await toEditor();
   await doPauseAndRestart();
   expect('back at the title, the ring is out and nothing hisses', [g().chores.state().ringLit, g().chores.state().boiledOver, g().chores.state().knob].join(), 'false,false,0');
   // And once more from the start, to show a second game starts clean.

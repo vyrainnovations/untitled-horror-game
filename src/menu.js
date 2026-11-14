@@ -5,8 +5,14 @@
 //
 // The look of it lives in menu.css.
 
-const TITLE = 'Untitled'; // the game's name. It is a working title: change it here.
+export const TITLE = 'Untitled'; // the game's name. It is a working title: change it here.
 const TITLE_NOTE = 'working title';
+// The credits: on the Credits page, and at the very end of the game (src/ending.js).
+export const CREDITS = [
+  'Directed by Eshan, Vyra Innovations.',
+  'Built with Claude, an AI model, in Claude Code.',
+  'Every texture is painted by code and every sound is made by code. The game holds no image or sound files.',
+];
 const USUAL_HINT = 'Click an option, or use the arrow keys and Enter.';
 
 const el = (tag, className, text) => {
@@ -180,9 +186,7 @@ export function createMenu({ settings, audio, onPlay, onTitle }) {
     ],
     credits: () => [
       words('row--heading', 'Credits'),
-      words('row--text', 'Directed by Eshan, Vyra Innovations.'),
-      words('row--text', 'Built with Claude, an AI model, in Claude Code.'),
-      words('row--text', 'Every texture is painted by code and every sound is made by code. The game holds no image or sound files.'),
+      ...CREDITS.map((line) => words('row--text', line)),
       back(),
     ],
   };

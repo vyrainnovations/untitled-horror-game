@@ -150,4 +150,19 @@ export const CLIPS = [
   },
 ];
 
-for (const clip of CLIPS) for (const step of clip.past) step.shows = FLAT[step.date].concat(step.adds || []);
+// The last shot (STORY.md, beat 18), played full screen by src/ending.js
+// once the front door is open: the empty flat tonight, the door standing
+// open with light coming through it, and Hamza in the corridor looking at
+// it, a figure against a lit doorway. Its camera's own lamp is turned down
+// (lamp), so that he stands dark against the light.
+export const LAST_SHOT = {
+  file: 'the last shot',
+  camera: { at: [5.3, 1.55, 6.0], look: [4.93, 1.05, 11.95], fov: 44 },
+  length: 10,
+  clock: [3, 7, 52],
+  moment: { from: 0, to: 1 },
+  past: [{ date: 'NOV 16 2027', lights: 0, lamp: 0.18, colour: 0.6, static: 0, hamza: { pose: 'stand', at: [4.93, 10.2], facing: 0 } }],
+  moves: [],
+};
+
+for (const clip of [...CLIPS, LAST_SHOT]) for (const step of clip.past) step.shows = FLAT[step.date].concat(step.adds || []);

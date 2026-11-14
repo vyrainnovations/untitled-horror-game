@@ -174,6 +174,18 @@ export function createAudio() {
     street.gain.setTargetAtTime(0.09 * nearWindows * nearWindows, now, 0.2);
   }
 
+  // Everything in the flat goes almost silent, for a moment, then comes
+  // back: the hiss has stopped.
+  function hush(seconds) {
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    world.gain.cancelScheduledValues(now);
+    world.gain.setValueAtTime(world.gain.value, now);
+    world.gain.linearRampToValueAtTime(0.08 * SCENES[scene], now + 0.25);
+    world.gain.setValueAtTime(0.08 * SCENES[scene], now + seconds);
+    world.gain.linearRampToValueAtTime(SCENES[scene], now + seconds + 2.5);
+  }
+
   function setScene(name) {
     scene = name;
     if (ctx) world.gain.setTargetAtTime(SCENES[name], ctx.currentTime, 0.08);
@@ -310,6 +322,24 @@ export function createAudio() {
       burst(world, 1500, 0.04, 0.08);
       slide(world, 620, 500, 0.03, 0.04, 'triangle');
     },
+    // The gas knob turned off: a hard click.
+    knob() {
+      slide(world, 1500, 900, 0.035, 0.11, 'square');
+      burst(world, 950, 0.05, 0.12);
+    },
+    // The microwave's clock moving on: one small beep. It sounds inside the
+    // silence after the hiss stops, so it does not go through the flat's
+    // own volume, which is held right down just then (hush).
+    beep() {
+      slide(ui, 2093, 2090, 0.16, 0.045, 'sine');
+    },
+    // The front door swinging wide: the latch, then a long creak.
+    doorWide() {
+      slide(world, 1900, 1300, 0.025, 0.07, 'square');
+      burst(world, 700, 0.05, 0.12);
+      slide(world, 250, 120, 2.8, 0.035, 'sawtooth', 0.08);
+      slide(world, 380, 210, 1.6, 0.02, 'triangle', 0.5);
+    },
   };
   function act(kind) {
     if (ctx && ACTS[kind]) ACTS[kind]();
@@ -444,5 +474,5 @@ export function createAudio() {
     return { running: ctx.state === 'running', peak, average: Math.sqrt(sum / samples.length) };
   }
 
-  return { start, update, setScene, setVolume, step, act, setRing, setGas, buzz, message, knock, tape, setTape, click, level };
+  return { start, update, setScene, setVolume, step, act, setRing, setGas, hush, buzz, message, knock, tape, setTape, click, level };
 }

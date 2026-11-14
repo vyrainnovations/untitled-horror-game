@@ -220,6 +220,15 @@ export function buildApartment(scene) {
   ring.position.set(1.466, 1.03, 11.56);
   scene.add(ring);
 
+  // The landing light, outside the front door. It has been out all night;
+  // it comes on at the very end, when the door is opened (src/ending.js).
+  // Like the gas ring, it is in the flat from the start, turned down to
+  // nothing. A narrow beam, so it only reaches in through the doorway.
+  const landing = new THREE.SpotLight(0xffe2b8, 0, 9, 0.55, 0.6, 1.3);
+  landing.position.set(4.95, 2.35, 12.75);
+  landing.target.position.set(4.95, 0.2, 9.6);
+  scene.add(landing, landing.target);
+
   // --- Furniture and clutter ----------------------------------------------------
   // Each room's things are one group, so that the tapes (src/footage.js) can
   // show the flat as it is a year later: cleared out.
@@ -242,6 +251,7 @@ export function buildApartment(scene) {
   let dropoutUntil = 0;
   let nextDropout = 8;
   let now = 0;
+  let steady = false; // the bulb has stopped flickering (the very end)
   b.updaters.push((t) => {
     now = t;
     // The corridor bulb flickers, and now and then cuts out for a moment.
@@ -249,8 +259,8 @@ export function buildApartment(scene) {
       dropoutUntil = t + 0.05 + Math.random() * 0.25;
       nextDropout = t + 5 + Math.random() * 16;
     }
-    const out = t < dropoutUntil;
-    const level = out ? 0.06 : 1 + Math.sin(t * 13) * 0.05 + Math.sin(t * 47) * 0.025;
+    const out = !steady && t < dropoutUntil;
+    const level = steady ? 1 : out ? 0.06 : 1 + Math.sin(t * 13) * 0.05 + Math.sin(t * 47) * 0.025;
     bulb.intensity = 2.6 * level;
     bulbMaterial.color.copy(out ? bulbDead : bulbLit);
     bulbHaze.material.opacity = 0.5 * level;
@@ -263,7 +273,7 @@ export function buildApartment(scene) {
     things: b.things, // the few objects the game moves or switches on, by name (see b.tag)
     rooms, // each room's furniture and clutter, as one group
     start: { x: 2.5, z: 2.2, yaw: 0, pitch: -0.1 }, // in the study, behind the chair, facing the desk
-    lights: { bulb, strip, screen, screenFill, beams, bounce, vent, drawn, ring, sky },
+    lights: { bulb, strip, screen, screenFill, beams, bounce, vent, drawn, ring, sky, landing },
     // The corridor bulb's own glow, so a tape can show it switched off.
     bulbLook: { material: bulbMaterial, haze: bulbHaze, dead: bulbDead },
     update(t, dt) {
@@ -273,6 +283,11 @@ export function buildApartment(scene) {
     // is hammered on.
     cutBulb(seconds) {
       dropoutUntil = Math.max(dropoutUntil, now + seconds);
+    },
+    // The corridor bulb burns steady (true) or flickers as it always has.
+    steadyBulb(on) {
+      steady = on;
+      dropoutUntil = 0;
     },
   };
 }

@@ -277,7 +277,7 @@ export function createFootage({ renderer, scene, apartment }) {
       unlit.copy(bulbLook.material.color);
       bulbLook.material.color.copy(bulbLook.dead);
     }
-    set(lamp, 'intensity', LAMP * (1 - 0.7 * look.lights));
+    set(lamp, 'intensity', LAMP * (look.lamp ?? 1 - 0.7 * look.lights));
     set(scene.fog, 'near', 4);
     set(scene.fog, 'far', 18);
     lamp.position.set(...clip.camera.at);
@@ -356,6 +356,8 @@ export function createFootage({ renderer, scene, apartment }) {
       osd.beginPath();
       if (state === 'PLAY') {
         osd.moveTo(x, 22); osd.lineTo(x + 20, 34); osd.lineTo(x, 46);
+      } else if (state === 'STOP') {
+        osd.rect(x, 23, 22, 22);
       } else if (state === 'PAUSE') {
         osd.rect(x, 23, 7, 23); osd.rect(x + 12, 23, 7, 23);
       } else {
@@ -396,5 +398,6 @@ export function createFootage({ renderer, scene, apartment }) {
     camera,
     props,
     target: raw,
+    says: () => osdSaid, // what is written on the tape just now: 'STATE|DATE|TIME'
   };
 }

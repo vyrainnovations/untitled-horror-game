@@ -35,6 +35,7 @@ const HAMMER_AFTER = 1.2; // seconds after the second tape runs out before the r
 const REPLY_AFTER_PEEPHOLE = 1.6; // seconds after looking through the peephole before the answer comes in
 const FILE_AFTER = 1.6; // seconds after "There is one more" before the fourth file arrives
 const LINGER = 7; // seconds on the last frame of the last tape before the game moves on
+const THREAD_AFTER = 1.4; // seconds after the phone buzzes before it is in his hand
 
 // The keys along the bottom of the screen while sat at the desk.
 const AT_SCREEN = [['Space', 'Play / pause'], ['A  D', 'Scrub'], ['E', 'Mark this frame'], ['Q', 'Stand up']];
@@ -129,13 +130,16 @@ export function createJob({ renderer, scene, camera, apartment, player, settings
   // asleep at his desk. The player looks at it for a moment. Then Part 3.
   function allTheWayBack() {
     later(LINGER, () => {
-      // --- THE NEXT PART OF THE GAME STARTS HERE -------------------------
-      // Part 2 is over. Part 3 (STORY.md, beat 15, "The thread") begins
-      // here: the phone lights up, and the thread scrolls up through a
-      // year of messages. It is not built yet; when it is, open it from
-      // here instead of handing on.
-      stage = 'done';
-      onDone();
+      // Part 2 is over. Part 3 begins (STORY.md, beat 15, "The thread"):
+      // the phone lights up, and the thread scrolls up through a year of
+      // messages to the night itself and the name. Once it is put away,
+      // the rest of the ending is src/ending.js.
+      stage = 'thread';
+      audio.message('pocket');
+      later(THREAD_AFTER, () => phone.openThread(() => {
+        stage = 'done';
+        onDone();
+      }));
     });
   }
 
@@ -159,7 +163,7 @@ export function createJob({ renderer, scene, camera, apartment, player, settings
   // Who has the controls: 'walk', 'phone' (the phone is up: look, but no
   // walking), 'seat' (sat at the desk) or 'door' (an eye to the peephole).
   function hands() {
-    if (phone.isUp()) return 'phone';
+    if (phone.isUp() && !seat.isSeated() && !seat.isMoving()) return 'phone';
     if (door.isLooking()) return 'door';
     if (seat.isSeated() || seat.isMoving()) return 'seat';
     return 'walk';
@@ -176,10 +180,10 @@ export function createJob({ renderer, scene, camera, apartment, player, settings
     phone.update(dt);
     seat.update(dt);
     door.update(dt, seat.isSeated() || seat.isMoving());
-    const working = seat.isSeated() && seat.atScreen();
+    const working = seat.isSeated() && seat.atScreen() && !phone.isUp();
     editor.setActive(working);
     if (editor.isOn()) editor.update(dt);
-    hud.keys(seat.isSeated() ? (working && stage === 'edit' ? AT_SCREEN : LOOKING_AWAY) : null);
+    hud.keys(seat.isSeated() && !phone.isUp() ? (working && stage === 'edit' ? AT_SCREEN : LOOKING_AWAY) : null);
 
     // While the door is hammered on, a word for a player who stays put.
     if (door.isHammering()) {
@@ -200,9 +204,10 @@ export function createJob({ renderer, scene, camera, apartment, player, settings
   // Answers true if the key was for the phone, the desk or the peephole.
   function keyDown(code) {
     const where = hands();
-    if (where === 'phone') {
+    if (phone.isUp()) {
+      // The phone in his hand, sat down or not: E is for the phone.
       if (code === 'KeyE') phone.use();
-      return code === 'KeyE';
+      return code === 'KeyE' || code === 'Space' || where === 'seat';
     }
     if (where === 'door') return true;
     if (where === 'seat') {

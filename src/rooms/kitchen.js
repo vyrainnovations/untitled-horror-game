@@ -34,7 +34,7 @@ export function dressKitchen(b, M, f, F) {
   b.box(0.06, 0.66, 0, 0.96, 9.62, 10.1, b.sides(M.laminate, { east: M.tallUnit }));
   b.box(0.06, 0.66, 0.96, 1.3, 9.62, 10.1, M.laminate);
   b.box(0.2, 0.672, 0.99, 1.27, 9.66, 10.06, b.sides(M.blackPlastic, { east: M.microwave }));
-  b.panel(0.6735, 1.235, 9.715, 0.07, 0.028, '+x', M.digitsGreen); // its clock
+  b.tag('microwaveClock', b.panel(0.6735, 1.235, 9.715, 0.07, 0.028, '+x', M.digitsGreen)); // its clock: 3:07, until the very end
   b.box(0.06, 0.66, 1.3, 2.15, 9.62, 10.1, b.sides(M.laminate, { east: M.tallUnit }));
   b.block(0.06, 0.66, 9.62, 11.34);
 
