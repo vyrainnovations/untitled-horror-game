@@ -189,7 +189,7 @@ All of it shows on the phone, or as a line across the top of the screen. The pla
 > Find the moment it goes wrong. Mark it.
 > Payment is 300,000 rupees. Half is sent now.
 >
-> **You:** That is a lot for three clips.
+> **You:** Why so much?
 >
 > Do not ask questions. Do the work.
 > Sending the files.

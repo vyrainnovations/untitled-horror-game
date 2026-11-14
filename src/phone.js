@@ -27,18 +27,24 @@ import { CLIPS } from './clips.js';
 //   files   for 'them': files arriving, instead of words
 // A 'you' line waits until the player presses E to send it. There are no
 // choices: one story, one ending (STORY.md, "The messages").
+//
+// The client does not sound like a person: short flat sentences, one
+// thought each, no feeling, and the same pause before every one (TYPING).
+// Each message then stays on its own long enough to be read twice (READ)
+// before the next one starts.
+const TYPING = 1.2;
 const TONIGHT = [
   { from: 'them', text: 'Are you still up?', typing: 0 },
-  { from: 'them', text: 'I have footage that needs looking at. Tonight.', typing: 0 },
+  { from: 'them', text: 'I have a job for you. Video editing. Tonight.', typing: 0 },
   { from: 'you', text: 'Who is this?' },
-  { from: 'them', text: "You don't have this number.", typing: 1.8 },
-  { from: 'them', text: "I'll pay whatever you ask. I mean that.", typing: 2.4 },
-  { from: 'you', text: "What's the job?" },
-  { from: 'them', text: 'Three clips. Something goes wrong in each one.', typing: 2.0 },
-  { from: 'them', text: "Find the frame where it goes wrong. Mark it. That's all.", typing: 2.6 },
-  { from: 'them', text: 'You were always the one who could see it.', typing: 3.0 },
-  { from: 'them', text: 'Sending now.', typing: 1.4 },
-  { from: 'them', files: ['clip_01.mov', 'clip_02.mov', 'clip_03.mov'], typing: 1.8 },
+  { from: 'them', text: 'A client.', typing: TYPING },
+  { from: 'them', text: 'There are three video files. In each one, something goes wrong.', typing: TYPING },
+  { from: 'them', text: 'Find the moment it goes wrong. Mark it.', typing: TYPING },
+  { from: 'them', text: 'Payment is 300,000 rupees. Half is sent now.', typing: TYPING },
+  { from: 'you', text: 'Why so much?' }, // short: it has to fit in the box it is typed in
+  { from: 'them', text: 'Do not ask questions. Do the work.', typing: TYPING },
+  { from: 'them', text: 'Sending the files.', typing: TYPING },
+  { from: 'them', files: ['clip_01.mov', 'clip_02.mov', 'clip_03.mov'], typing: TYPING },
 ];
 const WHO = 'Unknown number'; // the name at the top of the thread, until it has one
 const NAME = 'Hamza'; // the name it turns out to have
@@ -76,18 +82,20 @@ const LAST = [
   'You left the chai on, yaar.',
   'Turn it off. Then open the door.',
 ];
-// Seconds the thread lingers on a message as it scrolls up, for every
-// character in it (with a floor and a ceiling), and on the name.
-const READ = { perLetter: 0.045, least: 1.8, most: 3.6, onTheName: 3.2, arrive: 2.2 };
+// Seconds a message is left to be read, for every character in it (with a
+// floor and a ceiling): tonight, before the next one starts; in the thread,
+// as it scrolls up. And on the name. Slow on purpose: Eshan found the chats
+// hard to follow at the first speed (0.045 a letter).
+const READ = { perLetter: 0.075, least: 2.4, most: 6, onTheName: 4, arrive: 2.2, afterYours: 0.8 };
 
 // --- How it looks ------------------------------------------------------------------
 const LOOK = {
   width: 360, // the picture of the screen, in pixels (half as wide as it is tall)
   height: 720,
-  text: 25, // size of the words in a message
-  small: 17, // size of the times under them
-  line: 31, // the gap from one line of words to the next
-  bubble: 262, // the widest a message gets
+  text: 31, // size of the words in a message: big, because the picture is only 360 lines tall
+  small: 18, // size of the times under them
+  line: 37, // the gap from one line of words to the next
+  bubble: 290, // the widest a message gets
   them: '#2b2f37', // their messages
   themText: '#e2ded3',
   you: '#e8943a', // the player's messages: the menu's lamp colour
@@ -101,8 +109,8 @@ const LOOK = {
 // --- The phone in the hand -----------------------------------------------------------
 const HAND = {
   raise: 0.35, // seconds for the phone to come up, or go down
-  fill: 0.7, // how much of the height of the view it fills
-  lift: 0.08, // how far above the middle of the view it sits (part of the view's height)
+  fill: 0.78, // how much of the height of the view it fills
+  lift: 0.09, // how far above the middle of the view it sits (part of the view's height)
   tilt: -0.1, // tipped back a little, the way a phone is held
 };
 const BODY = [0.072, 0.146, 0.009]; // width, height, depth in metres
@@ -136,6 +144,7 @@ export function createPhone({ camera, audio, hud, onDone }) {
   let mode = 'tonight'; // 'tonight' or 'thread'
   let next = 0; // the next line of TONIGHT
   let typing = 0; // seconds of "typing..." left, while they are typing
+  let rest = 0; // seconds left for reading the last message before they start the next
   let up = false; // is the phone in his hand
   let raised = 0; // 0 down, 1 up
   let leaving = false; // going back down
@@ -153,11 +162,18 @@ export function createPhone({ camera, audio, hud, onDone }) {
   const waitingFor = () => TONIGHT[next];
   const yourTurn = () => up && !leaving && mode === 'tonight' && waitingFor() && waitingFor().from === 'you';
 
+  const readFor = (item) => Math.max(READ.least, Math.min(READ.most, (item.text || item.missed || '').length * READ.perLetter));
+
   // --- Tonight: move the conversation on as far as it can go without the player -----------
   function advance(dt) {
     while (next < TONIGHT.length) {
       const line = TONIGHT[next];
       if (line.from === 'you') return; // waiting for E
+      if (rest > 0) {
+        rest -= dt;
+        dt = 0;
+        if (rest > 0) return;
+      }
       if (typing <= 0 && line.typing > 0 && !line.started) {
         line.started = true;
         typing = line.typing;
@@ -170,7 +186,12 @@ export function createPhone({ camera, audio, hud, onDone }) {
       line.started = false;
       shown.push({ ...line, age: 0 });
       next += 1;
-      if (line.typing > 0) audio.message(line.files ? 'files' : 'in');
+      if (line.typing > 0) {
+        audio.message(line.files ? 'files' : 'in');
+        // Time to read it, unless the next move is the player's: then they take their own.
+        const after = TONIGHT[next];
+        rest = after && after.from === 'them' ? readFor(line) : 0;
+      }
     }
     finished = true;
   }
@@ -180,7 +201,6 @@ export function createPhone({ camera, audio, hud, onDone }) {
   //   { hold: item }    the thread holds that message in the middle of the screen
   //   { bottom: true }  back down to the newest
   //   { done: true }    finished: the phone can be put away
-  const readFor = (item) => Math.max(READ.least, Math.min(READ.most, (item.text || item.missed || '').length * READ.perLetter));
   function buildThread() {
     shown.length = 0;
     const old = (item) => ({ ...item, age: 99 });
@@ -524,6 +544,7 @@ export function createPhone({ camera, audio, hud, onDone }) {
     if (yourTurn()) {
       shown.push({ ...waitingFor(), age: 0 });
       next += 1;
+      rest = READ.afterYours; // a beat before they answer
       audio.message('out');
     } else if (finished) {
       leaving = true;
@@ -536,6 +557,7 @@ export function createPhone({ camera, audio, hud, onDone }) {
     for (const line of TONIGHT) line.started = false;
     next = 0;
     typing = 0;
+    rest = 0;
     up = false;
     raised = 0;
     leaving = false;

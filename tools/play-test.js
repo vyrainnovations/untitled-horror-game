@@ -73,11 +73,11 @@ export function doPhone() {
   const phone = () => g().job.parts.phone.state();
   expect('the phone is up', phone().up, true);
   for (let reply = 0; reply < 2; reply++) {
-    for (let i = 0; i < 200 && !phone().yourTurn; i++) tick(STEP);
+    for (let i = 0; i < 800 && !phone().yourTurn; i++) tick(STEP);
     expect(`reply ${reply + 1} is waiting`, g().hud.says().prompt, 'Send');
     key('KeyE');
   }
-  for (let i = 0; i < 400 && !phone().finished; i++) tick(STEP);
+  for (let i = 0; i < 800 && !phone().finished; i++) tick(STEP);
   expect('the files have come', phone().finished, true);
   tick(0.5);
   expect('prompt when the files are in', g().hud.says().prompt, 'Put the phone away');
@@ -214,7 +214,7 @@ export function doAnswerThree() {
   tick(2);
   for (const [i, words] of CLIPS[2].reply.entries()) {
     expect(`message ${i + 1} after clip 3`, g().hud.says().banner, (b) => !!b && b.includes(words));
-    tick(3.6);
+    tick(6.5);
   }
   tick(1.8);
   expect('then a fourth file: clip 4 is loaded', g().job.parts.editor.state().clip, 3);

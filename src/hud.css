@@ -179,7 +179,7 @@
   transform: translateX(-50%);
   border-left: 0.16em solid var(--lamp);
   background: rgba(var(--tape-black), 0.8);
-  font-size: clamp(15px, 2.4vh, 32px);
+  font-size: clamp(16px, 2.8vh, 38px);
   opacity: 0;
   transition: opacity 500ms ease;
 }

@@ -30,10 +30,11 @@ const TASKS = {
   door: 'Someone is at the front door',
 };
 const REPLY_AFTER = 1.8; // seconds after a frame is marked before the answer comes in
-const NEXT_MESSAGE = 3.6; // seconds between messages, when the answer is more than one
+const NEXT_MESSAGE = 6.5; // seconds between messages, when the answer is more than one: time to read each
+const BANNER = 9; // seconds a message stays across the top of the screen
 const HAMMER_AFTER = 1.2; // seconds after the second tape runs out before the real door is hammered on
 const REPLY_AFTER_PEEPHOLE = 1.6; // seconds after looking through the peephole before the answer comes in
-const FILE_AFTER = 1.6; // seconds after "There is one more" before the fourth file arrives
+const FILE_AFTER = 2.5; // seconds after "One more file" before the fourth file arrives
 const LINGER = 7; // seconds on the last frame of the last tape before the game moves on
 const THREAD_AFTER = 1.4; // seconds after the phone buzzes before it is in his hand
 
@@ -99,7 +100,7 @@ export function createJob({ renderer, scene, camera, apartment, player, settings
   function answer(index, clip) {
     clip.reply.forEach((words, i) => later(i * NEXT_MESSAGE, () => {
       audio.message('pocket');
-      hud.banner('Unknown number', words);
+      hud.banner('Unknown number', words, BANNER);
     }));
     const more = clip.reply.length > 1 ? FILE_AFTER : 0; // a file that was not expected comes a moment after
     later((clip.reply.length - 1) * NEXT_MESSAGE + more, () => nextClip(index));
