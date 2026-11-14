@@ -1,4 +1,4 @@
-// What is on each tape: STORY.md, Part 2, beats 7 and 8 (and, later, 9 to 14).
+// What is on each tape: STORY.md, Part 2, beats 7 to 11 (and, later, 13 and 14).
 //
 // Every clip is a locked-off shot of the flat at night, filmed by Hamza's
 // camera on its tripod a year after the night itself. Something goes wrong
@@ -15,29 +15,45 @@
 //   moment  when it goes wrong: from and to, in seconds of tape.
 //   past    the steps back in time. The tape starts on the first; each time
 //           the player scrubs back over the moment it moves on to the next.
-//     date    the date burnt into the corner
-//     shows   which of his things are back (the sets are named in src/footage.js)
+//     date    the date burnt into the corner. What of his is in the flat on
+//             that date comes from FLAT, below.
 //     lights  how much of the flat's own lighting is on: 0 none, 1 all of it
 //     colour  0 is the camera's black and white night picture, 1 full colour
 //     static  how much of the moment is still lost in static when scrubbing
 //             back over it: 1 all of it, 0 none. Playing forward, it is
 //             always lost.
-//   moves   what moves on the tape, during the moment.
+//     flame   what the gas ring does in the moment, if anything: 'lights'
+//             (by itself) or 'dies' (the chai boils over and puts it out)
+//   moves   what else moves on the tape, during the moment.
 //   jumpsOn after the moment is marked, the tape jumps on by itself to this
 //           time and plays for so many seconds. knocks: when something
 //           hammers on the door in it, in seconds from the jump.
-//   reply   the message that comes in once the moment is marked (STORY.md,
-//           "Between clips").
+//   reply   the messages that come in, one after another, once the moment
+//           is marked (STORY.md, "Between clips").
+//   hiss    true if marking it puts the real ring out: the chai has boiled
+//           over in the real kitchen too, and from then on the gas hisses.
 //
 // The dates a tape steps back through are the dates of Hamza's messages in
 // the thread at the end (STORY.md), where there is one that fits, so that
-// they click when the player reads it. All the tapes agree about the flat
-// on each date (rule 2: the tape shows what is really there):
-//   NOV 16 2026  the night: everything there, the lights on
-//   NOV 23 2026  everything there, dark; the door frame split
-//   FEB 14 2027  cleared, except the doormat and the shoe rack
-//   APR 19 2027  the same
-//   JUN 09 2027  empty, and from then on
+// they click when the player reads it.
+
+// What of Saad's is in the flat on each date. Every tape reads this, so they
+// all agree (rule 2: the tape shows what is really there). The sets are
+// named in src/footage.js.
+const FLAT = {
+  // The night itself: everything there, the pan of chai on the hob, the lights on.
+  'NOV 16 2026': ['hallByDoor', 'hallWalls', 'rooms', 'kitchen', 'chaiPan', 'bulb'],
+  // A week on: everything still there except the pan, dark. The door frame was forced that night.
+  'NOV 23 2026': ['splitWood', 'hallByDoor', 'hallWalls', 'rooms', 'kitchen'],
+  // Cleared, except the doormat and the shoe rack.
+  'FEB 14 2027': ['splitWood', 'hallByDoor'],
+  'APR 19 2027': ['splitWood', 'hallByDoor'],
+  // Empty, from here on.
+  'JUN 09 2027': ['splitWood'],
+  'AUG 02 2027': ['splitWood'],
+  'OCT 30 2027': ['splitWood'],
+};
+
 export const CLIPS = [
   {
     file: 'clip_01.mov',
@@ -48,15 +64,15 @@ export const CLIPS = [
     clock: [0, 39, 58],
     moment: { from: 11.6, to: 14.2 },
     past: [
-      { date: 'AUG 02 2027', shows: ['splitWood'], lights: 0, colour: 0, static: 1 },
-      { date: 'APR 19 2027', shows: ['splitWood', 'hallByDoor'], lights: 0, colour: 0.06, static: 0.72 },
-      { date: 'NOV 23 2026', shows: ['splitWood', 'hallByDoor', 'hallWalls', 'rooms'], lights: 0, colour: 0.2, static: 0.42 },
-      { date: 'NOV 16 2026', shows: ['hallByDoor', 'hallWalls', 'rooms', 'bulb'], lights: 1, colour: 0.85, static: 0 },
+      { date: 'AUG 02 2027', lights: 0, colour: 0, static: 1 },
+      { date: 'APR 19 2027', lights: 0, colour: 0.06, static: 0.72 },
+      { date: 'NOV 23 2026', lights: 0, colour: 0.2, static: 0.42 },
+      { date: 'NOV 16 2026', lights: 1, colour: 0.85, static: 0 },
     ],
     // The bag comes out of the kitchen on its own and slides down the
     // corridor to the front door. [x, z, turn] at the start, the bend and the end.
     moves: [{ thing: 'bag', from: [3.85, 10.2, 0.5], bend: [4.5, 9.75], to: [4.74, 11.62, 1.3] }],
-    reply: "That's it. That's exactly it. Keep going.",
+    reply: ["That's it. That's exactly it. Keep going."],
   },
   {
     file: 'clip_02.mov',
@@ -68,15 +84,36 @@ export const CLIPS = [
     // The frame round the lock was split the night it was forced: on every
     // tape after it, whole again only on the night itself.
     past: [
-      { date: 'JUN 09 2027', shows: ['splitWood'], lights: 0, colour: 0, static: 1 },
-      { date: 'FEB 14 2027', shows: ['splitWood', 'hallByDoor'], lights: 0, colour: 0.06, static: 0.72 },
-      { date: 'NOV 23 2026', shows: ['splitWood', 'hallByDoor', 'hallWalls', 'rooms'], lights: 0, colour: 0.2, static: 0.42 },
-      { date: 'NOV 16 2026', shows: ['hallByDoor', 'hallWalls', 'rooms', 'bulb'], lights: 1, colour: 0.85, static: 0 },
+      { date: 'JUN 09 2027', lights: 0, colour: 0, static: 1 },
+      { date: 'FEB 14 2027', lights: 0, colour: 0.06, static: 0.72 },
+      { date: 'NOV 23 2026', lights: 0, colour: 0.2, static: 0.42 },
+      { date: 'NOV 16 2026', lights: 1, colour: 0.85, static: 0 },
     ],
     // The bolt slides across by itself, into the frame: from open to shut, in metres.
     moves: [{ thing: 'bolt', from: 0, to: -0.085 }],
     // Then the tape jumps on to 3:07 and something hammers on the door from outside.
     jumpsOn: { clock: [3, 7, 2], seconds: 5.5, knocks: [0.7, 1.0, 1.3, 2.7, 3.0, 3.3, 3.6, 4.6] },
-    reply: 'That bolt. I have thought about that bolt every day.',
+    reply: ['That bolt. I have thought about that bolt every day.'],
+  },
+  {
+    file: 'clip_03.mov',
+    // In the kitchen, on the far side of the worktop, looking down at the hob.
+    camera: { at: [2.25, 1.6, 10.5], look: [1.52, 0.98, 11.66], fov: 46 },
+    length: 24,
+    clock: [1, 9, 48],
+    moment: { from: 12.2, to: 14.6 },
+    // A year on, a ring lights by itself on an empty hob. On the night, the
+    // pan of chai has been on it since 01:00: it boils over, and the flame dies.
+    past: [
+      { date: 'OCT 30 2027', lights: 0, colour: 0, static: 1, flame: 'lights' },
+      { date: 'FEB 14 2027', lights: 0, colour: 0.06, static: 0.72, flame: 'lights' },
+      { date: 'NOV 23 2026', lights: 0, colour: 0.2, static: 0.42, flame: 'lights' },
+      { date: 'NOV 16 2026', lights: 1, colour: 0.85, static: 0, flame: 'dies' },
+    ],
+    moves: [],
+    reply: ['1:10.', 'Two hours.', 'There is one more. I did not want to send it.'],
+    hiss: true,
   },
 ];
+
+for (const clip of CLIPS) for (const step of clip.past) step.shows = FLAT[step.date];

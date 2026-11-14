@@ -85,6 +85,7 @@ export function createMaterials() {
     terracotta: new THREE.MeshLambertMaterial({ color: 0x8a4a2c }),
     liquid: glossy(null, 90, 0x666666, { color: 0x0a1014 }),
     chai: glossy(null, 60, 0x333333, { color: 0x6a4424 }),
+    chaiFoam: new THREE.MeshLambertMaterial({ color: 0xb8956a }), // milky chai foaming up, and boiled over
     glass: new THREE.MeshPhongMaterial({ map: T.grime, transparent: true, depthWrite: false, shininess: 90, specular: 0x555555 }),
     bulbOff: new THREE.MeshLambertMaterial({ color: 0x8a8778 }),
 

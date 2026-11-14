@@ -91,6 +91,7 @@ const TIMES = {
 const DOOR_OPEN = 0.7; // how far the front door opens: 0.7 is about 40 degrees, a wide crack
 const BOLT_TRAVEL = 0.085; // how far the bolt slides, in metres: far enough for its end to go into the frame
 const RING_LIGHT = 0.42; // how bright the lit gas ring is
+const KNOB_ON = -1.4; // how far the gas knob turns to light the ring, in radians: about a quarter turn
 // Where the carried bag is seen: right of centre and low, as if 62 cm in
 // front of the eyes, so that only the top of it shows. [right, up, forward
 // is negative]. These are for the usual field of view (64 degrees): the
@@ -120,6 +121,8 @@ export function createChores({ apartment, camera, player, interact, hud, audio, 
   const phone = things.phone;
   const phoneScreen = things.phoneScreen;
   const binBarrier = things.binBarrier;
+  const knob = things.gasKnob;
+  const spill = things.chaiSpill;
 
   // How things are at the start, so reset() can put them back.
   const home = {
@@ -258,6 +261,7 @@ export function createChores({ apartment, camera, player, interact, hud, audio, 
       run() {
         busy = true;
         audio.act('ignite');
+        move(TIMES.ringCatches * 0.6, (k) => { knob.rotation.z = KNOB_ON * k; });
         after(TIMES.ringCatches, () => {
           ringLit = true;
           flame.visible = true;
@@ -405,6 +409,9 @@ export function createChores({ apartment, camera, player, interact, hud, audio, 
     flame.visible = false;
     ringLight.intensity = 0;
     audio.setRing(false);
+    knob.rotation.z = 0;
+    spill.visible = false;
+    audio.setGas(false);
     phone.visible = true;
     phoneScreen.visible = false;
     sinceBuzz = 0;
@@ -418,11 +425,25 @@ export function createChores({ apartment, camera, player, interact, hud, audio, 
     goTo(0);
   }
 
+  // Much later (the third tape, src/job.js): the chai the player left on
+  // the ring boils over and puts the flame out. The knob is still turned
+  // on, so from now on the gas hisses. Nobody sees it happen; it is there
+  // to be found.
+  function boilOver() {
+    ringLit = false;
+    flame.visible = false;
+    ringLight.intensity = 0;
+    audio.setRing(false);
+    spill.visible = true;
+    audio.setGas(true);
+  }
+
   return {
     start,
     reset,
+    boilOver,
     update,
     // For tests: where the chores have got to.
-    state: () => ({ step: index, of: STEPS.length, does: STEPS[index] ? STEPS[index].does || 'wait' : null, busy, holding, ringLit, moves: moves.length }),
+    state: () => ({ step: index, of: STEPS.length, does: STEPS[index] ? STEPS[index].does || 'wait' : null, busy, holding, ringLit, knob: +knob.rotation.z.toFixed(2), boiledOver: spill.visible, moves: moves.length }),
   };
 }

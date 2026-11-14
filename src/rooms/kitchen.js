@@ -1,8 +1,17 @@
 // The kitchen, with the dining table in it. Inside walls: x 0.06 to 4.14,
 // z 7.26 to 11.94. The cooking end is along the south and west walls; the
 // table stands by the big window at the north end.
+//
+// The third tape (src/clips.js) shows this kitchen emptied, and fills it in
+// again as the player scrubs back. So what was built into the flat (the
+// cabinets, the worktop, the hob, the sink) is always there, and his things
+// are in sets that can be hidden: 'kitchenThings', and the pan of chai on
+// its own ('chaiPan'), because the night itself is the only date it stands
+// on the hob.
 export function dressKitchen(b, M, f, F) {
   const TOP = 0.91; // height of the worktop
+  const things = [];
+  const his = (build) => things.push(b.group(0, 0, 0, 0, build));
 
   // --- Cabinets and worktop: an L along the south and west walls ---------------
   b.box(0.66, 3.3, 0.1, 0.87, 11.36, 11.94, b.sides(M.laminate, { north: M.cabinetsLow }));
@@ -30,18 +39,40 @@ export function dressKitchen(b, M, f, F) {
   b.block(0.06, 0.66, 9.62, 11.34);
 
   // The fridge, with things kept on top of it.
-  b.box(3.38, 4.1, 0, 1.8, 11.22, 11.92, b.sides(M.whitePlastic, { north: M.fridge }));
-  F.carton(3.46, 3.9, 1.8, 2.02, 11.36, 11.8);
-  b.cyl(4.0, 11.5, 1.8, 1.96, 0.07, M.steel, { sides: 8 });
+  his(() => {
+    b.box(3.38, 4.1, 0, 1.8, 11.22, 11.92, b.sides(M.whitePlastic, { north: M.fridge }));
+    F.carton(3.46, 3.9, 1.8, 2.02, 11.36, 11.8);
+    b.cyl(4.0, 11.5, 1.8, 1.96, 0.07, M.steel, { sides: 8 });
+  });
   b.block(3.3, 4.14, 11.2, 11.94);
 
   // --- The hob and what is on it ---------------------------------------------------
   b.box(1.33, 2.08, TOP, 0.94, 11.45, 11.85, b.sides(M.steel, { top: M.stoveTop }));
-  for (const x of [1.47, 1.705, 1.94]) b.rod([x, 0.925, 11.45], [x, 0.925, 11.43], 0.014, M.blackPlastic, { cast: false });
-  // A pan of chai on the left ring.
-  b.cyl(1.466, 11.65, 0.94, 1.015, 0.085, M.steel, { sides: 10 });
-  b.cyl(1.466, 11.65, 1.005, 1.018, 0.078, M.chai, { sides: 10, cast: false });
-  b.box(1.36, 1.4, 0.99, 1.005, 11.48, 11.6, M.blackPlastic);
+  for (const x of [1.705, 1.94]) b.rod([x, 0.925, 11.45], [x, 0.925, 11.43], 0.014, M.blackPlastic, { cast: false });
+  // The knob for the left ring, with a white mark to show which way it is
+  // turned: straight up is off. The chores turn it on; the end of the game
+  // turns it off.
+  b.tag('gasKnob', b.group(1.47, 0.925, 11.44, 0, () => {
+    b.rod([0, 0, 0.01], [0, 0, -0.01], 0.014, M.blackPlastic, { cast: false });
+    b.box(-0.0018, 0.0018, 0, 0.012, -0.0104, -0.0099, M.paper, { cast: false });
+  }));
+  // A pan of chai on the left ring. It boils over later: the foam rising
+  // in it, the chai down its sides and the puddle round it are here from
+  // the start, hidden (src/footage.js, src/chores.js).
+  b.tag('chaiPan', b.group(1.466, 0.94, 11.65, 0, () => {
+    b.cyl(0, 0, 0, 0.075, 0.085, M.steel, { sides: 10 });
+    b.cyl(0, 0, 0.065, 0.078, 0.078, M.chai, { sides: 10, cast: false });
+    b.box(-0.106, -0.066, 0.05, 0.065, -0.17, -0.05, M.blackPlastic);
+    const foam = b.cyl(0, 0, 0.066, 0.078, 0.079, M.chaiFoam, { sides: 10, cast: false });
+    foam.visible = false;
+    b.tag('chaiFoam', foam);
+    const spill = b.group(0, 0, 0, 0, () => {
+      b.cyl(0, 0, 0.004, 0.077, 0.088, M.chaiFoam, { sides: 10, open: true, cast: false });
+      b.cyl(0, 0, 0.0005, 0.0035, 0.17, M.chai, { sides: 14, cast: false });
+    });
+    spill.visible = false;
+    b.tag('chaiSpill', spill);
+  }));
   // The flame under it: a ring of blue round the bottom of the pan, with a
   // soft glow. It is out until the player lights the ring (src/chores.js).
   const flame = b.group(1.466, 0.94, 11.65, 0, () => {
@@ -50,6 +81,7 @@ export function dressKitchen(b, M, f, F) {
   });
   flame.visible = false;
   b.tag('ringFlame', flame);
+  his(() => {
   // A kadhai in the middle.
   b.cyl(1.705, 11.65, 0.94, 1.0, 0.06, M.darkMetal, { sides: 10, top: 0.13 });
   // The pressure cooker on the right.
@@ -96,12 +128,14 @@ export function dressKitchen(b, M, f, F) {
   }
   // A cloth hung over a cabinet handle.
   b.box(2.3, 2.46, 0.45, 0.8, 11.345, 11.358, M.napkin, { cast: false });
+  });
 
   // --- The sink, under its window on the west wall ------------------------------------
   b.box(0.12, 0.6, TOP, 0.918, 10.55, 11.2, M.steel, { cast: false });
   b.panel(0.36, 0.9185, 10.875, 0.4, 0.57, '+y', M.sinkSteel);
   b.rod([0.11, TOP, 10.87], [0.11, 1.12, 10.87], 0.012, M.steel);
   b.rod([0.11, 1.11, 10.87], [0.27, 1.09, 10.87], 0.01, M.steel);
+  his(() => {
   F.bottle(0.14, 11.26, TOP, 0.18, 0.03, M.greenPlastic);
   b.box(0.2, 0.28, TOP, 0.94, 11.23, 11.29, M.yellowPlastic, { cast: false });
   // Plates drying in a rack.
@@ -123,18 +157,19 @@ export function dressKitchen(b, M, f, F) {
   }));
   b.rod([4.08, 0.05, 11.12], [4.1, 1.25, 11.16], 0.012, M.woodLight);
   b.box(4.02, 4.12, 0, 0.12, 11.06, 11.18, M.sack);
+  });
   // One barrier for the bin, the bag and the broom. When the bag is taken
   // away, the game pulls this barrier back to the bin (src/chores.js).
   b.tag('binBarrier', b.block(3.6, 4.14, 10.55, 11.2));
 
   // --- The dining table ------------------------------------------------------------------
+  his(() => {
   b.box(1.4, 2.7, 0.72, 0.76, 8.15, 8.95, M.woodMid);
   for (const x of [1.46, 2.64]) for (const z of [8.21, 8.89]) b.box(x - 0.03, x + 0.03, 0, 0.72, z - 0.03, z + 0.03, M.woodMid);
   F.chair(1.75, 7.93, 0);
   F.chair(2.35, 7.93, 0);
   F.chair(1.75, 9.17, Math.PI);
   F.chair(2.42, 9.2, Math.PI + 0.35); // pushed back, as if someone just got up
-  b.block(1.4, 2.7, 7.26, 9.42);
   // On it: a plate and spoon, tumblers, a jug, fruit, the paper, pickle.
   F.plate(1.75, 8.72, 0.76);
   b.box(1.9, 1.92, 0.76, 0.765, 8.64, 8.8, M.steel, { cast: false });
@@ -152,8 +187,11 @@ export function dressKitchen(b, M, f, F) {
   b.rod([2.05, 2.8, 8.55], [2.05, 1.76, 8.55], 0.006, M.blackPlastic, { cast: false });
   b.cyl(2.05, 8.55, 1.6, 1.76, 0.2, M.darkMetal, { sides: 10, top: 0.05 });
   b.ball(2.05, 1.62, 8.55, 0.04, M.bulbOff, { cast: false });
+  });
+  b.block(1.4, 2.7, 7.26, 9.42);
 
   // --- North wall: a sideboard, with a radio, a flask and glasses on a tray ----------
+  his(() => {
   b.box(2.9, 4.1, 0, 0.9, 7.26, 7.7, b.sides(M.woodMid, { south: M.sideboard }));
   b.box(3.0, 3.3, 0.9, 1.08, 7.34, 7.5, M.woodDark);
   for (const x of [3.06, 3.24]) b.rod([x, 0.95, 7.5], [x, 0.95, 7.515], 0.015, M.steel, { cast: false });
@@ -161,16 +199,19 @@ export function dressKitchen(b, M, f, F) {
   b.cyl(3.5, 7.45, 1.16, 1.2, 0.03, M.steel, { sides: 8 });
   b.box(3.7, 4.02, 0.9, 0.91, 7.34, 7.6, M.steel, { cast: false });
   for (const [x, z] of [[3.78, 7.42], [3.88, 7.5], [3.95, 7.4]]) b.cyl(x, z, 0.91, 0.99, 0.03, M.steel, { sides: 8, top: 0.025 });
-  b.block(2.7, 4.14, 7.26, 7.72);
   f.hung(3.2, 1.62, 7.26, 0.3, 0.45, '+z', M.calendar, { frame: null });
   F.clock(3.82, 1.95, 7.26, '+z');
 
   // --- The corner by the big window: a tall plant ---------------------------------------
   F.plant(0.36, 7.52, 0, 2.2);
+  });
+  b.block(2.7, 4.14, 7.26, 7.72);
   b.block(0.06, 0.66, 7.26, 7.76);
   // Curtains pulled right back, so the window is clear to look out of.
   b.rod([0.15, 2.32, 7.5], [0.15, 2.32, 9.8], 0.012, M.darkMetal);
   f.curtain(0.15, 7.52, 7.8, 0.8, 2.32, 4);
   f.curtain(0.15, 9.5, 9.78, 0.8, 2.32, 4);
   f.switchboard(4.14, 1.3, 8.62, '-x');
+
+  b.tag('kitchenThings', things);
 }

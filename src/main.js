@@ -62,7 +62,11 @@ const chores = createChores({
   onDone: afterTheChores,
 });
 // The second part of the game: the phone, the PC and the tapes.
-const job = createJob({ renderer, scene, camera, apartment, player, settings, interact, hud, audio, onDone: afterTheLastClip });
+const job = createJob({
+  renderer, scene, camera, apartment, player, settings, interact, hud, audio,
+  onFlameOut: () => chores.boilOver(), // the chai left on the ring in Part 1 boils over
+  onDone: afterTheLastClip,
+});
 
 // The chores are done: the rubbish is out, the door is bolted, a ring is
 // burning under the chai, and the player has just picked up the buzzing

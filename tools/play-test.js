@@ -61,6 +61,8 @@ export function doChores() {
   expect('prompt at the hob', stand(1.47, 11.05, 1.466, 1.0, 11.62), 'Light the ring');
   key('KeyE');
   tick(7);
+  expect('the ring is lit', g().chores.state().ringLit, true);
+  expect('the gas knob is turned on', g().chores.state().knob, -1.4);
   expect('prompt at the phone', stand(3.1, 1.06, 3.095, 0.77, 0.57), 'Pick up the phone');
   key('KeyE');
   tick(1);
@@ -147,7 +149,7 @@ export function doClip(index) {
 // What follows the mark on clip 1: the answer, and clip 2.
 export function doAnswerOne() {
   tick(2.5);
-  expect('clip 1 is answered', g().hud.says().banner, (b) => !!b && b.includes(CLIPS[0].reply));
+  expect('clip 1 is answered', g().hud.says().banner, (b) => !!b && b.includes(CLIPS[0].reply[0]));
   tick(2.5);
   expect('then clip 2 is loaded', g().job.parts.editor.state().clip, 1);
   expect('task for clip 2', g().hud.says().task, 'Find the frame where it goes wrong');
@@ -187,8 +189,25 @@ export function doDoor() {
   expect('back from the peephole', g().job.hands(), 'walk');
   expect('the view is normal again', g().camera.fov, g().settings.get('fieldOfView'));
   tick(2.2);
-  expect('then the answer comes', g().hud.says().banner, (b) => !!b && b.includes(CLIPS[1].reply));
-  tick(3);
+  expect('then the answer comes', g().hud.says().banner, (b) => !!b && b.includes(CLIPS[1].reply[0]));
+  tick(2.5);
+  expect('then clip 3 is loaded', g().job.parts.editor.state().clip, 2);
+  expect('standing at the door, the task is to sit down again', g().hud.says().task, 'Sit down at the PC');
+}
+
+// What follows the mark on clip 3: the real flame has gone out, the chai
+// has boiled over, the gas hisses, and three messages come in.
+export function doAnswerThree() {
+  const chores = () => g().chores.state();
+  expect('the real ring has gone out', chores().ringLit, false);
+  expect('the chai has boiled over in the real kitchen', chores().boiledOver, true);
+  expect('the gas knob is still on', chores().knob, -1.4);
+  tick(2);
+  for (const [i, words] of CLIPS[2].reply.entries()) {
+    expect(`message ${i + 1} after clip 3`, g().hud.says().banner, (b) => !!b && b.includes(words));
+    tick(3.6);
+  }
+  tick(1.5);
   expect('the end of what is built', g().hud.says().task, 'That is as far as the game goes for now.');
 }
 
@@ -228,11 +247,15 @@ export async function run() {
   expect('sat down again, the task is still the clip', g().hud.says().task, 'Find the frame where it goes wrong');
   doClip(1);
   doDoor();
-  // Sit down again, to have something to pause.
-  stand(2.5, 1.9, 2.5, 1.05, 0.26);
+  expect('back to the PC', stand(2.5, 1.9, 2.5, 1.05, 0.26), 'Sit down');
   key('KeyE');
   tick(1.2);
+  tick(2);
+  expect('sat down, the task is clip 3', g().hud.says().task, 'Find the frame where it goes wrong');
+  doClip(2);
+  doAnswerThree();
   await doPauseAndRestart();
+  expect('back at the title, the ring is out and nothing hisses', [g().chores.state().ringLit, g().chores.state().boiledOver, g().chores.state().knob].join(), 'false,false,0');
   // And once more from the start, to show a second game starts clean.
   await toEditor();
   expect('second game: the first clip starts at the beginning', g().job.parts.editor.state().t, 0);

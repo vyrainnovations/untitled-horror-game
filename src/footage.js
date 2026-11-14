@@ -121,11 +121,15 @@ export function createFootage({ renderer, scene, apartment }) {
     for (const [part, [own, night]] of nightLook) part.material = on ? night : own;
   };
 
-  // Which of his things a tape can show, by name (see "shows" in src/clips.js).
-  const otherRooms = Object.keys(rooms).filter((name) => name !== 'corridor').map((name) => rooms[name]);
+  // Which of his things a tape can show, by name (see the list at the top
+  // of src/clips.js). The corridor and the kitchen are split into what was
+  // built into the flat, which is always there, and his things.
+  const otherRooms = Object.keys(rooms).filter((name) => name !== 'corridor' && name !== 'kitchen').map((name) => rooms[name]);
   const SETS = {
     hallByDoor: things.hallByDoor,
     hallWalls: things.hallWalls,
+    kitchen: things.kitchenThings,
+    chaiPan: [things.chaiPan],
     rooms: otherRooms,
   };
   // And what only the tapes show, because it happened after that night.
@@ -133,8 +137,9 @@ export function createFootage({ renderer, scene, apartment }) {
     splitWood: [things.splitWood], // the door frame, forced
   };
   // The flat's own lights: off in the emptied flat. The street lamp outside,
-  // and the neighbours' lights, still shine in.
-  const OWN_LIGHTS = [lights.bulb, lights.strip, lights.screen, lights.screenFill, lights.ring];
+  // and the neighbours' lights, still shine in. (The gas ring's light goes
+  // with its flame: see stageHob.)
+  const OWN_LIGHTS = [lights.bulb, lights.strip, lights.screen, lights.screenFill];
 
   // The writing burnt into the picture.
   const osdCanvas = document.createElement('canvas');
@@ -183,6 +188,41 @@ export function createFootage({ renderer, scene, apartment }) {
     }
   }
 
+  // The ring on the hob, on a tape whose step in the past says what it does
+  // ("flame" in src/clips.js):
+  //   'lights'  it lights by itself during the moment, and burns on
+  //   'dies'    the night itself: it has burnt under the pan since 01:00;
+  //             in the moment the chai rises, boils over, and the flame goes out
+  const clamp = (k) => Math.max(0, Math.min(1, k));
+  const [spillShell, puddle] = things.chaiSpill.children;
+  function stageHob(clip, look, t, set) {
+    const { from, to } = clip.moment;
+    const u = (t - from) / (to - from); // below 0 before the moment, above 1 after it
+    let lit = false;
+    let foam = 0; // how far the chai has risen: 1 is over the rim
+    let spill = 0; // how far it has run down and out over the hob
+    if (look.flame === 'lights') {
+      lit = u > 0.55 || (u > 0.3 && Math.random() < (u - 0.3) * 4); // it catches, unsteadily
+    } else if (look.flame === 'dies') {
+      foam = u < 0 ? clamp(0.5 + (t - from) / 18) : u < 1 ? clamp(0.5 + u * 1.25) : 0.35;
+      spill = clamp((u - 0.3) / 0.45);
+      lit = u < 0.4 || (u < 0.62 && Math.random() > (u - 0.4) * 3.2); // drowned, it gutters and goes out
+    }
+    const flame = things.ringFlame;
+    set(flame, 'visible', lit);
+    if (lit) set(flame.scale, 'y', 0.75 + Math.random() * 0.5);
+    set(lights.ring, 'intensity', lit ? 0.42 * (0.85 + Math.random() * 0.3) : 0);
+    const foamTop = things.chaiFoam;
+    set(foamTop, 'visible', foam > 0.02);
+    set(foamTop.position, 'y', foamTop.position.y + foam * 0.03);
+    set(foamTop.scale, 'x', 1 + foam * 0.1);
+    set(foamTop.scale, 'z', 1 + foam * 0.1);
+    set(things.chaiSpill, 'visible', spill > 0.02);
+    set(spillShell, 'visible', spill > 0.15);
+    set(puddle.scale, 'x', 0.35 + 0.65 * spill);
+    set(puddle.scale, 'z', 0.35 + 0.65 * spill);
+  }
+
   // Draw one frame of a tape: clip at t seconds, the past at step `depth`.
   // shake (0 to 1): the front door shaking in its frame, as it is hammered on.
   // Everything changed for it is put back straight afterwards.
@@ -198,7 +238,9 @@ export function createFootage({ renderer, scene, apartment }) {
 
     for (const [name, groups] of Object.entries(SETS)) for (const g of groups) set(g, 'visible', shows.has(name));
     for (const [name, groups] of Object.entries(AFTER)) for (const g of groups) set(g, 'visible', shows.has(name));
-    set(things.ringFlame, 'visible', false); // nobody has lit a ring on these tapes, yet
+    set(things.ringFlame, 'visible', false); // unless a tape says otherwise, the ring is out
+    set(lights.ring, 'intensity', 0);
+    if (look.flame) stageHob(clip, look, t, set);
     if (shake > 0) {
       // Bolted, it can only rattle in its frame.
       const door = things.frontDoor;

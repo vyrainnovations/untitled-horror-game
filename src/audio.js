@@ -17,6 +17,7 @@ const HUMS = {
   pc: { at: [1.9, 0.45], carries: 1.4, loud: 0.06 },
   strip: { at: [0.88, 11.52], carries: 1.2, loud: 0.03 },
   ring: { at: [1.47, 11.65], carries: 1.3, loud: 0.07 }, // the gas ring on the hob: silent until it is lit
+  gas: { at: [1.47, 11.55], carries: 1.5, loud: 0.11 }, // gas escaping from a ring that has gone out: silent until it does
 };
 // How bright a footstep sounds on each kind of floor (a filter frequency).
 const FLOORS = { mosaic: 720, tile: 1500, cement: 1000 };
@@ -36,6 +37,7 @@ export function createAudio() {
   let street = null;
   let lastTick = 0;
   let ringLit = false; // is the gas ring burning
+  let gasOn = 0; // is gas escaping, and how loudly: 0 to 1
   const ears = [0, 0]; // where the listener stands on the plan
   const hums = {};
   const tapeLoops = {}; // the tape in the editing program: its motor, the rewind whirr, static
@@ -144,6 +146,7 @@ export function createAudio() {
     hums.strip = drone([[100, 'sine', 1], [200, 'sine', 0.5]]);
     hums.pc = loopNoise(white, 'bandpass', 900, 0.6, 0); // the PC's fans
     hums.ring = loopNoise(white, 'bandpass', 2300, 0.9, 0); // gas burning: a thin hiss
+    hums.gas = loopNoise(white, 'highpass', 4300, 0.6, 0); // gas escaping, unburnt: thinner, higher
     street = loopNoise(brown, 'bandpass', 140, 0.5, 0); // the street, through the glass
     tapeLoops.motor = drone([[60, 'sine', 1], [120, 'sine', 0.35]]); // the tape turning
     tapeLoops.rewind = loopNoise(white, 'bandpass', 1900, 3, 0); // the whirr of scrubbing back
@@ -164,6 +167,7 @@ export function createAudio() {
       let level = hum.loud / (1 + (distance / hum.carries) ** 2);
       if (name === 'bulb') level *= bulbLevel;
       if (name === 'ring' && !ringLit) level = 0;
+      if (name === 'gas') level *= gasOn;
       hums[name].gain.setTargetAtTime(level, now, 0.1);
     }
     const nearWindows = Math.max(0, Math.min(1, 1 - x / 4.2)); // the west rooms only
@@ -389,6 +393,12 @@ export function createAudio() {
     ringLit = on;
   }
 
+  // Gas escaping from the ring after the flame has gone out: true, false,
+  // or how loud (1 is true). It is faint, and only near the hob.
+  function setGas(on) {
+    gasOn = on === true ? 1 : on || 0;
+  }
+
   // A phone buzzing on a wooden desk at (x, z): two short buzzes. It is
   // louder the nearer the listener stands, but it carries a long way.
   function buzz(x, z) {
@@ -434,5 +444,5 @@ export function createAudio() {
     return { running: ctx.state === 'running', peak, average: Math.sqrt(sum / samples.length) };
   }
 
-  return { start, update, setScene, setVolume, step, act, setRing, buzz, message, knock, tape, setTape, click, level };
+  return { start, update, setScene, setVolume, step, act, setRing, setGas, buzz, message, knock, tape, setTape, click, level };
 }

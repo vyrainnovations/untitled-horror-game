@@ -9,7 +9,7 @@
 //      then his own front door is hammered on, for real (src/door.js).
 //      Only after he has looked through the peephole does the answer come.
 //
-// So far clips 1 and 2 are built. This file only says what comes after
+// So far clips 1 to 3 are built. This file only says what comes after
 // what. The pieces are in the files named above, and src/seat.js (sitting
 // at the desk) and src/footage.js (drawing the tapes).
 import { createPhone } from './phone.js';
@@ -26,6 +26,7 @@ const TASKS = {
   door: 'Someone is at the front door',
 };
 const REPLY_AFTER = 1.8; // seconds after a frame is marked before the answer comes in
+const NEXT_MESSAGE = 3.6; // seconds between messages, when the answer is more than one
 const HAMMER_AFTER = 1.2; // seconds after the second tape runs out before the real door is hammered on
 const REPLY_AFTER_PEEPHOLE = 1.6; // seconds after looking through the peephole before the answer comes in
 
@@ -33,7 +34,7 @@ const REPLY_AFTER_PEEPHOLE = 1.6; // seconds after looking through the peephole 
 const AT_SCREEN = [['Space', 'Play / pause'], ['A  D', 'Scrub'], ['E', 'Mark this frame'], ['Q', 'Stand up']];
 const LOOKING_AWAY = [['Q', 'Stand up']];
 
-export function createJob({ renderer, scene, camera, apartment, player, settings, interact, hud, audio, onDone }) {
+export function createJob({ renderer, scene, camera, apartment, player, settings, interact, hud, audio, onFlameOut, onDone }) {
   let stage = 'waiting'; // 'waiting' for the chores, 'phone', 'sit', 'edit', 'after' a clip is marked, 'door'
   let clipIndex = 0; // the clip the player is on
   const timers = []; // things that happen after a wait, on the game's clock
@@ -80,14 +81,23 @@ export function createJob({ renderer, scene, camera, apartment, player, settings
   function marked(index, clip) {
     stage = 'after';
     hud.task(null, { ticked: true });
+    // The kitchen tape: the flame died at 01:10, and in the real kitchen
+    // the chai has just boiled over too. From now on the gas hisses.
+    if (clip.hiss) onFlameOut();
     // A tape that jumps on by itself is answered later, after the door.
     if (!clip.jumpsOn) later(REPLY_AFTER, () => answer(index, clip));
   }
 
-  // The unknown number answers a mark. Then the next clip.
+  // The unknown number answers a mark, a message at a time. Then the next clip.
   function answer(index, clip) {
-    audio.message('pocket');
-    hud.banner('Unknown number', clip.reply);
+    clip.reply.forEach((words, i) => later(i * NEXT_MESSAGE, () => {
+      audio.message('pocket');
+      hud.banner('Unknown number', words);
+    }));
+    later((clip.reply.length - 1) * NEXT_MESSAGE, () => nextClip(index));
+  }
+
+  function nextClip(index) {
     const next = index + 1;
     if (next < CLIPS.length) {
       clipIndex = next;
@@ -102,9 +112,11 @@ export function createJob({ renderer, scene, camera, apartment, player, settings
       return;
     }
     // --- THE NEXT PART OF THE GAME STARTS HERE -------------------------
-    // Clips 1 and 2 are marked and answered. Clip 3, the kitchen
-    // (STORY.md, Part 2, beat 11), is not built yet: when it is, add it to
-    // src/clips.js and the lines above load it by themselves.
+    // Clips 1 to 3 are marked and answered, the last answer ending "There
+    // is one more. I did not want to send it." Clip 4, the study (STORY.md,
+    // Part 2, beats 12 to 14), is not built yet: when it is, add it to
+    // src/clips.js (and as a fourth file in src/editor.js), and the lines
+    // above load it by themselves.
     stage = 'done';
     onDone();
   }
