@@ -8,8 +8,12 @@
 //   4. After clip 2, the tape jumps on to 3:07 and its door is hammered on;
 //      then his own front door is hammered on, for real (src/door.js).
 //      Only after he has looked through the peephole does the answer come.
+//   5. After clip 3, the real chai has boiled over and the gas hisses; then
+//      a fourth file: the study, live. Nothing to mark: scrubbing back
+//      brings Hamza nearer, until the tape goes all the way back to the
+//      night and Saad asleep at his desk. That is the end of Part 2.
 //
-// So far clips 1 to 3 are built. This file only says what comes after
+// All four clips are built. This file only says what comes after
 // what. The pieces are in the files named above, and src/seat.js (sitting
 // at the desk) and src/footage.js (drawing the tapes).
 import { createPhone } from './phone.js';
@@ -29,6 +33,8 @@ const REPLY_AFTER = 1.8; // seconds after a frame is marked before the answer co
 const NEXT_MESSAGE = 3.6; // seconds between messages, when the answer is more than one
 const HAMMER_AFTER = 1.2; // seconds after the second tape runs out before the real door is hammered on
 const REPLY_AFTER_PEEPHOLE = 1.6; // seconds after looking through the peephole before the answer comes in
+const FILE_AFTER = 1.6; // seconds after "There is one more" before the fourth file arrives
+const LINGER = 7; // seconds on the last frame of the last tape before the game moves on
 
 // The keys along the bottom of the screen while sat at the desk.
 const AT_SCREEN = [['Space', 'Play / pause'], ['A  D', 'Scrub'], ['E', 'Mark this frame'], ['Q', 'Stand up']];
@@ -42,7 +48,7 @@ export function createJob({ renderer, scene, camera, apartment, player, settings
   const phone = createPhone({ camera, audio, hud, onDone: phoneDone });
   const seat = createSeat({ camera, player, settings });
   const footage = createFootage({ renderer, scene, apartment });
-  const editor = createEditor({ scene, footage, audio, hud, onMarked: marked, onTapeEnd: tapeEnded });
+  const editor = createEditor({ scene, footage, audio, hud, onMarked: marked, onTapeEnd: tapeEnded, onAllTheWayBack: allTheWayBack });
   const door = createDoor({ apartment, camera, player, settings, interact, audio, onLooked: looked });
 
   // Do something after a wait. Paused, the wait stops too.
@@ -94,13 +100,15 @@ export function createJob({ renderer, scene, camera, apartment, player, settings
       audio.message('pocket');
       hud.banner('Unknown number', words);
     }));
-    later((clip.reply.length - 1) * NEXT_MESSAGE, () => nextClip(index));
+    const more = clip.reply.length > 1 ? FILE_AFTER : 0; // a file that was not expected comes a moment after
+    later((clip.reply.length - 1) * NEXT_MESSAGE + more, () => nextClip(index));
   }
 
   function nextClip(index) {
     const next = index + 1;
     if (next < CLIPS.length) {
       clipIndex = next;
+      if (next >= 3) audio.message('files'); // "There is one more": it arrives
       editor.load(next);
       if (seat.isSeated()) {
         stage = 'edit';
@@ -111,14 +119,24 @@ export function createJob({ renderer, scene, camera, apartment, player, settings
       }
       return;
     }
-    // --- THE NEXT PART OF THE GAME STARTS HERE -------------------------
-    // Clips 1 to 3 are marked and answered, the last answer ending "There
-    // is one more. I did not want to send it." Clip 4, the study (STORY.md,
-    // Part 2, beats 12 to 14), is not built yet: when it is, add it to
-    // src/clips.js (and as a fourth file in src/editor.js), and the lines
-    // above load it by themselves.
+    // The last tape is not marked, so nothing should come here. Should a
+    // tape be added after it, it loads above by itself.
     stage = 'done';
     onDone();
+  }
+
+  // The last tape has gone all the way back: the night, 3:07, and Saad
+  // asleep at his desk. The player looks at it for a moment. Then Part 3.
+  function allTheWayBack() {
+    later(LINGER, () => {
+      // --- THE NEXT PART OF THE GAME STARTS HERE -------------------------
+      // Part 2 is over. Part 3 (STORY.md, beat 15, "The thread") begins
+      // here: the phone lights up, and the thread scrolls up through a
+      // year of messages. It is not built yet; when it is, open it from
+      // here instead of handing on.
+      stage = 'done';
+      onDone();
+    });
   }
 
   // --- 4. The door -------------------------------------------------------------------------

@@ -11,6 +11,7 @@
 //
 // The editing program (src/editor.js) puts that picture on the monitor.
 import * as THREE from 'three';
+import { createFigure } from './figures.js';
 
 const SIZE = [240, 180]; // the tape's picture, in pixels
 const LAMP = 7; // how bright the camera's infra-red lamp is
@@ -117,6 +118,16 @@ export function createFootage({ renderer, scene, apartment }) {
     props[name] = twin;
   };
   copy('bag', things.rubbishBag);
+  // The two people on the last tape (src/figures.js): only ever on a tape.
+  for (const who of ['hamza', 'saad']) {
+    const figure = createFigure(who);
+    figure.root.traverse((part) => {
+      if (part.isMesh) nightLook.set(part, [part.material, pale]);
+    });
+    figure.root.visible = false;
+    scene.add(figure.root);
+    props[who] = figure;
+  }
   const wearNight = (on) => {
     for (const [part, [own, night]] of nightLook) part.material = on ? night : own;
   };
@@ -124,14 +135,24 @@ export function createFootage({ renderer, scene, apartment }) {
   // Which of his things a tape can show, by name (see the list at the top
   // of src/clips.js). The corridor and the kitchen are split into what was
   // built into the flat, which is always there, and his things.
-  const otherRooms = Object.keys(rooms).filter((name) => name !== 'corridor' && name !== 'kitchen').map((name) => rooms[name]);
+  const split = ['corridor', 'kitchen', 'study'];
+  const otherRooms = Object.keys(rooms).filter((name) => !split.includes(name)).map((name) => rooms[name]);
   const SETS = {
     hallByDoor: things.hallByDoor,
     hallWalls: things.hallWalls,
     kitchen: things.kitchenThings,
     chaiPan: [things.chaiPan],
+    study: [rooms.study],
+    spareChair: [things.spareChair],
     rooms: otherRooms,
   };
+  // Things added to the flat by other parts of the game that belong to one
+  // of those sets (the editing program on the monitor is part of the study),
+  // and things a tape must never show: the tripod it is filmed from, and the
+  // tape's own picture on the monitor (drawing it would mean drawing into
+  // the picture being drawn).
+  const belonging = []; // [set name, object]
+  const never = [things.tripod];
   // And what only the tapes show, because it happened after that night.
   const AFTER = {
     splitWood: [things.splitWood], // the door frame, forced
@@ -238,6 +259,8 @@ export function createFootage({ renderer, scene, apartment }) {
 
     for (const [name, groups] of Object.entries(SETS)) for (const g of groups) set(g, 'visible', shows.has(name));
     for (const [name, groups] of Object.entries(AFTER)) for (const g of groups) set(g, 'visible', shows.has(name));
+    for (const [name, object] of belonging) set(object, 'visible', object.visible && shows.has(name));
+    for (const object of never) set(object, 'visible', false);
     set(things.ringFlame, 'visible', false); // unless a tape says otherwise, the ring is out
     set(lights.ring, 'intensity', 0);
     if (look.flame) stageHob(clip, look, t, set);
@@ -265,6 +288,7 @@ export function createFootage({ renderer, scene, apartment }) {
       camera.updateProjectionMatrix();
     }
     stage(clip, t, set);
+    placePeople(look);
     wearNight(look.colour < 0.5);
 
     // Shadows are drawn once, for the flat as it is now. Never let a tape
@@ -278,7 +302,26 @@ export function createFootage({ renderer, scene, apartment }) {
 
     for (const [object, key, value] of undo.reverse()) object[key] = value;
     if (!shows.has('bulb')) bulbLook.material.color.copy(unlit);
-    for (const thing of Object.values(props)) thing.visible = false;
+    for (const thing of Object.values(props)) (thing.root || thing).visible = false;
+  }
+
+  // The people on the last tape, where its step in the past puts them.
+  function placePeople(look) {
+    if (look.hamza) {
+      const { root, pose } = props.hamza;
+      pose(look.hamza.pose);
+      root.position.set(look.hamza.at[0], 0, look.hamza.at[1]);
+      root.rotation.y = look.hamza.facing;
+      root.visible = true;
+    }
+    if (look.saad) {
+      // Asleep in his chair at the desk, slumped onto it.
+      const { root, pose } = props.saad;
+      pose('asleep');
+      root.position.set(2.5, 0, 1.17);
+      root.rotation.y = Math.PI + 0.28;
+      root.visible = true;
+    }
   }
 
   // The writing in the corners of the picture. state is 'PLAY', 'PAUSE',
@@ -299,7 +342,15 @@ export function createFootage({ renderer, scene, apartment }) {
       osd.strokeText(text, x, y);
       osd.fillText(text, x, y);
     };
-    if (state) {
+    if (state === 'LIVE') {
+      // Being filmed now: a red light, as a camera shows it.
+      write(state, 26, 46);
+      osd.fillStyle = '#e0261c';
+      osd.beginPath();
+      osd.arc(26 + osd.measureText(state).width + 28, 35, 11, 0, Math.PI * 2);
+      osd.fill();
+      osd.fillStyle = '#f2f2ea';
+    } else if (state) {
       write(state, 26, 46);
       const x = 26 + osd.measureText(state).width + 16;
       osd.beginPath();
@@ -337,6 +388,10 @@ export function createFootage({ renderer, scene, apartment }) {
       uniforms.uJump.value = jump;
       uniforms.uOn.value = on;
     },
+    // Something added to the flat that is part of one of the sets above.
+    belongs: (name, object) => belonging.push([name, object]),
+    // Something a tape must never show.
+    keepOff: (object) => never.push(object),
     // For tests.
     camera,
     props,

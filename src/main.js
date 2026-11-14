@@ -75,9 +75,9 @@ function afterTheChores() {
   job.start();
 }
 
-// The last clip built so far is marked and answered. That is as far as the
-// game is built. The place where the next part starts is marked "THE NEXT
-// PART OF THE GAME STARTS HERE" in src/job.js.
+// Part 2 is over: the last tape has gone all the way back to the night.
+// That is as far as the game is built. The place where Part 3 starts is
+// marked "THE NEXT PART OF THE GAME STARTS HERE" in src/job.js.
 function afterTheLastClip() {
   hud.task('That is as far as the game goes for now.', { plain: true });
 }

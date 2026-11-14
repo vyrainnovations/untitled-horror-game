@@ -232,6 +232,9 @@ export function buildApartment(scene) {
   room('bathroom', dressBathroom);
   room('store', dressStore);
   room('corridor', dressCorridor);
+  // The spare room's chair is still there a year on: the one thing in the
+  // emptied flat, where Hamza sits. So it is not one of the room's things.
+  scene.attach(b.things.spareChair);
 
   // --- Things that change over time ---------------------------------------------
   const bulbLit = new THREE.Color(0xffe2b0);

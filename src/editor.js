@@ -43,7 +43,7 @@ const DIGITS = '"Cascadia Mono", Consolas, "Courier New", monospace';
 
 const pad2 = (n) => String(Math.floor(n)).padStart(2, '0');
 
-export function createEditor({ scene, footage, audio, hud, onMarked, onTapeEnd }) {
+export function createEditor({ scene, footage, audio, hud, onMarked, onTapeEnd, onAllTheWayBack }) {
   // --- The program on the monitor ----------------------------------------------------
   const canvas = document.createElement('canvas');
   canvas.width = UI[0];
@@ -62,6 +62,10 @@ export function createEditor({ scene, footage, audio, hud, onMarked, onTapeEnd }
   screen.add(program, tape);
   screen.visible = false;
   scene.add(screen);
+  // On a tape of the study, the monitor is part of the study; and the tape
+  // must never show its own picture (src/footage.js).
+  footage.belongs('study', screen);
+  footage.keepOff(tape);
 
   // --- Where the edit has got to ---------------------------------------------------------
   let clip = null; // the clip that is loaded
@@ -86,6 +90,8 @@ export function createEditor({ scene, footage, audio, hud, onMarked, onTapeEnd }
     index = i;
     clip = CLIPS[i];
     t = 0;
+    idle = 0;
+    liveTime = 0;
     playing = false;
     scrub = 0;
     held = 0;
@@ -106,7 +112,7 @@ export function createEditor({ scene, footage, audio, hud, onMarked, onTapeEnd }
   const inMoment = (pad = 0) => t >= moment().from - pad && t <= moment().to + pad;
   // How much static is on the screen right now.
   function staticNow() {
-    if (!clip || !inMoment(PAD)) return 0;
+    if (!clip || clip.live || !inMoment(PAD)) return 0; // the live tape is never damaged
     const edge = Math.min(t - (moment().from - PAD), moment().to + PAD - t);
     const fade = Math.min(1, edge / PAD);
     return (lastWay > 0 ? 1 : clip.past[depth].static) * fade;
@@ -118,6 +124,7 @@ export function createEditor({ scene, footage, audio, hud, onMarked, onTapeEnd }
   const down = new Set();
 
   function press(code) {
+    idle = 0;
     if (!clip || !active || marked !== null) return false;
     if (code === 'Space') {
       if (t >= clip.length - 0.01) t = 0;
@@ -136,6 +143,7 @@ export function createEditor({ scene, footage, audio, hud, onMarked, onTapeEnd }
         // Scrubbing back over the moment, or from after it: one step further into the past.
         if (way < 0 && t > moment().from && depth < clip.past.length - 1) {
           depth += 1;
+          if (depth === clip.past.length - 1 && clip.live) onAllTheWayBack(index, clip);
           jump = JUMP;
           audio.tape('jump');
         }
@@ -158,8 +166,19 @@ export function createEditor({ scene, footage, audio, hud, onMarked, onTapeEnd }
   }
 
   let say = 0; // seconds left that a "not this frame" answer stays up
+  let idle = 0; // seconds since a key was last pressed
+  let liveTime = 0; // seconds the live tape has been running
   function mark() {
     if (!clip || marked !== null) return;
+    if (clip.live) {
+      // Nothing to mark on the last tape. It is not that kind of tape.
+      if (depth < clip.past.length - 1) {
+        hud.hint('Keep going back.');
+        audio.tape('no');
+        say = 2.5;
+      }
+      return;
+    }
     if (!inMoment()) {
       hud.hint('Nothing goes wrong in this frame.');
       audio.tape('no');
@@ -238,8 +257,18 @@ export function createEditor({ scene, footage, audio, hud, onMarked, onTapeEnd }
 
     // Hints, for a player who has not worked it out.
     hintTime += dt;
+    idle += dt;
+    if (clip.live) liveTime += dt;
     say = Math.max(0, say - dt);
-    if (active && marked === null && say === 0) {
+    const last = clip.past.length - 1;
+    if (active && clip.live && say === 0) {
+      // The live tape has its own hints: there is no static to look for.
+      const still = !playing && scrub === 0 && idle > 5;
+      if (depth === last) hud.hint(null);
+      else if (t < moment().from && still) hud.hint(depth === 0 ? 'Press Space to play the clip.' : 'Play it on a little, and scrub back again.');
+      else if (still) hud.hint(depth === 0 ? 'Hold A to scrub back.' : 'Keep going back.');
+      else if (scrub !== 0 || playing) hud.hint(null);
+    } else if (active && marked === null && say === 0) {
       if (!damageSeen && hintTime > 20) hud.hint('Press Space to play the clip.');
       else if (damageSeen && depth === 0 && t > moment().to && !playing && scrub === 0) hud.hint('Hold A to scrub back over the static.');
       else if (depth > 0 && depth < clip.past.length - 1 && t < moment().from - PAD && !playing && scrub === 0) hud.hint('Go past it, and scrub back over it again.');
@@ -253,6 +282,7 @@ export function createEditor({ scene, footage, audio, hud, onMarked, onTapeEnd }
     const look = clip.past[depth];
     footage.set({ time: clock, static: snow, colour: look.colour, rewind: scrub < 0 && moving ? 1 : 0, jump: jump / JUMP, on: ended ? 0 : 1 });
     if (ended) footage.caption('', '', '');
+    else if (clip.live && depth < last) footage.caption('LIVE', look.date, `03:07:${pad2(Math.min(59, liveTime))}`); // tonight, and 3:07 does not end yet
     else if (jumped && jumped.time >= 0) footage.caption('PLAY', look.date, timeOnTape(jumped.time, clip.jumpsOn.clock));
     else footage.caption(scrub < 0 ? 'REW' : scrub > 0 ? 'FWD' : playing ? 'PLAY' : 'PAUSE', look.date, timeOnTape(t));
     draw();
@@ -286,7 +316,8 @@ export function createEditor({ scene, footage, audio, hud, onMarked, onTapeEnd }
     p.fillText(clip.file, 14, 22);
     p.fillStyle = COLOURS.dim;
     p.textAlign = 'right';
-    p.fillText(`clip ${index + 1} of 3`, W - 14, 22);
+    const files = Math.max(3, index + 1); // three files came first; the fourth comes later
+    p.fillText(`clip ${index + 1} of ${files}`, W - 14, 22);
     p.textAlign = 'left';
 
     // The files, on the left.
@@ -296,14 +327,14 @@ export function createEditor({ scene, footage, audio, hud, onMarked, onTapeEnd }
     p.fillStyle = COLOURS.dim;
     p.fillText('FILES', 26, VIEWER.y + 30);
     p.font = `21px ${WORDS}`;
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < files; i++) {
       const y = VIEWER.y + 66 + i * 38;
       if (i === index) {
         p.fillStyle = COLOURS.line;
         p.fillRect(18, y - 25, VIEWER.x - 38, 34);
       }
       p.fillStyle = i === index ? COLOURS.lamp : COLOURS.words;
-      p.fillText(`clip_0${i + 1}.mov`, 30, y);
+      p.fillText(CLIPS[i].file, 30, y);
       if (marks[i] !== undefined) {
         p.fillStyle = COLOURS.lamp;
         p.fillText('marked', VIEWER.x - 96, y);

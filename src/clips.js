@@ -1,4 +1,4 @@
-// What is on each tape: STORY.md, Part 2, beats 7 to 11 (and, later, 13 and 14).
+// What is on each tape: STORY.md, Part 2, beats 7 to 14.
 //
 // Every clip is a locked-off shot of the flat at night, filmed by Hamza's
 // camera on its tripod a year after the night itself. Something goes wrong
@@ -24,6 +24,11 @@
 //             always lost.
 //     flame   what the gas ring does in the moment, if anything: 'lights'
 //             (by itself) or 'dies' (the chai boils over and puts it out)
+//     adds    more of his things, on top of what FLAT says for the date
+//     hamza   where Hamza is, and how: a pose from src/figures.js, the spot
+//             [x, z] on the plan, and the way he faces (radians: 0 faces
+//             south, -1.57 west)
+//     saad    true: Saad, asleep at his desk
 //   moves   what else moves on the tape, during the moment.
 //   jumpsOn after the moment is marked, the tape jumps on by itself to this
 //           time and plays for so many seconds. knocks: when something
@@ -32,6 +37,9 @@
 //           is marked (STORY.md, "Between clips").
 //   hiss    true if marking it puts the real ring out: the chai has boiled
 //           over in the real kitchen too, and from then on the gas hisses.
+//   live    the last tape: it is being filmed now. Its time runs whatever
+//           the tape is doing, it never has static, and there is nothing to
+//           mark: it ends by itself once it has gone all the way back.
 //
 // The dates a tape steps back through are the dates of Hamza's messages in
 // the thread at the end (STORY.md), where there is one that fits, so that
@@ -42,9 +50,9 @@
 // named in src/footage.js.
 const FLAT = {
   // The night itself: everything there, the pan of chai on the hob, the lights on.
-  'NOV 16 2026': ['hallByDoor', 'hallWalls', 'rooms', 'kitchen', 'chaiPan', 'bulb'],
+  'NOV 16 2026': ['hallByDoor', 'hallWalls', 'study', 'rooms', 'kitchen', 'chaiPan', 'spareChair', 'bulb'],
   // A week on: everything still there except the pan, dark. The door frame was forced that night.
-  'NOV 23 2026': ['splitWood', 'hallByDoor', 'hallWalls', 'rooms', 'kitchen'],
+  'NOV 23 2026': ['splitWood', 'hallByDoor', 'hallWalls', 'study', 'rooms', 'kitchen', 'spareChair'],
   // Cleared, except the doormat and the shoe rack.
   'FEB 14 2027': ['splitWood', 'hallByDoor'],
   'APR 19 2027': ['splitWood', 'hallByDoor'],
@@ -52,6 +60,8 @@ const FLAT = {
   'JUN 09 2027': ['splitWood'],
   'AUG 02 2027': ['splitWood'],
   'OCT 30 2027': ['splitWood'],
+  // Tonight, a year on: empty, but for the chair in the spare room where Hamza sits.
+  'NOV 16 2027': ['splitWood', 'spareChair'],
 };
 
 export const CLIPS = [
@@ -114,6 +124,30 @@ export const CLIPS = [
     reply: ['1:10.', 'Two hours.', 'There is one more. I did not want to send it.'],
     hiss: true,
   },
+  {
+    file: 'clip_04.mov',
+    // From the tripod by the study window, east through the study door and
+    // the spare room door opposite, with the desk and its monitor on the left.
+    camera: { at: [0.6, 1.5, 2.3], look: [3.6, 1.05, 1.1], fov: 60 },
+    length: 24,
+    clock: [3, 7, 0], // for the last step only: before it, the time is tonight's, live
+    live: true,
+    moment: { from: 1.5, to: 24 }, // every scrub back after the first second and a half is a step
+    // Tonight, live: an empty room, and far off, through two doorways,
+    // someone in the chair in the spare room. Each scrub back, his things
+    // are back in the study and Hamza is nearer, until he is bending to look
+    // at the screen. Then all the way back: the night, and Saad asleep.
+    past: [
+      { date: 'NOV 16 2027', lights: 0, colour: 0, static: 0, hamza: { pose: 'sit', at: [7.62, 2.05], facing: -1.57 } },
+      { date: 'NOV 16 2027', adds: ['study'], lights: 0, colour: 0, static: 0, hamza: { pose: 'stand', at: [5.95, 2.15], facing: -1.57 } },
+      { date: 'NOV 16 2027', adds: ['study'], lights: 0, colour: 0, static: 0, hamza: { pose: 'stand', at: [4.95, 2.15], facing: -1.57 } },
+      { date: 'NOV 16 2027', adds: ['study'], lights: 0, colour: 0, static: 0, hamza: { pose: 'stand', at: [4.05, 2.15], facing: -1.57 } },
+      { date: 'NOV 16 2027', adds: ['study'], lights: 0, colour: 0, static: 0, hamza: { pose: 'bend', at: [3.05, 0.98], facing: -2.49 } },
+      { date: 'NOV 16 2026', lights: 1, colour: 0.85, static: 0, saad: true },
+    ],
+    moves: [],
+    reply: [],
+  },
 ];
 
-for (const clip of CLIPS) for (const step of clip.past) step.shows = FLAT[step.date];
+for (const clip of CLIPS) for (const step of clip.past) step.shows = FLAT[step.date].concat(step.adds || []);

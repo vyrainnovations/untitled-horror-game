@@ -3,17 +3,22 @@
 export function dressStudy(b, M, f, F) {
   // --- North wall, left to right -------------------------------------------
 
-  // A camera on a tripod in the corner, pointed into the room.
-  const head = [0.48, 1.22, 0.48];
-  for (const foot of [[0.48, 0, 0.82], [0.19, 0, 0.31], [0.77, 0, 0.31]]) b.rod(head, foot, 0.014, M.darkMetal);
-  b.rod([0.48, 1.1, 0.48], [0.48, 1.44, 0.48], 0.016, M.darkMetal);
-  b.box(0.43, 0.53, 1.42, 1.47, 0.43, 0.53, M.blackPlastic);
-  b.group(0.48, 1.47, 0.48, -0.39, () => {
-    b.box(-0.07, 0.07, 0, 0.1, -0.045, 0.045, M.blackPlastic);
-    b.rod([0.07, 0.05, 0], [0.16, 0.05, 0], 0.036, M.darkMetal, { sides: 8 });
-    b.box(-0.05, 0, 0.1, 0.13, -0.02, 0.02, M.blackPlastic);
-  });
-  b.block(0.06, 0.9, 0.06, 0.85);
+  // A camera on a tripod by the window, pointed at the desk: a time-lapse of
+  // his night's work (STORY.md). It stands in line with the study door and
+  // the spare room door opposite, because the last tape is filmed from this
+  // spot, through both doorways.
+  b.tag('tripod', b.group(0.6, 0, 2.3, 0, () => {
+    const head = [0, 1.22, 0];
+    for (const foot of [[0, 0, 0.34], [-0.29, 0, -0.17], [0.29, 0, -0.17]]) b.rod(head, foot, 0.014, M.darkMetal);
+    b.rod([0, 1.1, 0], [0, 1.44, 0], 0.016, M.darkMetal);
+    b.box(-0.05, 0.05, 1.42, 1.47, -0.05, 0.05, M.blackPlastic);
+    b.group(0, 1.47, 0, 0.76, () => {
+      b.box(-0.07, 0.07, 0, 0.1, -0.045, 0.045, M.blackPlastic);
+      b.rod([0.07, 0.05, 0], [0.16, 0.05, 0], 0.036, M.darkMetal, { sides: 8 });
+      b.box(-0.05, 0, 0.1, 0.13, -0.02, 0.02, M.blackPlastic);
+    });
+  }));
+  b.block(0.06, 0.95, 1.95, 2.58);
 
   // A low bookshelf with a plant on top.
   b.box(0.94, 0.96, 0, 0.9, 0.06, 0.4, M.woodLight);

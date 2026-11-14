@@ -86,8 +86,10 @@ export function dressSpareRoom(b, M, f, F) {
   F.draped(5.82, 6.62, 0.1, 0.9, 1.05);
   b.block(5.76, 6.65, 0.06, 0.92);
 
-  // One chair, left facing the door, under the bare bulb.
-  F.chair(7.6, 2.05, -Math.PI / 2);
+  // One chair, left facing the door, under the bare bulb. It is where Hamza
+  // sits tonight, watching the study, so a tape can show it on its own
+  // (src/apartment.js lifts it out of the room's things).
+  b.tag('spareChair', b.group(0, 0, 0, 0, () => F.chair(7.6, 2.05, -Math.PI / 2)));
   b.block(7.35, 7.85, 1.8, 2.3);
   f.hangingBulb(7.5, 1.8, 0.5, M.bulbOff);
 

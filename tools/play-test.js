@@ -207,7 +207,38 @@ export function doAnswerThree() {
     expect(`message ${i + 1} after clip 3`, g().hud.says().banner, (b) => !!b && b.includes(words));
     tick(3.6);
   }
-  tick(1.5);
+  tick(1.8);
+  expect('then a fourth file: clip 4 is loaded', g().job.parts.editor.state().clip, 3);
+}
+
+// Clip 4, the study, live (beats 13 and 14): nothing to mark; every scrub
+// back brings Hamza nearer, until it goes all the way back to the night.
+export function doClipFour() {
+  const ed = () => g().job.parts.editor.state();
+  const clip = CLIPS[3];
+  key('Space');
+  tick(4);
+  key('Space');
+  expect('clip 4: the live tape has no static', ed().static, 0);
+  key('KeyE');
+  expect('clip 4: nothing to mark', [ed().marked, g().hud.says().hint].join(), ',Keep going back.');
+  const hamza = g().job.parts.footage.props.hamza.root;
+  let before = Infinity;
+  for (let step = 1; step < clip.past.length; step++) {
+    key('KeyA', 0.4);
+    expect(`clip 4: scrub back ${step}, a step nearer`, ed().depth, step);
+    g().job.parts.editor.film();
+    const look = clip.past[step];
+    if (look.hamza) {
+      const away = Math.hypot(hamza.position.x - 0.6, hamza.position.z - 2.3);
+      expect(`clip 4: Hamza nearer the camera on step ${step}`, away < before, true);
+      before = away;
+    }
+  }
+  expect('clip 4: all the way back, the night itself', clip.past[ed().depth].date, 'NOV 16 2026');
+  expect('clip 4: and Saad is at the desk', g().job.parts.footage.props.saad.root.position.x, 2.5);
+  expect('clip 4: the task is never ticked', g().hud.says().ticked, false);
+  tick(8.5);
   expect('the end of what is built', g().hud.says().task, 'That is as far as the game goes for now.');
 }
 
@@ -254,6 +285,8 @@ export async function run() {
   expect('sat down, the task is clip 3', g().hud.says().task, 'Find the frame where it goes wrong');
   doClip(2);
   doAnswerThree();
+  tick(2.5);
+  doClipFour();
   await doPauseAndRestart();
   expect('back at the title, the ring is out and nothing hisses', [g().chores.state().ringLit, g().chores.state().boiledOver, g().chores.state().knob].join(), 'false,false,0');
   // And once more from the start, to show a second game starts clean.
