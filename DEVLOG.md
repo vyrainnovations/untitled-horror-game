@@ -356,3 +356,37 @@ Asked "Build clip 3, the kitchen, next?", Eshan chose "Build clip 3 next".
 **Next**
 
 Clip 4, the study (beats 12 to 14): a fourth file arrives, the tape is live, a figure sits in the spare room and comes nearer at every scrub back, and at the very end of it Saad is asleep at the desk. It needs the figure, built from simple shapes. Then Part 3: the thread, the gas, the door, the last shot.
+
+### Later still: clip 4, and the end of Part 2
+
+Asked "Build clip 4 and the figure next?", Eshan chose "Build clip 4 next".
+
+**What happened**
+
+- **The fourth file** (beat 12). A moment after "There is one more. I did not want to send it." it arrives and loads by itself.
+- **Clip 4: the study, live** (beat 13). LIVE in the corner with a red light, NOV 16 2027, the time running from 03:07. An empty room, and far off, through the study door and the spare room door opposite, someone sitting in the chair in the spare room. There is no static and nothing to mark: pressing E says "Keep going back." Each scrub back, his things are back in the study and the figure is nearer: the spare room doorway, the corridor, the study doorway, then right beside the empty chair, bent over to look at the screen.
+- **All the way back** (beat 14). One more, and the date falls back to NOV 16 2026, 3:07: the room in colour, and somebody asleep at the desk in a grey hoodie, headphones on, head on his arms. Seven seconds later Part 2 is over, and the game hands on to Part 3, which is next to build.
+- **The figure.** Hamza and Saad are built from boxes, with a handful of poses: sitting, standing, bending to a screen, asleep at a desk. They only ever appear on a tape, and under the camera's infra-red lamp they show up pale. Blocky, and at 240 by 180 that reads as a person, and an unpleasant one.
+- **The tripod moved.** From its corner it could not see through both doorways at once, and the story needs that shot. It now stands by the study window, in line with both doors. The spare room's chair stands apart from that room's things, because it is the one thing still there a year on.
+- The play test covers all four tapes now: 137 checks.
+
+**Choices Claude made that Eshan has not seen yet**
+
+- The live clock stops at 03:07:59. Every clock in the flat says 3:07 and the story only lets one of them reach 3:08, at the very end, so this one waits.
+- The figure's places, and the tripod's new spot, are Claude's. STORY.md names the places (the spare room chair, the doorways, beside the desk) but not where exactly.
+- The task line for the last tape ("Find the frame where it goes wrong") is never ticked off, like the chai.
+
+**Checked**
+
+- The play test, the walking test (with the tripod moved), the build. No errors in the console.
+- By eye, from pictures read straight out of the game: every step of the last tape, from the empty room and the small pale figure far off, to the figure bent over the desk beside the empty chair, to Saad asleep in colour.
+
+**What went wrong**
+
+- **The first framing hid the point of the shot.** At the fourth step the figure stood between the camera and the monitor he was meant to be looking at, so the picture was a white blur on the edge of the frame. The camera now turns more towards the desk, and he bends on the far side of the empty chair, with the screen in view.
+- **Pictures that came out as grey squares**, because the hidden browser panel had no size at all, and pictures buried under the static from pressing Start. Both were testing problems, not the game's.
+- **Not checked:** how any of it sounds, and how it looks in Chrome on Eshan's screen. Nobody has played any of the tapes yet but the test.
+
+**Next**
+
+Part 3, the cut (beats 15 to 18): the phone lights up and the thread scrolls up through a year of messages to the night itself; "Turn off the gas"; "Open the door"; and the last shot, Hamza in a lit doorway, 3:07 turning to 3:08. Then the title and the credits. That is all that is left of the story.

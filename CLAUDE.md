@@ -48,12 +48,13 @@ Out of scope for now: voice acting, multiple endings, a second location, multipl
 - `src/hud.js`, `src/hud.css`: the words on the screen while playing (task line, hint, prompt, keys row, message banner). Nothing in it knows the story.
 - `src/interact.js`: looking at something within reach and using it (E or click).
 - `src/chores.js`: Part 1, the three chores. Wording, order and timings at the top.
-- `src/job.js`: Part 2 in order (phone, sitting down, the clips, the door). The place where clip 4 will start is marked THE NEXT PART OF THE GAME STARTS HERE.
+- `src/job.js`: Part 2 in order (phone, sitting down, the clips, the door). The place where Part 3 will start is marked THE NEXT PART OF THE GAME STARTS HERE.
 - `src/phone.js`: the phone in the hand; the messages are in `TONIGHT` at the top.
 - `src/seat.js`: sitting at the desk, and the view settling on the monitor.
 - `src/editor.js`: the editing program on the monitor: play, scrub, mark.
 - `src/footage.js`: how a tape is drawn: the flat from the tape camera, as it was on the date in the corner.
-- `src/clips.js`: what is on each tape: camera, dates, the moment, what moves, what follows the mark. Clips 1 to 3 so far. What of his is in the flat on each date is one table, `FLAT`, that every tape reads.
+- `src/clips.js`: what is on each tape: camera, dates, the moment, what moves, what follows the mark. All four clips. What of his is in the flat on each date is one table, `FLAT`, that every tape reads.
+- `src/figures.js`: Hamza and Saad, built from boxes, with their poses. Only ever seen on a tape.
 - `src/door.js`: the front door hammered on for real after clip 2, and the peephole.
 - `tools/walk-test.js`: the walking test (see Things to know).
 - `tools/play-test.js`: the play test (see Things to know).
@@ -88,7 +89,7 @@ The repo is a showcase of a game made with AI, told as a story with the mistakes
 
 ## Status
 
-As of 14 November 2026: the flat, the menu, the settings and the sound are done, and the game plays from the title to the end of beat 12. Part 1 (the three chores) is complete. Part 2 has the phone conversation, sitting at the PC, the editing program, clip 1 (the corridor), clip 2 (the front door, then the tape jumps to 3:07 and its door is hammered on), the real front door hammered on with the peephole, and clip 3 (the kitchen: the flame dies at 01:10; marked, the real chai has boiled over and the gas hisses). Still to build: clip 4 (the study) and the figure, and all of Part 3 (the thread, the gas, the door, the last shot). Three days remain, counting the 16th. Eshan has not said how any of the gameplay plays yet. The game has no name: the menu says "Untitled", with "working title" under it. `STORY.md` offers three.
+As of 14 November 2026: the flat, the menu, the settings and the sound are done, and the game plays from the title to the end of Part 2 (beat 14). Part 1 (the three chores) is complete. Part 2 is complete: the phone conversation, sitting at the PC, the editing program, clip 1 (the corridor), clip 2 (the front door, then the tape jumps to 3:07 and its door is hammered on), the real front door hammered on with the peephole, clip 3 (the kitchen: the flame dies at 01:10; marked, the real chai has boiled over and the gas hisses), and clip 4 (the study, live, Hamza nearer at every scrub back, then Saad asleep at the desk). Still to build: all of Part 3 (the thread, the gas, the door, the last shot), the title and the credits. Three days remain, counting the 16th. Eshan has not said how any of the gameplay plays yet. The game has no name: the menu says "Untitled", with "working title" under it. `STORY.md` offers three.
 
 Look decisions Eshan has made (do not undo without asking):
 
@@ -116,6 +117,6 @@ Things to know:
 - The mirrors are fakes (dark glossy panels).
 - The game is played in Chrome in a big window (roughly 2400 x 1300). Check the look at that size.
 
-**Next step:** clip 4, the study (`STORY.md`, beats 12 to 14: a fourth file arrives; the tape is live; a figure sits in the spare room and is nearer at every scrub back, until he bends to look at the screen; the chair in front of the monitor on the tape is empty; at the very end, Saad asleep at the desk), then Part 3. Adding a clip to `src/clips.js` is enough for `src/job.js` to load it after the one before (the editor's file list also needs a fourth name). Eshan should play what exists in Chrome as soon as he can; his words go in the next commit. Still owed by Eshan: the two names, the title, how the two of them text, and the setting. And one slip in `STORY.md` for him: it says the bolt went on both at 00:40 and at 00:52 (the tape uses 00:41).
+**Next step:** Part 3, the cut (`STORY.md`, beats 15 to 18): the phone lights up and the thread scrolls up through a year of messages (the script is in `STORY.md`; the phone in `src/phone.js` can show it); "Turn off the gas" (the knob is `gasKnob`, the hiss is `audio.setGas`, and it should grow loud by now); "Open the door" (the bolt slides back, the door opens, the landing light is on); the last shot on tape (Hamza in the lit doorway, 3:07 turning to 3:08, STOP); then the title and credits. It starts where `src/job.js` says THE NEXT PART OF THE GAME STARTS HERE. Eshan should play what exists in Chrome as soon as he can; his words go in the next commit. Still owed by Eshan: the two names, the title, how the two of them text, and the setting. And one slip in `STORY.md` for him: it says the bolt went on both at 00:40 and at 00:52 (the tape uses 00:41).
 
-Things the rest of the story needs that are not there yet, so nobody is surprised: a figure (Hamza) that can sit and stand in a few places, and Saad asleep at the desk. Clip 4 films the study, which has the monitor in it: hide the tape's own picture on the monitor while filming it. All of these appear or move, so all of them touch the rule about shadows being drawn once.
+Things Part 3 needs that are not there yet, so nobody is surprised: a light on the landing, a door that can open fully (it opens outwards a crack now) and a way through it that stays closed to the player, the microwave clock able to turn from 3:07 to 3:08, and Hamza standing in a lit doorway for the last shot (the figure exists: `src/figures.js`). Anything that appears or moves touches the rule about shadows being drawn once.
