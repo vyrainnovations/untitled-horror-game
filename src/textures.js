@@ -52,6 +52,17 @@ function fitted(el) {
   return t;
 }
 
+// A picture laid end to end with mirror images of itself, so that the joins
+// do not show: across times wide, down times tall. The one in the middle is
+// the right way round.
+function mirrored(el, across, down) {
+  const t = fitted(el);
+  t.wrapS = t.wrapT = THREE.MirroredRepeatWrapping;
+  t.repeat.set(across, down);
+  t.offset.set(-(across - 1) / 2, -(down - 1) / 2);
+  return t;
+}
+
 // --- Brushes -------------------------------------------------------------
 
 const fill = (g, colour, x, y, w, h) => {
@@ -1253,8 +1264,8 @@ export function createTextures() {
     drain: fitted(drain(88)),
     pillow: fitted(pillow(89)),
     glow: fitted(glow()),
-    facade: fitted(facade(90)),
-    lane: fitted(lane(91)),
+    facade: mirrored(facade(90), 3, 1),
+    lane: mirrored(lane(91), 1, 3),
     microwave: fitted(microwave(92)),
     washer: fitted(washer(93)),
     tube: fitted(tube(94)),

@@ -13,6 +13,7 @@ import { dressKitchen } from './rooms/kitchen.js';
 import { dressBathroom } from './rooms/bathroom.js';
 import { dressStore } from './rooms/store.js';
 import { dressCorridor } from './rooms/corridor.js';
+import { dressLanding } from './rooms/landing.js';
 
 export function buildApartment(scene) {
   const M = createMaterials();
@@ -50,9 +51,9 @@ export function buildApartment(scene) {
   wall('z', 0, 0.06, 3.4, OUT, M.studyWall, [win(0.9, 2.5, 0.95, 2.15)]);
   wall('z', 0, 3.4, 7.2, OUT, M.bed1Wall, [win(4.4, 6.2, 0.95, 2.15)]);
   wall('z', 0, 7.2, 11.94, OUT, M.kitchenWall, [win(7.75, 9.55, 0.9, 2.2), win(10.4, 11.4, 1.15, 2.0)]);
-  // South outer wall, with the front door.
-  wall('x', 12, -0.06, 4.2, M.kitchenWall, OUT);
-  wall('x', 12, 4.2, 5.76, M.hallWall, OUT, [door(4.5, 5.4)]);
+  // South outer wall, with the front door. Its outside is the landing's wall.
+  wall('x', 12, -0.06, 4.2, M.kitchenWall, M.landingWall);
+  wall('x', 12, 4.2, 5.76, M.hallWall, M.landingWall, [door(4.5, 5.4)]);
   // Between the rooms on the west side.
   wall('x', 3.4, 0.06, 4.14, M.studyWall, M.bed1Wall);
   wall('x', 7.2, 0.06, 4.14, M.bed1Wall, M.kitchenWall);
@@ -129,9 +130,9 @@ export function buildApartment(scene) {
   });
   split.visible = false;
   b.tag('splitWood', split);
-  // The landing outside it. Its light is out: all that shows through the
-  // open door is black, blacker than anything inside the flat.
-  b.tag('landing', b.box(2.9, 7.0, -1, 4, 12.9, 13.0, M.void));
+  // The landing outside it: the top of a shared stairwell (src/rooms/landing.js).
+  // Its light is out all night. It is not one of the rooms: it is not his.
+  b.group(0, 0, 0, 0, () => dressLanding(b, M, f, F));
 
   // --- Windows ----------------------------------------------------------------
   windowAt(0, 0.9, 2.5, 0.95, 2.15, 1); // study
@@ -146,6 +147,8 @@ export function buildApartment(scene) {
   buildOutside(b, M);
 
   // --- Lights -----------------------------------------------------------------
+  const bulbLit = new THREE.Color(0xffe2b0); // a bulb that is on
+  const bulbDead = new THREE.Color(0x3a2c1c); // and one that is not
   // Everything in the flat stands still, so shadows are worked out once at the
   // start and never again. That makes seven shadow-casting lights cheap.
   const shadows = (light, size, near, far) => {
@@ -228,6 +231,22 @@ export function buildApartment(scene) {
   landing.position.set(4.95, 2.35, 12.75);
   landing.target.position.set(4.95, 0.2, 9.6);
   scene.add(landing, landing.target);
+  // What lights the landing itself. All night that is only a tube light a
+  // floor below, spilling up the stairs: cold and faint, enough to make out
+  // a place. At the end it is the landing's own bulb.
+  const LANDING = { below: [7.7, -0.3, 13.1], spill: 3.4, full: 2.6, cold: new THREE.Color(0x8fb0c0), warm: new THREE.Color(0xffe2b8) };
+  const landingGlow = new THREE.PointLight(LANDING.cold, LANDING.spill, 9, 1.3);
+  landingGlow.position.set(...LANDING.below);
+  scene.add(landingGlow);
+  const landingBulb = b.things.landingBulb;
+  function landingLight(level) {
+    const on = level > 0.01;
+    landingGlow.position.set(...(on ? landingBulb.at : LANDING.below));
+    landingGlow.color.copy(on ? LANDING.warm : LANDING.cold);
+    landingGlow.intensity = on ? LANDING.full * level : LANDING.spill;
+    landingBulb.material.color.copy(bulbDead).lerp(bulbLit, level);
+    landingBulb.haze.material.opacity = 0.55 * level;
+  }
 
   // --- Furniture and clutter ----------------------------------------------------
   // Each room's things are one group, so that the tapes (src/footage.js) can
@@ -246,12 +265,11 @@ export function buildApartment(scene) {
   scene.attach(b.things.spareChair);
 
   // --- Things that change over time ---------------------------------------------
-  const bulbLit = new THREE.Color(0xffe2b0);
-  const bulbDead = new THREE.Color(0x3a2c1c);
   let dropoutUntil = 0;
   let nextDropout = 8;
   let now = 0;
   let steady = false; // the bulb has stopped flickering (the very end)
+  landingLight(0);
   b.updaters.push((t) => {
     now = t;
     // The corridor bulb flickers, and now and then cuts out for a moment.
@@ -273,7 +291,9 @@ export function buildApartment(scene) {
     things: b.things, // the few objects the game moves or switches on, by name (see b.tag)
     rooms, // each room's furniture and clutter, as one group
     start: { x: 2.5, z: 2.2, yaw: 0, pitch: -0.1 }, // in the study, behind the chair, facing the desk
-    lights: { bulb, strip, screen, screenFill, beams, bounce, vent, drawn, ring, sky, landing },
+    lights: { bulb, strip, screen, screenFill, beams, bounce, vent, drawn, ring, sky, landing, landingGlow },
+    // The light on the landing: 0 is out (all night), 1 is on (the very end).
+    landingLight,
     // The corridor bulb's own glow, so a tape can show it switched off.
     bulbLook: { material: bulbMaterial, haze: bulbHaze, dead: bulbDead },
     update(t, dt) {

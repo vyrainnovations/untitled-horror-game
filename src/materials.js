@@ -8,6 +8,13 @@
 import * as THREE from 'three';
 import { createTextures } from './textures.js';
 
+// The haze over the street at night: its colour (street lamps on dust and
+// smoke), and how far off it starts and is complete, in metres.
+export const HAZE = {
+  colour: { value: new THREE.Color(0x3a2e23) },
+  range: { value: new THREE.Vector2(8, 27) },
+};
+
 export function createMaterials() {
   const T = createTextures();
 
@@ -24,6 +31,26 @@ export function createMaterials() {
   const haze = (color, opacity) =>
     new THREE.SpriteMaterial({ map: T.glow, color, opacity, blending: THREE.AdditiveBlending, depthWrite: false, fog: false });
   const both = THREE.DoubleSide; // cloth is seen from both sides
+
+  // Everything outside the west windows fades into the night's haze with
+  // distance (HAZE, at the top of this file, says how thick it is), so that
+  // the lane has no ends and the city no edge. The flat's own fog is
+  // darkness, and stops at a few metres; this is a second one, only for the
+  // street. The distance is worked out for every pixel, not every corner:
+  // these backdrops are single sheets tens of metres long.
+  const hazed = (material) => {
+    material.onBeforeCompile = (shader) => {
+      shader.uniforms.uHaze = HAZE.colour;
+      shader.uniforms.uHazeRange = HAZE.range;
+      shader.vertexShader = shader.vertexShader
+        .replace('#include <common>', '#include <common>\nvarying vec3 vHazeAt;')
+        .replace('#include <project_vertex>', '#include <project_vertex>\nvHazeAt = mvPosition.xyz;');
+      shader.fragmentShader = shader.fragmentShader
+        .replace('#include <common>', '#include <common>\nvarying vec3 vHazeAt;\nuniform vec3 uHaze;\nuniform vec2 uHazeRange;')
+        .replace('#include <fog_fragment>', '#include <fog_fragment>\ngl_FragColor.rgb = mix(gl_FragColor.rgb, uHaze, smoothstep(uHazeRange.x, uHazeRange.y, length(vHazeAt)));');
+    };
+    return material;
+  };
 
   return {
     // --- Walls, ceilings, floors ---
@@ -43,6 +70,10 @@ export function createMaterials() {
     cement: matte(T.cement),
     backsplash: glossy(T.backsplash, 40, 0x2a2a2a),
     stone: matte(T.plaster, { color: 0x707070 }),
+    // The landing outside the front door: a shared stairwell, painted long ago.
+    landingWall: matte(T.plaster, { color: 0xa89f88 }),
+    landingDado: matte(T.plaster, { color: 0x3f504a }),
+    landingFloor: matte(T.cement, { color: 0xc9c2b4 }),
 
     // --- Wood ---
     woodDark: matte(T.woodDark),
@@ -155,10 +186,14 @@ export function createMaterials() {
     hazeBlue: haze(0x8fb0e8, 0.25),
     hazeOrange: haze(0xff8a30, 0.8),
 
-    // --- Outside the windows (painted, not lit) ---
-    facade: lit(0xffffff, T.facade),
-    lane: lit(0xffffff, T.lane),
-    silhouette: lit(0x050608),
-    void: lit(0x000000), // true black: the unlit landing outside the front door
+    // --- Outside the windows (painted, not lit, and lost in the haze far off) ---
+    facade: hazed(lit(0xffffff, T.facade)),
+    lane: hazed(lit(0xffffff, T.lane)),
+    silhouette: hazed(lit(0x050608)),
+    nightSky: hazed(lit(0x05070d)), // behind and above the buildings
+    void: lit(0x000000), // true black: the glass of the peephole
+    // --- On the landing ---
+    ventGlow: lit(0x5a3212), // the street's lamplight through a vent block
+    stairGlow: lit(0x1a262b), // a tube light on, a floor below
   };
 }

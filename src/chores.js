@@ -105,9 +105,9 @@ const USUAL_VIEW = 64;
 // standing against.
 const NEAR = 0.2;
 // The bag's way out: through the gap in the doorway, then down on the
-// landing beside the door, out of sight. [x, y, z] on the plan.
+// landing beside the door. [x, y, z] on the plan.
 const GAP = [4.63, 0.3, 12.03];
-const LANDING = [4.3, 0, 12.42];
+const LANDING = [4.55, 0, 12.66]; // clear of the door's swing, and in sight when it stands open at the end
 
 const smooth = (k) => k * k * (3 - 2 * k); // start gently, stop gently
 
@@ -233,7 +233,7 @@ export function createChores({ apartment, camera, player, interact, hud, audio, 
             after(TIMES.doorHolds, () => {
               move(TIMES.doorShuts, (k) => { door.rotation.y = DOOR_OPEN * (1 - k); }, () => {
                 audio.act('doorShut');
-                bag.visible = false; // it is out on the landing, behind the wall
+                // It stays out on the landing, where the peephole and the open door can see it.
                 busy = false;
                 next();
               });

@@ -46,9 +46,6 @@ export function createEnding({ apartment, camera, footage, interact, hud, audio,
   const knob = things.gasKnob;
   const bolt = things.bolt;
   const door = things.frontDoor;
-  const landingWall = things.landing;
-  const dark = landingWall.material;
-  const lit = new THREE.MeshBasicMaterial({ color: 0xeedfc2, fog: false });
 
   let stage = 'waiting'; // 'waiting', 'gas', 'door', 'opening', 'shot', 'stopped', 'card'
   let shotTime = 0; // seconds into the last shot
@@ -125,10 +122,10 @@ export function createEnding({ apartment, camera, footage, interact, hud, audio,
       later(0.5, () => {
         // The door opens, and the landing light is on.
         audio.act('doorWide');
-        landingWall.material = lit;
         move(TIMES.opens, (k) => {
           door.rotation.y = DOOR_WIDE * k;
           lights.landing.intensity = LANDING_LIGHT * Math.min(1, k * 3);
+          apartment.landingLight(Math.min(1, k * 3));
         }, () => later(TIMES.light, lastShot));
       });
     });
@@ -264,7 +261,7 @@ export function createEnding({ apartment, camera, footage, interact, hud, audio,
     card.hidden = true;
     title.classList.remove('is-in');
     credits.classList.remove('is-in');
-    landingWall.material = dark;
+    apartment.landingLight(0);
     lights.landing.intensity = 0;
     apartment.steadyBulb(false);
     microwave('3:07');
