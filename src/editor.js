@@ -88,6 +88,7 @@ export function createEditor({ scene, footage, audio, hud, onMarked, onTapeEnd, 
   let ended = false; // the tape has run out: the screen shows a blank blue
   let figureSeen = -1; // the step into the past whose figure has already been noticed
   let burning = null; // the last tape burning out: seconds since it began
+  let dark = false; // the monitor has no power
   const marks = []; // every file marked so far
 
   function load(i) {
@@ -288,7 +289,9 @@ export function createEditor({ scene, footage, audio, hud, onMarked, onTapeEnd, 
     if (clip.live) liveTime += dt;
     say = Math.max(0, say - dt);
     const last = clip.past.length - 1;
-    if (active && clip.live && say === 0) {
+    if (dark) {
+      // A dead screen has nothing to say.
+    } else if (active && clip.live && say === 0) {
       // The live tape has its own hints: there is no static to look for.
       const still = !playing && scrub === 0 && idle > 5;
       if (depth === last) hud.hint(null);
@@ -471,6 +474,7 @@ export function createEditor({ scene, footage, audio, hud, onMarked, onTapeEnd, 
     ended = false;
     figureSeen = -1;
     burning = null;
+    dark = false;
     screen.visible = false;
     footage.set({ time: 0, on: 0 });
     audio.setTape({ motor: 0, rewind: 0, snow: 0 });
@@ -481,6 +485,11 @@ export function createEditor({ scene, footage, audio, hud, onMarked, onTapeEnd, 
     update,
     film,
     burnOut,
+    // The monitor has no power (true), or has it back.
+    setDark(on) {
+      dark = on;
+      screen.visible = !on && !!clip;
+    },
     press,
     release,
     reset,

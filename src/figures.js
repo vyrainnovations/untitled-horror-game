@@ -39,6 +39,28 @@ const POSES = {
   asleep: { seat: 0.5, lean: 1.0, head: 0.35, tilt: 0.9, arms: [[-1.9, -0.67], [-1.9, -0.67]], fold: 1.0, legs: [-Math.PI / 2, Math.PI / 2] },
 };
 
+// The glare of a torch pointed at you: a soft white disc that always faces
+// whoever is looking. size is how wide it is, in metres.
+let glareMap = null;
+export function createGlare(size) {
+  if (!glareMap) {
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = 64;
+    const g = canvas.getContext('2d');
+    const fall = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    fall.addColorStop(0, 'rgba(255,255,255,1)');
+    fall.addColorStop(0.35, 'rgba(255,255,255,0.92)'); // blinding nearly half way out
+    fall.addColorStop(0.7, 'rgba(255,255,255,0.35)');
+    fall.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = fall;
+    g.fillRect(0, 0, 64, 64);
+    glareMap = new THREE.CanvasTexture(canvas);
+  }
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: glareMap, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+  sprite.scale.set(size, size, 1);
+  return sprite;
+}
+
 // who: 'saad' or 'hamza'. torch: he wears a head torch (its lamp is handed
 // back, to be lit).
 export function createFigure(who, { torch = false } = {}) {

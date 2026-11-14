@@ -31,6 +31,7 @@ canvas {
 .menu {
   position: fixed;
   inset: 0;
+  z-index: 4; /* over everything the game puts on the screen */
   color: var(--phosphor);
   font-family: var(--signage);
   font-stretch: 87.5%;

@@ -279,6 +279,7 @@ function tick(dt) {
     const hands = ending.busy() ? 'ending' : job.hands();
     if (hands === 'walk') player.update(dt);
     else if (hands === 'phone' || hands === 'ending') player.update(dt, STILL);
+    // 'seat', 'door', 'hide' and 'frozen': whoever has the controls places the view itself.
     chores.update(dt);
     job.update(dt);
     ending.update(dt);

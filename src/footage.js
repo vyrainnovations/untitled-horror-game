@@ -11,7 +11,7 @@
 //
 // The editing program (src/editor.js) puts that picture on the monitor.
 import * as THREE from 'three';
-import { createFigure } from './figures.js';
+import { createFigure, createGlare } from './figures.js';
 
 const SIZE = [240, 180]; // the tape's picture, in pixels
 const LAMP = 7; // how bright the camera's infra-red lamp is
@@ -134,16 +134,6 @@ export function createFootage({ renderer, scene, apartment }) {
     saad: { top: glows(0x8a8a8a, 0x707070), legs: glows(0x767676, 0x585858), skin: flat(0x1c1c1c), hair: flat(0x2c2c2c), shoes: flat(0x7a7a7a), gear: flat(0x505050) },
     hamza: { top: lit(0x7c7c7c), legs: lit(0x646464), skin: lit(0xc8c8c8), hair: lit(0x2a2a2a), shoes: lit(0x3a3a3a), gear: lit(0x202020) },
   };
-  // The glare of a torch pointed at the lens.
-  const glare = document.createElement('canvas');
-  glare.width = glare.height = 64;
-  const g2 = glare.getContext('2d');
-  const fall = g2.createRadialGradient(32, 32, 0, 32, 32, 32);
-  fall.addColorStop(0, 'rgba(255,255,255,1)');
-  fall.addColorStop(0.3, 'rgba(255,255,255,0.5)');
-  fall.addColorStop(1, 'rgba(255,255,255,0)');
-  g2.fillStyle = fall;
-  g2.fillRect(0, 0, 64, 64);
   for (const who of ['hamza', 'saad']) {
     const figure = createFigure(who, { torch: who === 'hamza' });
     figure.root.traverse((part) => {
@@ -151,8 +141,7 @@ export function createFootage({ renderer, scene, apartment }) {
       if (night) nightLook.set(part, [part.material, night]);
     });
     if (figure.lamp) {
-      figure.flare = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(glare), blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
-      figure.flare.scale.set(1.5, 1.5, 1);
+      figure.flare = createGlare(1.5); // the glare of his torch, pointed at the lens
       figure.flare.position.copy(figure.lamp.position);
       figure.flare.position.z += 0.03;
       figure.flare.visible = false;

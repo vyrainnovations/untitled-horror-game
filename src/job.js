@@ -28,6 +28,7 @@ import { createSeat } from './seat.js';
 import { createFootage } from './footage.js';
 import { createEditor } from './editor.js';
 import { createDoor } from './door.js';
+import { createHunt } from './hunt.js';
 import { CLIPS } from './clips.js';
 
 // The words on the task line.
@@ -44,7 +45,8 @@ const REPLY_AFTER_PEEPHOLE = 1.6; // seconds after looking through the peephole 
 const FILE_AFTER = 2.5; // seconds after "One more file" before the fourth file arrives
 const BODY = 4.5; // seconds on the night itself, and Saad asleep, before the tape tears back to tonight
 const SEEN_AFTER = 1.1; // seconds after the picture burns out before "I can see you."
-const LINGER = 5; // seconds after that before the game moves on
+const DARK_AFTER = 2.6; // seconds after that before every light in the flat goes out
+const LIGHTS_BACK = 1.2; // seconds after the hunt is over before the lights come back
 const THREAD_AFTER = 1.4; // seconds after the phone buzzes before it is in his hand
 // How far up the drone is (0 to 1) at each point of the night.
 const TENSION = {
@@ -73,6 +75,8 @@ export function createJob({ renderer, scene, camera, apartment, player, settings
   const footage = createFootage({ renderer, scene, apartment });
   const editor = createEditor({ scene, footage, audio, hud, onMarked: marked, onTapeEnd: tapeEnded, onAllTheWayBack: allTheWayBack, onDeeper: deeper, onFigure: figure, onBurnt: burnt });
   const door = createDoor({ apartment, scene, camera, player, settings, interact, audio, cut, onLooked: looked });
+  // Part 3: the lights go out, and something with a light looks for him.
+  const hunt = createHunt({ renderer, scene, camera, apartment, player, seat, interact, hud, audio, cut, onDone: huntOver });
 
   // Do something after a wait. Paused, the wait stops too.
   const later = (seconds, then) => timers.push({ left: seconds, then });
@@ -94,7 +98,7 @@ export function createJob({ renderer, scene, camera, apartment, player, settings
 
   // --- 2. Sitting down -------------------------------------------------------------------
   // Look at the chair, or the screen, and press E.
-  const canSit = () => stage !== 'waiting' && stage !== 'phone' && editor.isOn() && !seat.isSeated() && !seat.isMoving();
+  const canSit = () => !['waiting', 'phone', 'hunt'].includes(stage) && editor.isOn() && !seat.isSeated() && !seat.isMoving();
   interact.add({ at: [2.5, 0.75, 1.25], look: 0.4, prompt: () => (canSit() ? 'Sit down' : null), use: sit });
   interact.add({ at: [2.5, 1.05, 0.26], look: 0.36, reach: 2.2, prompt: () => (canSit() ? 'Sit down' : null), use: sit });
 
@@ -183,18 +187,33 @@ export function createJob({ renderer, scene, camera, apartment, player, settings
     });
   }
 
-  // The screen is dead. "I can see you." Then Part 3.
+  // The screen is dead. "I can see you." Then Part 3 (src/hunt.js): every
+  // light in the flat goes out, and it is standing beside him.
   function burnt() {
     audio.sting('hit');
     cut();
     later(SEEN_AFTER, () => {
       audio.message('pocket');
-      hud.banner('Unknown number', 'I can see you.', BANNER);
+      hud.banner('Unknown number', 'I can see you.', 5);
     });
-    later(SEEN_AFTER + LINGER, () => {
-      // Part 2 is over. Part 3 begins: the phone lights up, and the thread
-      // scrolls up through a year of messages to the night itself and the
-      // name. Once it is put away, the rest of the ending is src/ending.js.
+    later(SEEN_AFTER + DARK_AFTER, () => {
+      stage = 'hunt';
+      editor.setDark(true);
+      cut();
+      hunt.start();
+    });
+  }
+
+  // It has stopped looking, and its light is out. The lights of the flat
+  // come back. Then the phone lights up, and the thread scrolls up through a
+  // year of messages to the night itself and the name. Once it is put away,
+  // the rest of the ending is src/ending.js.
+  function huntOver() {
+    later(LIGHTS_BACK, () => {
+      apartment.power(true);
+      audio.setPower(true);
+      audio.act('powerUp');
+      editor.setDark(false);
       stage = 'thread';
       audio.setTension(0.3, 4);
       audio.message('pocket');
@@ -227,6 +246,7 @@ export function createJob({ renderer, scene, camera, apartment, player, settings
   // Who has the controls: 'walk', 'phone' (the phone is up: look, but no
   // walking), 'seat' (sat at the desk) or 'door' (an eye to the peephole).
   function hands() {
+    if (hunt.hands()) return hunt.hands(); // 'hide' (in a wardrobe) or 'frozen' (found)
     if (phone.isUp() && !seat.isSeated() && !seat.isMoving()) return 'phone';
     if (door.isLooking()) return 'door';
     if (seat.isSeated() || seat.isMoving()) return 'seat';
@@ -247,7 +267,8 @@ export function createJob({ renderer, scene, camera, apartment, player, settings
     const working = seat.isSeated() && seat.atScreen() && !phone.isUp();
     editor.setActive(working);
     if (editor.isOn()) editor.update(dt);
-    hud.keys(seat.isSeated() && !phone.isUp() ? (working && stage === 'edit' ? AT_SCREEN : LOOKING_AWAY) : null);
+    if (hunt.isOn()) hunt.update(dt); // it sets the keys along the bottom itself
+    else hud.keys(seat.isSeated() && !phone.isUp() ? (working && stage === 'edit' ? AT_SCREEN : LOOKING_AWAY) : null);
 
     // While the door is hammered on, a word for a player who stays put.
     if (door.isHammering()) {
@@ -267,6 +288,7 @@ export function createJob({ renderer, scene, camera, apartment, player, settings
   // --- Keys ------------------------------------------------------------------------------
   // Answers true if the key was for the phone, the desk or the peephole.
   function keyDown(code) {
+    if (hunt.keyDown(code)) return true; // hiding, or found
     const where = hands();
     if (phone.isUp()) {
       // The phone in his hand, sat down or not: E is for the phone.
@@ -301,6 +323,7 @@ export function createJob({ renderer, scene, camera, apartment, player, settings
     seat.reset();
     editor.reset();
     door.reset();
+    hunt.reset();
     hud.keys(null);
   }
 
@@ -314,7 +337,7 @@ export function createJob({ renderer, scene, camera, apartment, player, settings
     hands,
     reset,
     // For tests.
-    parts: { phone, seat, footage, editor, door },
-    state: () => ({ stage, clip: clipIndex, timers: timers.length, hands: hands(), phone: phone.state(), seat: seat.state(), editor: editor.state(), door: door.state() }),
+    parts: { phone, seat, footage, editor, door, hunt },
+    state: () => ({ stage, clip: clipIndex, timers: timers.length, hands: hands(), phone: phone.state(), seat: seat.state(), editor: editor.state(), door: door.state(), hunt: hunt.state() }),
   };
 }

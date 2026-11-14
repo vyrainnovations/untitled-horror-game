@@ -178,7 +178,7 @@ export function buildApartment(scene) {
   f.tube([0.55, 1.47, 11.57], [1.2, 1.47, 11.57], true);
   const strip = shadows(new THREE.PointLight(0xb4d6ae, 1.8, 7, 1.6), 512, 0.05, 7);
   strip.position.set(0.88, 1.42, 11.52);
-  b.glow(0.88, 1.46, 11.55, 0.7, M.hazeCold);
+  const stripHaze = b.glow(0.88, 1.46, 11.55, 0.7, M.hazeCold);
 
   // The PC monitor in the study, shining into the room.
   const SCREEN = 3.4; // how bright it is
@@ -270,6 +270,23 @@ export function buildApartment(scene) {
   let now = 0;
   let steady = false; // the bulb has stopped flickering (the very end)
   landingLight(0);
+
+  // The electricity. With it off, every light of his dies at once, and
+  // everything that glows off the mains: the LEDs, the clocks, the monitor.
+  // What comes in from outside stays: the street lamp, the neighbours.
+  // (STORY.md, beat 15: the night he remembers is giving way.)
+  const MAINS = [M.ledRed, M.ledGreen, M.ledBlue, M.ledAmber, M.digits, M.digitsGreen, M.screen, M.tubeOn];
+  const glowing = MAINS.map((material) => material.color.clone());
+  const FED = [[strip, strip.intensity], [screenFill, screenFill.intensity]];
+  const SKY = [sky.intensity, 0.42]; // the little light there is everywhere: with the power on, and off
+  let powered = true;
+  function power(on) {
+    powered = on;
+    MAINS.forEach((material, i) => material.color.copy(on ? glowing[i] : bulbDead).multiplyScalar(on ? 1 : 0.12));
+    for (const [light, full] of FED) light.intensity = on ? full : 0;
+    stripHaze.visible = on;
+    sky.intensity = SKY[on ? 0 : 1];
+  }
   b.updaters.push((t) => {
     now = t;
     // The corridor bulb flickers, and now and then cuts out for a moment.
@@ -277,12 +294,12 @@ export function buildApartment(scene) {
       dropoutUntil = t + 0.05 + Math.random() * 0.25;
       nextDropout = t + 5 + Math.random() * 16;
     }
-    const out = !steady && t < dropoutUntil;
-    const level = steady ? 1 : out ? 0.06 : 1 + Math.sin(t * 13) * 0.05 + Math.sin(t * 47) * 0.025;
+    const out = !powered || (!steady && t < dropoutUntil);
+    const level = !powered ? 0 : steady ? 1 : out ? 0.06 : 1 + Math.sin(t * 13) * 0.05 + Math.sin(t * 47) * 0.025;
     bulb.intensity = 2.6 * level;
     bulbMaterial.color.copy(out ? bulbDead : bulbLit);
     bulbHaze.material.opacity = 0.5 * level;
-    screen.intensity = SCREEN * (1 + Math.sin(t * 2.1) * 0.03);
+    screen.intensity = powered ? SCREEN * (1 + Math.sin(t * 2.1) * 0.03) : 0;
   });
 
   return {
@@ -294,6 +311,9 @@ export function buildApartment(scene) {
     lights: { bulb, strip, screen, screenFill, beams, bounce, vent, drawn, ring, sky, landing, landingGlow },
     // The light on the landing: 0 is out (all night), 1 is on (the very end).
     landingLight,
+    // The electricity: false, and every light of his dies; true brings them back.
+    power,
+    hasPower: () => powered,
     // The corridor bulb's own glow, so a tape can show it switched off.
     bulbLook: { material: bulbMaterial, haze: bulbHaze, dead: bulbDead },
     update(t, dt) {

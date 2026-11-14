@@ -111,6 +111,18 @@ export function createSeat({ camera, player, settings }) {
     camera.updateProjectionMatrix();
   }
 
+  // Sat in the chair at once, with no glide, looking at the screen: the
+  // tape has rewound to where he was sitting (src/hunt.js).
+  function snap() {
+    moving = null;
+    seated = true;
+    focus = 1;
+    player.state.yaw = straight.yaw;
+    player.state.pitch = straight.pitch;
+    camera.position.set(SEAT[0], SEAT[1], SEAT[2] - LEAN);
+    camera.rotation.set(straight.pitch, straight.yaw, 0);
+  }
+
   // Back to standing, at once: used when the game goes back to the title.
   function reset() {
     seated = false;
@@ -123,6 +135,7 @@ export function createSeat({ camera, player, settings }) {
   return {
     sitDown,
     standUp,
+    snap,
     update,
     reset,
     isSeated: () => seated,

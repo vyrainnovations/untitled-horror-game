@@ -271,10 +271,101 @@ export function doClipFour() {
   expect('clip 4: the picture burns out and the screen is dead', ed().ended, true);
   tick(1.3);
   expect('clip 4: "I can see you."', g().hud.says().banner, (b) => !!b && b.includes('I can see you.'));
-  tick(5.2);
-  expect('Part 3: the phone buzzes', g().job.state().stage, 'thread');
+}
+
+// Part 3, beat 15: every light goes out, and it is standing beside him.
+const hunt = () => g().job.parts.hunt.state();
+export function doLightsOut() {
+  tick(2.8);
+  expect('the lights go out', [g().apartment.hasPower(), hunt().stage].join(), 'false,desk');
+  expect('its light is on, beside the desk', [hunt().beam > 0, hunt().at.join()].join(), 'true,3.1,1.15');
+  expect('the corridor bulb is dead', g().apartment.lights.bulb.intensity, 0);
+  tick(1.6);
+  expect('task in the dark', g().hud.says().task, 'Hide');
+  tick(2.5);
+  expect('a word for a player who stays sat', g().hud.says().hint, 'Press Q to stand up.');
+  expect('no sitting down again prompt, no tape keys', g().hud.says().keys, 'QStand up');
+}
+
+// Beat 18: found. He never leaves the chair; it turns round, and its light
+// falls on him. The picture burns white, the tape rewinds, lights out again.
+export function doFound() {
+  for (let i = 0; i < 600 && hunt().stage === 'desk'; i++) tick(STEP);
+  expect('it turns from the screen in the end', hunt().stage, 'search');
+  for (let i = 0; i < 200 && hunt().stage === 'search'; i++) tick(STEP);
+  expect('and finds him in his chair', [hunt().stage, hunt().flash, g().job.hands()].join(), 'found,found is-white,frozen');
+  tick(1);
+  expect('the tape rewinds', [hunt().stage, hunt().flash].join(), 'rewind,found is-rewind');
+  key('KeyQ');
+  tick(1.6);
+  expect('and it is lights out again, in the chair', [hunt().stage, hunt().catches, hunt().flash, g().job.parts.seat.state().seated, g().apartment.hasPower()].join(), 'desk,1,,true,false');
+  expect('back at the desk, bent over the screen', hunt().at.join(), '3.1,1.15');
+}
+
+// Beat 17: seen from the far end of the corridor, it comes for him.
+export function doChased() {
+  key('KeyQ');
+  tick(1.2);
+  expect('stood up in the dark', g().job.hands(), 'walk');
+  expect('no chair to sit back down in while it is there', stand(2.5, 1.9, 2.5, 1.05, 0.26), null);
+  // Into the other wardrobe, the one in his bedroom, and out again.
+  expect('prompt at the bedroom wardrobe', stand(2.6, 4.75, 2.6, 1.2, 4.07), 'Hide in the wardrobe');
+  key('KeyE');
+  tick(0.6);
+  expect('hidden in the bedroom wardrobe', [hunt().hidden, hunt().slit].join(), 'bedroom,true');
+  key('KeyE');
+  tick(0.6);
+  expect('and out of it again', [hunt().hidden, hunt().slit, g().job.hands(), g().player.state.x, g().player.state.z].join(), ',false,walk,2.6,4.55');
+  stand(4.95, 8.5, 4.95, 1.5, 2); // out in the corridor, a long way down it, looking back
+  let chased = false;
+  let nearest = 99;
+  for (let i = 0; i < 1500 && hunt().catches < 2; i++) {
+    tick(STEP);
+    if (hunt().stage === 'chase') chased = true;
+    nearest = Math.min(nearest, hunt().away);
+  }
+  expect('seen from far off, it comes for him', chased, true);
+  expect('and finds him, still a way off', [hunt().catches, nearest > 2].join(), '2,true');
+  tick(2.6);
+  expect('lights out again', [hunt().stage, g().job.parts.seat.state().seated].join(), 'desk,true');
+}
+
+// Beats 16, 17 and 19: out behind its back, into the wardrobe across the
+// corridor, and it searches the whole flat and gives up.
+export function doHide() {
+  key('KeyQ');
+  tick(1.2);
+  expect('a word once he is up', g().hud.says().hint, 'Get out of the room, behind its back.');
+  expect('prompt at the wardrobe', stand(6.6, 2.35, 6.6, 1.2, 2.93), 'Hide in the wardrobe');
+  key('KeyE');
+  tick(0.6);
+  expect('hidden in the wardrobe', [hunt().hidden, g().job.hands(), hunt().slit].join(), 'spare,hide,true');
+  expect('keys in the wardrobe', g().hud.says().keys, 'EStep out');
+  key('KeyW', 0.5);
+  expect('he cannot walk in there', hunt().hidden, 'spare');
+  let stared = false;
+  let lit = false;
+  const heard = [];
+  for (let i = 0; i < 4000 && hunt().stage !== 'off'; i++) {
+    tick(STEP);
+    const s = hunt();
+    if (s.at.join() === '6.05,2.15' && Math.abs(s.facing - 0.47) < 0.06) stared = true;
+    if (g().renderer.shadowMap.needsUpdate) lit = true;
+    const banner = g().hud.says().banner;
+    const words = banner ? banner.replace('Unknown number', '') : '';
+    if (words && heard[heard.length - 1] !== words) heard.push(words);
+  }
+  expect('never found in the wardrobe', hunt().catches, 2);
+  expect('it stood and looked at the wardrobe', stared, true);
+  expect('its shadows moved with it', lit, true);
+  expect('the messages while he hid', heard.join('|'), 'Where are you.|I know you are in here.|It is Hamza.|Please.');
+  expect('it gave up, and he is out of the wardrobe', [hunt().stage, hunt().hidden, hunt().beam, g().job.hands()].join(), 'off,,0,walk');
+  expect('the task is ticked', g().hud.says().ticked, true);
+  tick(1.4);
+  expect('the lights come back', [g().apartment.hasPower(), g().apartment.lights.bulb.intensity > 1].join(), 'true,true');
+  expect('Part 4: the phone buzzes', g().job.state().stage, 'thread');
   tick(1.8);
-  expect('Part 3: the phone comes up, sat at the desk', [g().job.parts.phone.state().up, g().job.parts.phone.state().mode].join(), 'true,thread');
+  expect('Part 4: the phone comes up', [g().job.parts.phone.state().up, g().job.parts.phone.state().mode].join(), 'true,thread');
 }
 
 // Part 3, beat 15: the thread scrolls up through the year to the night and
@@ -304,9 +395,7 @@ export function doThread() {
 // Part 3, beat 16: the gas.
 export function doGas() {
   const end = () => g().ending.state();
-  key('KeyQ');
-  tick(1.2);
-  expect('stood up from the desk', g().job.hands(), 'walk');
+  expect('on his feet', g().job.hands(), 'walk');
   expect('prompt at the gas knob', stand(1.47, 10.85, 1.47, 0.925, 11.43), 'Turn off the gas');
   key('KeyE');
   tick(0.8);
@@ -397,6 +486,10 @@ export async function run() {
   doAnswerThree();
   tick(2.5);
   doClipFour();
+  doLightsOut();
+  doFound();
+  doChased();
+  doHide();
   doThread();
   doGas();
   doTheDoor();

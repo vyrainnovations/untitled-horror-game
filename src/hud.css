@@ -8,6 +8,7 @@
 .hud {
   position: fixed;
   inset: 0;
+  z-index: 2; /* over the peephole's ring and the wardrobe's doors, so a message can still be read */
   pointer-events: none; /* clicks go straight through to the game */
   color: var(--phosphor);
   font-family: var(--signage);
@@ -208,10 +209,68 @@
   display: none;
 }
 
+/* --- Hiding in a wardrobe: black, but for the gap between its doors (src/hunt.js) --- */
+.slit {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    #000 0,
+    #000 38%,
+    rgba(0, 0, 0, 0.92) 41.5%,
+    rgba(0, 0, 0, 0.3) 43.6%,
+    transparent 45%,
+    transparent 55%,
+    rgba(0, 0, 0, 0.3) 56.4%,
+    rgba(0, 0, 0, 0.92) 58.5%,
+    #000 62%,
+    #000 100%
+  );
+}
+.slit[hidden] {
+  display: none;
+}
+
+/* --- Found: the picture burns white, then the tape rewinds (src/hunt.js) --- */
+.found {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: #fff;
+  opacity: 0;
+}
+.found[hidden] {
+  display: none;
+}
+.found.is-white {
+  opacity: 1;
+  transition: opacity 90ms linear;
+}
+.found.is-rewind {
+  opacity: 1;
+  background: #000;
+}
+.found__osd {
+  position: absolute;
+  top: 7vh;
+  left: 7vw;
+  margin: 0;
+  font-family: var(--counter);
+  font-size: clamp(22px, 5vh, 64px);
+  letter-spacing: 0.06em;
+  color: #f2f2ea;
+  visibility: hidden;
+}
+.found.is-rewind .found__osd {
+  visibility: visible;
+}
+
 /* --- The very end: the title, then the credits, on black (src/ending.js) --- */
 .ending {
   position: fixed;
   inset: 0;
+  z-index: 3;
   display: flex;
   flex-direction: column;
   align-items: center;
