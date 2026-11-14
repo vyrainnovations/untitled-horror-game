@@ -390,3 +390,39 @@ Asked "Build clip 4 and the figure next?", Eshan chose "Build clip 4 next".
 **Next**
 
 Part 3, the cut (beats 15 to 18): the phone lights up and the thread scrolls up through a year of messages to the night itself; "Turn off the gas"; "Open the door"; and the last shot, Hamza in a lit doorway, 3:07 turning to 3:08. Then the title and the credits. That is all that is left of the story.
+
+### Late: Part 3, and the whole game
+
+Asked "Build Part 3, the ending, next?", Eshan chose "Build Part 3 next". With that, the game plays from the title screen to the credits, the whole of STORY.md.
+
+**What happened**
+
+- **The thread** (beat 15). Seven seconds after the last tape has gone all the way back, the phone buzzes and comes up into his hand, still sat at the desk. "It's me. It was always me. You only ever answered clients." Then the thread scrolls up by itself, lingering on each message: a year of them, every one sent at 3:07, then the night itself, from "9 missed calls" and "OPEN THE DOOR" back up to "It's Hamza. New number." At the name, the top of the thread stops saying "Unknown number" and says Hamza. Then down again, and the last three messages, ending "Turn it off. Then open the door." Every word is STORY.md's script.
+- **The gas** (beat 16). In the kitchen the hiss is loud now. Turn the knob back: the whole flat drops almost to silence for a few seconds, one small beep, and the microwave says 3:08.
+- **The door** (beat 17). The corridor bulb has stopped flickering. Slide the bolt back and the door swings wide by itself onto a lit landing, the first light from outside in the whole game.
+- **The last shot** (beat 18). The screen becomes the tape: the empty flat, NOV 16 2027, the front door open with light coming through it, and Hamza in the corridor looking at it, dark against the lit doorway, the picture on the poster of their film. 03:07:59 turns to 03:08:00. STOP. Black, the title, the credits, then back to the title screen with everything in the flat as it was.
+- The play test now plays the whole game: 181 checks.
+
+**Choices Claude made that Eshan has not seen yet**
+
+- How the thread is staged: the first of the last four messages comes in before the scroll, the other three after it, so that the year and the night are read before "Turn it off". The header changes to the name when the scroll reaches "It's Hamza. New number." STORY.md says the header has a name, not when it gets it.
+- The silence after the gas is the whole flat, not only the hiss stopping, and the microwave beeps once as it turns to 3:08, so the eye goes to it.
+- The door opens by itself once the bolt is back; the player does not push it.
+- The end card uses the game's working title, "Untitled", until Eshan names it.
+
+**Checked**
+
+- The play test twice in a row, the walking test, the build. No errors in the console.
+- By eye, from pictures read straight out of the game: the thread at the night, at the name and at the end; the microwave at 3:08; the door open on the lit landing; the last shot at 03:08:00 and stopped.
+- The sounds, measured: the silence really is near silence (a tenth of the kitchen's usual level), and comes back after four seconds; the knob, the creak of the door and the beep are all clear.
+
+**What went wrong**
+
+- **The editing program wrote over the end of the game.** Once the last shot stopped, the program on the monitor, still running underneath, wrote its own words back onto the tape: PAUSE, 2026. Found in a picture; the ending now keeps the tape to itself, and the play test checks the stopped tape says STOP at 3:08.
+- **The beep that nobody could hear.** It sounded inside the silence after the gas, and the silence swallowed it. It now plays outside the flat's own volume.
+- **Two checks in the play test that only passed by luck**, because of the random gaps in the hammering and the time the task line takes to tick. Both now wait long enough.
+- **Not checked:** how any of it sounds to a person, and how it plays in Chrome on Eshan's screen. Nobody has played the game from start to finish except the test.
+
+**Next**
+
+Eshan plays the whole game in Chrome and says what he thinks. Then the game needs its name, and to be put online by the 16th. Still his to decide: the two names, the title, how they text, and the setting.
