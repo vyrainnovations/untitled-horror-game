@@ -426,3 +426,101 @@ Asked "Build Part 3, the ending, next?", Eshan chose "Build Part 3 next". With t
 **Next**
 
 Eshan plays the whole game in Chrome and says what he thinks. Then the game needs its name, and to be put online by the 16th. Still his to decide: the two names, the title, how they text, and the setting.
+
+### Afternoon: Eshan plays it, and it is not a horror game
+
+Eshan played the whole game in Chrome, start to finish, for the first time. His verdict, in full:
+
+> "Dude I just played the game it was good so far there is some stuff I didnt like, the chats' all the chats we did is a little hard to understand, we need to make them a little slower and simpler to understand. Also the time when we are talking to the client we the client should be a little uncanny and talking very straightforward not like a human being very straight forward and just telling to efit so it feels a little unsettling and for the sake of money you are doing the work. Next thing is the video marking. Its a little too easy. Marking the video is very simple because all the three first clips go wrong at the same place and when it goes wrong the screen voids and a red bar appears. The red bar shoulnt appear as it is tells us directly where to mark and we also have to make the anomaly happen at different parts instead of the same place every time. Next up is the story of the game. It was good ngl but the thing is it wasn't horror at all like from whcih angle did it scare or where was the suspense. WE NEED IT TO BE SCARIER! Also when we peek there should be a place there. Like a random flat looks like from outside, at least not white, and when we look out the window the city ends in a box, instead of box add some fog so it doesn't feel like living in a box and borders are not visible. For the story we should add some intense scenes with risers, small jumpscares, and music to uplift the game, a chase scene or a hiding scene might be better from an anomaly pretending to be Saad. the videos will be showing us working with some standing and watching, the unknown has entered our house or something like that. Think and work."
+
+And a little later, while the work was under way:
+
+> "We can add cinematics with subtitles for story telling instead of showing old chats, where we make everything click and can use a music like L's theme A from death note or something similar and make it fast paced when its all ending."
+
+He is right about all of it. The game Claude built was a sad ghost story with one loud noise in it. Nothing in it could go wrong for the player, so there was nothing to be afraid of.
+
+**What happened, in the order it was done**
+
+- **Marking.** The red bar on the timeline is gone, and each tape goes wrong in a different place: late on the first, near the start of the second, in the middle of the third.
+- **The story, rewritten before anything else was built**, the way he asked for the first one. What happened to Saad and how the game ends are unchanged. The middle is new. The pale figure on the tapes is Saad himself, as a camera sees him. When the lights go out, the thing with a light for a face is Hamza with a head torch, looking for his friend. So the player gets what Eshan asked for, "an anomaly pretending to be Saad", for ten minutes, and then the ending takes it away. One new rule holds it together: everything the unknown number says must be frightening the first time and true the second. "I can see you." "I know you are in here." "It is Hamza."
+- **The chats.** The client now writes like a form: "A client." "There are three video files. In each one, something goes wrong." "Payment is 300,000 rupees. Half is sent now." "Do not ask questions. Do the work." Every message stays up long enough to be read twice before the next begins. The phone is bigger on the screen and its words a quarter larger.
+- **Two places.** Outside the front door there is now a landing: the neighbours' door behind a steel gate, a meter board, stairs, a bare bulb. Outside the windows the lane runs three times as far and fades into haze before it ends.
+- **A score**, all made by code: a drone that rises through the night, risers, a hit for the jump scares, a heartbeat, a slow theme for the title screen, and a fast piece for the ending. Eshan asked for something like a tune from Death Note. Claude cannot use that tune, so it wrote its own in the same spirit: a running figure over a pumping bass, building a layer at a time.
+- **Somebody on the tapes.** On one pass of each of the first three tapes a pale figure is standing there, dead still: at the end of the corridor, a metre from the lens, bent over the hob. On the next pass it is gone. The live tape shows the player himself at his desk, and the other one coming nearer behind him. Then a torch into the lens, and the picture burns out.
+- **Small frights on the way.** The landline rings in the corridor after the first tape. At the peephole there is nobody, and then an eye. The pan boils over out loud.
+
+**Choices Claude made that Eshan has not seen yet**
+
+- **The monster is taken away at the end.** He asked for an anomaly. The story gives him one and then says it was his friend, and the figure was him. That keeps the ending he approved. If he wants a monster that stays a monster, the ending has to change. It is the first thing on the list at the bottom of STORY.md.
+- Each tape also drops out to static for a moment in two other places, as a worn tape does. He did not ask for it. Without it, static alone still says "mark here".
+- The money is in rupees, because the working setting is a city in Pakistan.
+- The second reply the player sends is "Why so much?", because the longer one did not fit the box.
+
+**What went wrong**
+
+- **The haze swallowed the whole street.** It was worked out from the corners of each painted sheet, and a sheet 78 metres long has its corners 40 metres away however near its middle is. Every window showed a flat brown wall. It is worked out for every pixel now.
+- **The game would not start.** The new drone was given a name the sound file already used for something else. The build caught it.
+- **The first heartbeat was as loud as someone hammering on the door.**
+- **The first face at the peephole was funny.** A brown block with two white rectangles. It is now a black shape that fills the lens, and one wet eye that will not keep still.
+- **The first figure on the tape had no head**: a dark head against a dark door. It has a faint one now.
+- **On the kitchen tape, a standing figure was a white wall across half the picture.** He bends over the hob instead, which is also worse to look at.
+- **A second reply that did not fit**, and a phone whose words were nine lines of picture tall. Part of "hard to understand" was simply "hard to read".
+
+### Evening: the light
+
+The first thing in the game that can go wrong for the player.
+
+**What happened**
+
+- A few seconds after "I can see you.", every light in the flat dies at once. An arm's length from the chair stands a dark figure with a white light where its face should be, bent over the dead screen. The task line says "Hide".
+- The player has a few seconds to stand up and get out behind its back. Then it straightens, its light goes round the room, and it comes out and goes from room to room. Its footsteps can be heard through the walls.
+- He can hide in either wardrobe: the screen goes black but for the gap between the doors. When it reaches his room it comes and stands in front of the wardrobe with its light on the gap. Then it turns away.
+- Seen from across the flat, it comes for him at a run. Found, the picture burns white, the tape rewinds, and it is lights out again in the chair.
+- Messages buzz in his pocket: "Where are you." "I know you are in here." "It is Hamza." At the front door: "Please." The light goes out.
+- Its torch is the first light in the game whose shadows move. Shadows are drawn once for everything else; while the torch is on, only its own are drawn again.
+
+**What went wrong**
+
+- **Sitting still was the best way to survive, and also the fastest way to lose.** The first time the test sat in the chair to be found, it was found the instant the figure began to turn, for being within arm's reach, before the light had moved an inch. And without that rule he would never have been found at all: a man in a chair is under the beam of a head torch, and the light was a cone in the air. The light is a wedge on the floor plan now.
+- **The glare of the torch was a grey ball**, and at three metres it covered the whole man, so that a ball with legs came down the corridor. It is white, and smaller: the shape of a man shows round it.
+
+**Checked**
+
+- The play test, 238 checks by the end of the day, twice in a row. It lives through the scene three ways: sat still and found, seen down the corridor and chased, hidden in the wardrobe until it gives up. The walking test.
+- Pictures, read straight out of the game: lights out from the chair, the figure from behind, the light at the end of the corridor, and the view from inside the wardrobe.
+- **Not checked:** whether six and a half seconds is enough to get out of the study with a mouse in the hand; how any of it sounds.
+
+## Day 5: 15 November 2026. Nothing
+
+The cutscene was written late on the 14th. The session ran out of its allowance before it could be tested and committed. On the 15th it was picked up twice, and both times ran out again within a minute. Nothing was built. A day was lost with the deadline one day off, and the work that existed sat uncommitted on Eshan's disk the whole time, which is the thing this project's own rules say not to do.
+
+## Day 6: 16 November 2026. The cutscene, and the last day
+
+**What happened**
+
+- **The cutscene** (STORY.md, beat 20) replaces the thread of old messages. The tape fills the screen: twenty shots, one short subtitle each, in Hamza's words. The thing with the light is in the corridor; the light goes out; it is only a man. "I was the client. It was the only way you would answer." One year ago tonight: the bolt, the chai, the flame going out, the headphones, the hammering. "You died at 3:07." Then faster: "Every night since, you do it all again. The rubbish. The bolt. The chai. The figure on the tapes is you." "I was not hunting you. I was looking for you."
+- Fourteen of the twenty shots are the game's own tapes, played clear. The player has scrubbed every one of them.
+- It is cut to the music, which comes in a layer at a time. The music keeps driving under "Turn off the gas" and is cut dead by the knob. The slow theme comes in as the door opens.
+- The ending is about seven seconds shorter between the knob and the title.
+- The phone is the first conversation only again. The year of 3:07 messages is gone from the game.
+
+**What went wrong**
+
+- **The shot of his phone had a mug in front of the phone.**
+- **The close shot for "You died at 3:07." was a heap of grey slabs.** A man made of twelve boxes does not survive a close-up from behind. It is the wide shot of the study now, pushing slowly in.
+
+**Checked**
+
+- The play test: 240 checks, the whole game, title to credits. The walking test. The build.
+- A contact sheet of all twenty shots, and the subtitle on the page.
+
+**Not checked, and only Eshan can**
+
+- How any of it sounds: the drone, the hit, the heartbeat, and above all the two pieces of music. Claude wrote them and has never heard them.
+- Whether it is frightening. The test cannot be frightened.
+- Whether the hiding is fair with a real mouse: the time to get out of the study, how easy the wardrobes are to find in the dark.
+- Whether the cuts in the cutscene land on the beat. The pictures run on the game's clock and the music on the sound card's.
+
+**Next**
+
+Today is the deadline. Eshan plays it. If it holds, it needs its name (`TITLE` in `src/menu.js`), and `npm run build` makes the `dist/` folder that goes online; where it goes is his call. Still his to decide: whether the thing with the light may turn out to be Hamza, the two names, the title, and the setting.

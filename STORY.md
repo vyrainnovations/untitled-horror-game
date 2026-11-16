@@ -246,17 +246,17 @@ Kept: who they are, what happened that night, the chores, the four tapes, the do
 
 Done before this revision: the flat, the menu, the sound, the chores, the phone, the editing program, all four tapes, the hammering, the gas, the door, the last shot, the title and credits.
 
-New, in the order it gets built:
+New, in the order it was built. All of it is in the game as of 16 November:
 
-1. Marking made harder: no red bar, each tape goes wrong somewhere else. (Done, 14 Nov.)
-2. The client's new script, and every message slower.
-3. A landing outside the front door, and fog outside the windows.
-4. The music: drone, risers, hits, the heartbeat, the two themes.
-5. The figure on the first three tapes; the landline; the face at the peephole; the pan boiling over out loud; the live tape with Saad at the desk, and the light.
-6. Lights out, and the light that searches the flat: the wardrobes, being found, the rewind.
-7. The cutscene, and a quicker ending.
+1. Marking made harder: no red bar, each tape goes wrong somewhere else. (14 Nov.)
+2. The client's new script, and every message slower. (14 Nov.)
+3. A landing outside the front door, and fog outside the windows. (14 Nov.)
+4. The music: drone, risers, hits, the heartbeat, the two themes. (14 Nov.)
+5. The figure on the first three tapes; the landline; the face at the peephole; the pan boiling over out loud; the live tape with Saad at the desk, and the light. (14 Nov.)
+6. Lights out, and the light that searches the flat: the wardrobes, being found, the rewind. (14 Nov.)
+7. The cutscene, and a quicker ending. (16 Nov.)
 
-**Cut first if a day is lost,** in this order: the figure on tapes 2 and 3; the chase when seen from far off (found is found); the landline; the title theme.
+**Cut first if a day is lost,** in this order: the figure on tapes 2 and 3; the chase when seen from far off (found is found); the landline; the title theme. (A day was lost, the 15th, and nothing had to be cut.)
 
 **Still out:** voices, faces, a second ending, anything outside the flat but the landing.
 
