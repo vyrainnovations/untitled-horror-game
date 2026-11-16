@@ -14,6 +14,7 @@ import * as THREE from 'three';
 import { createFigure, createGlare } from './figures.js';
 
 const SIZE = [240, 180]; // the tape's picture, in pixels
+const SHARP = [480, 360]; // and when it fills the whole screen, not a monitor across the desk
 const LAMP = 7; // how bright the camera's infra-red lamp is
 const PALE = 0xbdbdbd; // the grey that black plastic shows up as under that lamp
 const OSD = [480, 360]; // the writing burnt into the picture: date, time, PLAY
@@ -132,7 +133,7 @@ export function createFootage({ renderer, scene, apartment }) {
   const glows = (hex, glow) => new THREE.MeshLambertMaterial({ color: hex, emissive: glow }); // pale by itself, and shaped a little by the lamp
   const NIGHT = {
     saad: { top: glows(0x8a8a8a, 0x707070), legs: glows(0x767676, 0x585858), skin: flat(0x1c1c1c), hair: flat(0x2c2c2c), shoes: flat(0x7a7a7a), gear: flat(0x505050) },
-    hamza: { top: lit(0x7c7c7c), legs: lit(0x646464), skin: lit(0xc8c8c8), hair: lit(0x2a2a2a), shoes: lit(0x3a3a3a), gear: lit(0x202020) },
+    hamza: { top: lit(0x686868), legs: lit(0x525252), skin: lit(0xc8c8c8), hair: lit(0x2a2a2a), shoes: lit(0x3a3a3a), gear: lit(0x202020) },
   };
   for (const who of ['hamza', 'saad']) {
     const figure = createFigure(who, { torch: who === 'hamza' });
@@ -289,6 +290,11 @@ export function createFootage({ renderer, scene, apartment }) {
     for (const object of never) set(object, 'visible', false);
     set(things.ringFlame, 'visible', false); // unless a tape says otherwise, the ring is out
     set(lights.ring, 'intensity', 0);
+    if (look.phone) {
+      // His phone, on the desk where it was that night, lit by a message.
+      set(things.phone, 'visible', true);
+      set(things.phoneScreen, 'visible', true);
+    }
     if (look.flame) stageHob(clip, look, t, set);
     if (shake > 0) {
       // Bolted, it can only rattle in its frame.
@@ -342,6 +348,7 @@ export function createFootage({ renderer, scene, apartment }) {
       const where = look[who] === true ? ASLEEP : look[who];
       const figure = props[who];
       figure.pose(where.pose);
+      if (where.stride !== undefined) figure.stride(where.stride, 0.7); // walking: how far through his stride
       figure.root.position.set(where.at[0], 0, where.at[1]);
       figure.root.rotation.y = where.facing;
       figure.root.visible = true;
@@ -423,6 +430,11 @@ export function createFootage({ renderer, scene, apartment }) {
     belongs: (name, object) => belonging.push([name, object]),
     // Something a tape must never show.
     keepOff: (object) => never.push(object),
+    // The tape is about to fill the whole screen (true), or is back on the monitor.
+    sharp(on) {
+      const [w, h] = on ? SHARP : SIZE;
+      raw.setSize(w, h);
+    },
     // For tests.
     camera,
     props,

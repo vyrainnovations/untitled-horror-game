@@ -75,6 +75,7 @@ const ending = createEnding({
   apartment, camera, interact, hud, audio,
   footage: job.parts.footage,
   cut: () => vhs.cut(),
+  onLights: () => job.lightsBack(), // the flat's lights come back when the cutscene is over
   onFinished: theEnd,
 });
 
@@ -85,8 +86,8 @@ function afterTheChores() {
   job.start();
 }
 
-// Part 2 is over and the thread has been read (src/job.js). The rest of
-// Part 3 is src/ending.js.
+// Parts 2 and 3 are over: the tapes, and the hiding (src/job.js). Part 4,
+// the cutscene and the ending, is src/ending.js.
 function afterTheLastClip() {
   ending.start();
 }

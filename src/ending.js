@@ -1,39 +1,49 @@
-// The end of the game: STORY.md, Part 3, beats 16 to 18, after the thread.
+// The end of the game: STORY.md, Part 4, "The cut", beats 20 to 23.
 //
-//   16. "Turn off the gas". In the kitchen the flame is out, the chai has
+//   20. The cutscene (src/cutscene.js): the tape on the whole screen, cut
+//       fast to music, with Hamza's words as subtitles. Where it clicks.
+//   21. "Turn off the gas". The lights are back and the bulb burns steady.
+//       The music drives. In the kitchen the flame is out, the chai has
 //       boiled over, and the hiss is loud. Turn the knob. Silence. The clock
 //       on the microwave changes to 3:08.
-//   17. "Open the door". The corridor bulb has stopped flickering. Slide the
-//       bolt back. The door opens. The landing light is on.
-//   18. The last shot, on tape: the empty flat, 16 November 2027. The front
+//   22. "Open the door". Slide the bolt back. The door opens. The landing
+//       light is on.
+//   23. The last shot, on tape: the empty flat, 16 November 2027. The front
 //       door stands open with light coming through it, and Hamza stands in
 //       the corridor looking at it: a figure in a lit doorway, the picture on
 //       the poster of their film. 3:07 turns to 3:08. STOP. The title. Credits.
 //
+// The music (src/audio.js): the finale under the cutscene and the gas, cut
+// dead by the knob; its pulse alone under "Open the door"; the slow theme
+// from the moment the door opens, through the credits.
+//
 // HOW TO CHANGE THINGS
 //   The words on the task line are TASKS; how long each moment lasts is
-//   TIMES. What the last shot shows is LAST_SHOT in src/clips.js.
+//   TIMES. What the last shot shows is LAST_SHOT in src/clips.js. The
+//   cutscene's shots and subtitles are SHOTS in src/cutscene.js.
 import * as THREE from 'three';
 import { TITLE, CREDITS } from './menu.js';
 import { LAST_SHOT } from './clips.js';
+import { createCutscene } from './cutscene.js';
 
 const TASKS = {
   gas: 'Turn off the gas',
   door: 'Open the door',
 };
+// Quicker than they were: Eshan asked for the ending to be "fast paced".
 const TIMES = {
   knob: 0.5, // the knob turning back
-  hush: 3.5, // the flat holding its breath once the hiss stops
-  clock: 1.4, // seconds after the knob before the microwave shows 3:08
-  task: 2.6, // and before "Open the door"
+  hush: 2.6, // the flat holding its breath once the hiss stops
+  clock: 1.2, // seconds after the knob before the microwave shows 3:08
+  task: 2.0, // and before "Open the door"
   bolt: 0.35, // the bolt sliding back
-  opens: 3.4, // the door swinging open
-  light: 2.4, // looking at the lit doorway before the tape
-  shot: 9.5, // the last shot, before it stops
-  turns: 8, // seconds into the shot when 3:07 turns to 3:08
-  stopped: 1.8, // the stopped tape before the screen goes black
-  black: 1.4, // black before the title
-  title: 3.5, // the title alone
+  opens: 2.6, // the door swinging open
+  light: 1.8, // looking at the lit doorway before the tape
+  shot: 8, // the last shot, before it stops
+  turns: 6.5, // seconds into the shot when 3:07 turns to 3:08
+  stopped: 1.6, // the stopped tape before the screen goes black
+  black: 1.2, // black before the title
+  title: 3.2, // the title alone
   back: 9, // the credits, before the title screen
 };
 const KNOB_OFF = 0; // the gas knob, straight up: off
@@ -41,13 +51,13 @@ const DOOR_WIDE = 1.5; // how far the front door swings open, in radians
 const BOLT_TRAVEL = 0.085; // as in src/chores.js
 const LANDING_LIGHT = 3.2; // how bright the landing light is
 
-export function createEnding({ apartment, camera, footage, interact, hud, audio, cut, onFinished }) {
+export function createEnding({ apartment, camera, footage, interact, hud, audio, cut, onLights, onFinished }) {
   const { things, lights } = apartment;
   const knob = things.gasKnob;
   const bolt = things.bolt;
   const door = things.frontDoor;
 
-  let stage = 'waiting'; // 'waiting', 'gas', 'door', 'opening', 'shot', 'stopped', 'card'
+  let stage = 'waiting'; // 'waiting', 'cutscene', 'gas', 'turning', 'door', 'opening', 'shot', 'stopped', 'card'
   let shotTime = 0; // seconds into the last shot
   let clock = '3:07'; // what the microwave says
   let moves = []; // things turning or sliding: { seconds, time, paint, then }
@@ -85,12 +95,26 @@ export function createEnding({ apartment, camera, footage, interact, hud, audio,
     picture.needsUpdate = true;
   }
 
-  // --- 16. The gas ------------------------------------------------------------------
-  // Called once the thread has been read and the phone put away.
+  // --- 20. The cutscene ---------------------------------------------------------------
+  // Called once the light has gone out (src/hunt.js).
   function start() {
+    stage = 'cutscene';
+    hud.clear();
+    cut();
+    cutscene.start();
+  }
+
+  // --- 21. The gas ------------------------------------------------------------------
+  // The cutscene is over. The lights of the flat are back, and steady.
+  function afterCutscene() {
+    onLights();
+    apartment.steadyBulb(true); // the bulb has stopped flickering
+    cut();
     stage = 'gas';
     hud.task(TASKS.gas);
+    audio.setTension(0, 2);
     audio.setGas(3); // the hiss is loud now
+    audio.music('finale', { level: 2 }); // and the music drives
   }
 
   function turnOff() {
@@ -100,6 +124,7 @@ export function createEnding({ apartment, camera, footage, interact, hud, audio,
     const from = knob.rotation.z;
     move(TIMES.knob, (k) => { knob.rotation.z = from + (KNOB_OFF - from) * k; });
     audio.setGas(false);
+    audio.music(null, { fade: 0 }); // the music is cut dead
     audio.hush(TIMES.hush); // silence
     later(TIMES.clock, () => {
       microwave('3:08');
@@ -109,7 +134,7 @@ export function createEnding({ apartment, camera, footage, interact, hud, audio,
       // --- 17. The door ---------------------------------------------------------
       stage = 'door';
       hud.task(TASKS.door, { ticked: true });
-      apartment.steadyBulb(true); // the bulb has stopped flickering
+      audio.music('finale', { level: 1, fade: 1.5 }); // only its pulse, now
     });
   }
 
@@ -118,10 +143,12 @@ export function createEnding({ apartment, camera, footage, interact, hud, audio,
     hud.prompt(null);
     hud.task(null, { ticked: true });
     audio.act('bolt');
+    audio.music(null, { fade: 0.3 });
     move(TIMES.bolt, (k) => { bolt.position.x = -BOLT_TRAVEL * (1 - k); }, () => {
       later(0.5, () => {
-        // The door opens, and the landing light is on.
+        // The door opens, and the landing light is on. The slow theme comes in.
         audio.act('doorWide');
+        audio.music('theme', { fade: 2.5 });
         move(TIMES.opens, (k) => {
           door.rotation.y = DOOR_WIDE * k;
           lights.landing.intensity = LANDING_LIGHT * Math.min(1, k * 3);
@@ -157,9 +184,20 @@ export function createEnding({ apartment, camera, footage, interact, hud, audio,
     shotTime = 0;
     hud.clear();
     cut();
+    footage.sharp(true);
+    tape.visible = true;
     screen.visible = true;
     audio.setTape({ motor: 1 });
   }
+
+  // The cutscene uses the same screen: the tape in front of everything.
+  const cutscene = createCutscene({
+    footage,
+    audio,
+    show: (on) => { screen.visible = on; },
+    picture: (on) => { tape.visible = on; },
+    onDone: afterCutscene,
+  });
 
   const pad2 = (n) => String(Math.floor(n)).padStart(2, '0');
   function clockOnTape() {
@@ -187,6 +225,7 @@ export function createEnding({ apartment, camera, footage, interact, hud, audio,
   function showCard() {
     stage = 'card';
     screen.visible = false;
+    footage.sharp(false);
     card.hidden = false;
     later(TIMES.black, () => title.classList.add('is-in'));
     later(TIMES.black + TIMES.title, () => credits.classList.add('is-in'));
@@ -216,6 +255,10 @@ export function createEnding({ apartment, camera, footage, interact, hud, audio,
       moves.splice(moves.indexOf(m), 1);
       if (m.then) m.then();
     }
+    if (stage === 'cutscene') {
+      fit();
+      cutscene.update(dt);
+    }
     if (stage === 'shot') {
       shotTime += dt;
       if (shotTime >= TIMES.shot) {
@@ -237,6 +280,7 @@ export function createEnding({ apartment, camera, footage, interact, hud, audio,
 
   // Draw the last shot into the tape's picture, while it is playing.
   function film() {
+    if (stage === 'cutscene') cutscene.film();
     if (stage === 'shot') footage.film(LAST_SHOT, shotTime, 0);
   }
 
@@ -250,14 +294,17 @@ export function createEnding({ apartment, camera, footage, interact, hud, audio,
   }
 
   // True while the ending has the controls: the player can look, not walk.
-  const busy = () => ['opening', 'shot', 'stopped', 'card'].includes(stage);
+  const busy = () => ['cutscene', 'opening', 'shot', 'stopped', 'card'].includes(stage);
 
   function reset() {
     stage = 'waiting';
     timers.length = 0;
     moves = [];
     shotTime = 0;
+    cutscene.reset();
+    footage.sharp(false);
     screen.visible = false;
+    tape.visible = true;
     card.hidden = true;
     title.classList.remove('is-in');
     credits.classList.remove('is-in');
@@ -286,6 +333,8 @@ export function createEnding({ apartment, camera, footage, interact, hud, audio,
       card: !card.hidden,
       title: title.classList.contains('is-in') ? title.textContent : null,
       credits: credits.classList.contains('is-in'),
+      cutscene: cutscene.state(),
     }),
+    parts: { cutscene },
   };
 }

@@ -78,6 +78,10 @@ const FLAT = {
 // Saad at his desk, working: where the player is sitting.
 const AT_DESK = { pose: 'work', at: [2.5, 1.2], facing: Math.PI };
 
+// What of his is in the flat on a date, plus anything more: for a shot that
+// is not one of the tapes below (the cutscene, src/cutscene.js).
+export const flat = (date, adds = []) => FLAT[date].concat(adds);
+
 export const CLIPS = [
   {
     file: 'clip_01.mov',

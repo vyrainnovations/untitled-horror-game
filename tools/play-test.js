@@ -360,53 +360,57 @@ export function doHide() {
   expect('its shadows moved with it', lit, true);
   expect('the messages while he hid', heard.join('|'), 'Where are you.|I know you are in here.|It is Hamza.|Please.');
   expect('it gave up, and he is out of the wardrobe', [hunt().stage, hunt().hidden, hunt().beam, g().job.hands()].join(), 'off,,0,walk');
-  expect('the task is ticked', g().hud.says().ticked, true);
-  tick(1.4);
-  expect('the lights come back', [g().apartment.hasPower(), g().apartment.lights.bulb.intensity > 1].join(), 'true,true');
-  expect('Part 4: the phone buzzes', g().job.state().stage, 'thread');
-  tick(1.8);
-  expect('Part 4: the phone comes up', [g().job.parts.phone.state().up, g().job.parts.phone.state().mode].join(), 'true,thread');
+  expect('the flat is still dark', g().apartment.hasPower(), false);
 }
 
-// Part 3, beat 15: the thread scrolls up through the year to the night and
-// the name, then the last messages come in.
-export function doThread() {
-  const phone = () => g().job.parts.phone.state();
-  expect('the thread starts with no name', phone().who, 'Unknown number');
-  let sawTheNight = false;
-  let named = false;
-  for (let i = 0; i < 3000 && !phone().finished; i++) {
+// Part 4, beat 20: the cutscene. The tape on the whole screen, a subtitle
+// for every shot, and the music coming in a layer at a time.
+export function doCutscene() {
+  const end = () => g().ending.state();
+  const scene = () => end().cutscene;
+  expect('the cutscene is on, and the tape fills the screen', [end().stage, end().tape, g().ending.busy()].join(), 'cutscene,true,true');
+  expect('it opens on black, with his name', [scene().black, scene().subtitle].join(), 'true,Saad.');
+  key('KeyW', 0.3);
+  expect('he cannot walk about during it', g().job.hands() === 'walk' && !g().ending.busy(), false);
+  const said = [];
+  const music = [];
+  let dark = true;
+  for (let i = 0; i < 4000 && end().stage === 'cutscene'; i++) {
     tick(STEP);
-    if (phone().focus === 'OPEN THE DOOR') sawTheNight = true;
-    if (phone().who === 'Hamza') named = true;
+    const s = scene();
+    if (s.subtitle && said[said.length - 1] !== s.subtitle) said.push(s.subtitle);
+    const song = g().audio.state().song;
+    const now = song ? `${song.name}${song.level}` : 'none';
+    if (music[music.length - 1] !== now) music.push(now);
+    if (end().stage === 'cutscene' && g().apartment.hasPower()) dark = false;
+    if (end().stage === 'cutscene' && !s.black) g().ending.film(); // every shot can be drawn
   }
-  expect('the thread reaches the night itself', sawTheNight, true);
-  expect('the thread has a name now', named, true);
-  expect('the last messages are in', phone().finished, true);
-  tick(0.5);
-  expect('prompt when the thread is done', g().hud.says().prompt, 'Put the phone away');
-  key('KeyE');
+  expect('every subtitle was shown, in order', said.join('|'), g().ending.parts.cutscene.shots.map((s) => s.says).join('|'));
+  expect('twenty of them', said.length, 20);
+  expect('the music comes in a layer at a time', music.join('>'), 'none>finale1>finale2>finale3>finale1>finale2');
+  expect('the flat stays dark until it is over', dark, true);
+  expect('then the lights are back, and the tape is off the screen', [g().apartment.hasPower(), end().tape, scene().subtitle].join(), 'true,false,');
   tick(1);
-  expect('the phone is down', phone().up, false);
-  tick(1.5);
-  expect('task after the thread', g().hud.says().task, 'Turn off the gas');
+  expect('task after the cutscene', g().hud.says().task, 'Turn off the gas');
 }
 
-// Part 3, beat 16: the gas.
+// Part 4, beat 21: the gas.
 export function doGas() {
   const end = () => g().ending.state();
   expect('on his feet', g().job.hands(), 'walk');
   expect('prompt at the gas knob', stand(1.47, 10.85, 1.47, 0.925, 11.43), 'Turn off the gas');
+  expect('the music is driving', g().audio.state().song.name, 'finale');
   key('KeyE');
   tick(0.8);
-  expect('the knob is off', end().knob, 0);
+  expect('the knob is off, and the music is cut dead', [end().knob, g().audio.state().song].join(), '0,');
   tick(1);
   expect('the microwave says 3:08', end().microwave, '3:08');
   tick(3.4); // the gas line is ticked and leaves before the next comes
   expect('task after the gas', g().hud.says().task, 'Open the door');
+  expect('only the pulse of the music now', g().audio.state().song.level, 1);
 }
 
-// Part 3, beat 17: the door.
+// Part 4, beat 22: the door.
 export function doTheDoor() {
   const end = () => g().ending.state();
   expect('prompt at the bolt', stand(4.9, 11.2, 4.69, 1.87, 11.92), 'Slide the bolt back');
@@ -417,14 +421,15 @@ export function doTheDoor() {
   tick(3.6);
   expect('the door is open', end().door, 1.5);
   expect('the landing light is on', end().landing > 3, true);
+  expect('the slow theme comes in', g().audio.state().song.name, 'theme');
   tick(2.6);
   expect('the last shot is on', [end().stage, end().tape].join(), 'shot,true');
 }
 
-// Part 3, beat 18: the last shot, then the title and the credits.
+// Part 4, beat 23: the last shot, then the title and the credits.
 export function doTheEnd() {
   const end = () => g().ending.state();
-  tick(9.6);
+  tick(6.2);
   expect('the tape stops', end().stage, 'stopped');
   tick(0.5);
   expect('the stopped tape says STOP, at 3:08', g().job.parts.footage.says(), 'STOP|NOV 16 2027|03:08:01');
@@ -490,7 +495,7 @@ export async function run() {
   doFound();
   doChased();
   doHide();
-  doThread();
+  doCutscene();
   doGas();
   doTheDoor();
   doTheEnd();

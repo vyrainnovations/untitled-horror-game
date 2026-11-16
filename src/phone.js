@@ -1,22 +1,21 @@
-// The phone in his hand, and the messages on it.
+// The phone in his hand, and the messages on it: STORY.md, Part 2, beat 6,
+// "The unknown number". The job offer.
 //
-//   tonight  STORY.md, Part 2, beat 6, "The unknown number": the job offer.
-//   thread   STORY.md, Part 3, beat 15, "The thread": the phone lights up
-//            and the thread scrolls up by itself through a year of messages,
-//            every one sent at 3:07, back to the night itself and the name.
+// (It used to show a second thing as well: at the end of the game, a thread
+// of a year's old messages scrolling up by itself. Eshan found it hard to
+// follow, and it was replaced by the cutscene: src/cutscene.js.)
 //
 // HOW TO CHANGE THINGS
-//   The messages are in TONIGHT, THE_NIGHT, THE_YEAR and LAST, just below,
-//   in order. How long the thread lingers on each message is in READ. The
-//   look of the screen (sizes, colours) is in LOOK. How long the phone takes
-//   to come up and how big it is on the screen are in HAND.
+//   The messages are in TONIGHT, just below, in order. How long each one is
+//   left to be read is in READ. The look of the screen (sizes, colours) is
+//   in LOOK. How long the phone takes to come up and how big it is on the
+//   screen are in HAND.
 //
 // The screen is painted with ordinary 2D drawing onto a picture that is
 // wrapped round the phone, so it goes through the same VHS filter as the
 // rest of the flat. Everything runs on the game's clock, so it stops while
 // the game is paused.
 import * as THREE from 'three';
-import { CLIPS } from './clips.js';
 
 // --- Tonight's conversation ----------------------------------------------------------
 // One line per message, in order.
@@ -46,47 +45,12 @@ const TONIGHT = [
   { from: 'them', text: 'Sending the files.', typing: TYPING },
   { from: 'them', files: ['clip_01.mov', 'clip_02.mov', 'clip_03.mov'], typing: TYPING },
 ];
-const WHO = 'Unknown number'; // the name at the top of the thread, until it has one
-const NAME = 'Hamza'; // the name it turns out to have
+const WHO = 'Unknown number'; // the name at the top of the screen
 const TIME = '3:07'; // the clock on the phone, and the time on every message tonight
-
-// --- The thread at the end (STORY.md, "The thread at the end") -------------------------
-// Oldest first. day: a date across the thread. time: when it was sent.
-const THE_NIGHT = [
-  { day: '16 Nov 2026' },
-  { from: 'them', time: '01:04', text: 'Are you still up?' },
-  { from: 'them', time: '01:04', text: "It's Hamza. New number.", named: true },
-  { from: 'them', time: '01:07', text: "I'm in town till Thursday. I don't want to leave it the way we left it." },
-  { from: 'them', time: '02:31', text: "I know you've seen these. I'm coming over." },
-  { from: 'them', time: '03:07', text: "I'm outside." },
-  { from: 'them', time: '03:07', text: 'My key still turns. Why is the bolt on' },
-  { from: 'them', time: '03:08', text: 'I can hear the landline ringing in there. Pick up' },
-  { from: 'them', time: '03:09', text: 'Saad I can smell gas' },
-  { from: 'them', time: '03:09', text: 'OPEN THE DOOR' },
-  { missed: '9 missed calls' },
-];
-const THE_YEAR = [
-  ['23 Nov 2026', "They gave me your phone today. I don't know why I'm texting it."],
-  ['14 Feb 2027', "The landlord wants to let the flat. I told him I'd pay."],
-  ['2 Jun 2027', 'The woman downstairs says she hears somebody walking about up here at night.'],
-  ['9 Jun 2027', 'I found the bolt on. From the inside. In an empty flat.'],
-  ['2 Aug 2027', 'The rubbish bag I left by the bin was at the front door this morning.'],
-  ['30 Oct 2027', 'A ring on the hob was lit tonight. Nobody has a key but me.'],
-  ['15 Nov 2027', "Tomorrow is a year. I'll be there. I'll bring the footage."],
-];
-// The last messages, tonight. The first comes in as the phone lights up;
-// the rest after the thread has scrolled back to the night and down again.
-const LAST = [
-  "It's me. It was always me. You only ever answered clients.",
-  '1:10. I had not even set off. I needed to know that.',
-  'You left the chai on, yaar.',
-  'Turn it off. Then open the door.',
-];
-// Seconds a message is left to be read, for every character in it (with a
-// floor and a ceiling): tonight, before the next one starts; in the thread,
-// as it scrolls up. And on the name. Slow on purpose: Eshan found the chats
-// hard to follow at the first speed (0.045 a letter).
-const READ = { perLetter: 0.075, least: 2.4, most: 6, onTheName: 4, arrive: 2.2, afterYours: 0.8 };
+// Seconds a message is left to be read before the next one starts, for
+// every character in it, with a floor and a ceiling. Slow on purpose: Eshan
+// found the chats hard to follow at the first speed (0.045 a letter).
+const READ = { perLetter: 0.075, least: 2.4, most: 6, afterYours: 0.8 };
 
 // --- How it looks ------------------------------------------------------------------
 const LOOK = {
@@ -101,7 +65,6 @@ const LOOK = {
   you: '#e8943a', // the player's messages: the menu's lamp colour
   youText: '#1c1209',
   dim: '#8b887f',
-  missed: '#c05a4e',
   back: '#090b10', // the screen behind the messages
   words: '"Bahnschrift", "Arial Narrow", "Liberation Sans Narrow", sans-serif',
 };
@@ -140,8 +103,7 @@ export function createPhone({ camera, audio, hud, onDone }) {
   camera.add(phone);
 
   // --- Where it has got to ---------------------------------------------------------------
-  const shown = []; // what is on the screen: messages { from, text | files, time, age }, days { day }, { missed }
-  let mode = 'tonight'; // 'tonight' or 'thread'
+  const shown = []; // the messages on the screen: { from, text | files, age }
   let next = 0; // the next line of TONIGHT
   let typing = 0; // seconds of "typing..." left, while they are typing
   let rest = 0; // seconds left for reading the last message before they start the next
@@ -152,19 +114,12 @@ export function createPhone({ camera, audio, hud, onDone }) {
   let want = 0; // and how far they should have
   let clock = 0; // seconds the phone has been up: for the typing dots
   let finished = false; // every line has been shown
-  let who = WHO; // the name at the top
-  let steps = []; // the thread's script, one step at a time
-  let stepTime = 0; // seconds into the current step
-  let focus = null; // the message the thread is holding in the middle of the screen
-  let then = onDone; // what to do once the phone is put away
-  let snap = false; // jump straight to where the thread should be, next time it is drawn
 
   const waitingFor = () => TONIGHT[next];
-  const yourTurn = () => up && !leaving && mode === 'tonight' && waitingFor() && waitingFor().from === 'you';
+  const yourTurn = () => up && !leaving && waitingFor() && waitingFor().from === 'you';
+  const readFor = (item) => Math.max(READ.least, Math.min(READ.most, (item.text || '').length * READ.perLetter));
 
-  const readFor = (item) => Math.max(READ.least, Math.min(READ.most, (item.text || item.missed || '').length * READ.perLetter));
-
-  // --- Tonight: move the conversation on as far as it can go without the player -----------
+  // --- Move the conversation on as far as it can go without the player ---------------------
   function advance(dt) {
     while (next < TONIGHT.length) {
       const line = TONIGHT[next];
@@ -194,69 +149,6 @@ export function createPhone({ camera, audio, hud, onDone }) {
       }
     }
     finished = true;
-  }
-
-  // --- The thread: a script of steps, played out one after another -------------------------
-  //   { arrive: text }  they type, and the message lands at the bottom
-  //   { hold: item }    the thread holds that message in the middle of the screen
-  //   { bottom: true }  back down to the newest
-  //   { done: true }    finished: the phone can be put away
-  function buildThread() {
-    shown.length = 0;
-    const old = (item) => ({ ...item, age: 99 });
-    for (const item of THE_NIGHT) shown.push(old(item));
-    const yearFrom = shown.length;
-    for (const [day, text] of THE_YEAR) {
-      shown.push(old({ day }));
-      shown.push(old({ from: 'them', time: '03:07', text }));
-    }
-    const yearTo = shown.length;
-    shown.push(old({ day: 'Today' }));
-    for (const line of TONIGHT) shown.push(old(line));
-    for (const clip of CLIPS) for (const text of clip.reply) shown.push(old({ from: 'them', text }));
-    shown.push(old({ from: 'them', files: [CLIPS[CLIPS.length - 1].file] }));
-
-    // Up from tonight, through the year, to the night and the name; then down again.
-    const messages = (from, to) => shown.slice(from, to).filter((item) => item.text || item.missed).reverse();
-    const year = messages(yearFrom, yearTo);
-    const night = messages(0, THE_NIGHT.length);
-    steps = [
-      { arrive: LAST[0] },
-      ...year.map((item) => ({ hold: item, seconds: readFor(item) })),
-      ...night.map((item) => ({ hold: item, seconds: item.named ? READ.onTheName : readFor(item), naming: item.named })),
-      { bottom: true, seconds: 1.2 },
-      ...LAST.slice(1).map((text) => ({ arrive: text })),
-      { done: true },
-    ];
-  }
-
-  function runThread(dt) {
-    const step = steps[0];
-    if (!step || step.done) {
-      finished = true;
-      focus = null;
-      return;
-    }
-    stepTime += dt;
-    if (step.arrive) {
-      focus = null;
-      if (stepTime < READ.arrive) {
-        typing = READ.arrive - stepTime;
-        return;
-      }
-      typing = 0;
-      shown.push({ from: 'them', text: step.arrive, age: 0 });
-      audio.message('in');
-    } else if (step.hold) {
-      focus = step.hold;
-      if (step.naming && stepTime > 0.6 && who !== NAME) who = NAME; // the thread has a name now
-      if (stepTime < step.seconds) return;
-    } else if (step.bottom) {
-      focus = null;
-      if (stepTime < step.seconds) return;
-    }
-    steps.shift();
-    stepTime = 0;
   }
 
   // --- Painting the screen ---------------------------------------------------------------
@@ -302,29 +194,21 @@ export function createPhone({ camera, audio, hud, onDone }) {
     return 64;
   }
 
-  // Lay the thread out from the top down: where each thing goes, and how tall it is.
+  // Lay the messages out from the top down: where each thing goes, and how tall it is.
   function layout() {
     let y = 0;
     const placed = [];
     let previous = null;
     paint.font = `${LOOK.text}px ${LOOK.words}`;
     for (const m of shown) {
-      if (m.day || m.missed) {
-        y += 10;
-        placed.push({ kind: m.day ? 'day' : 'missed', m, y, height: 30 });
-        y += 40;
-        previous = null;
-        continue;
-      }
       if (previous && previous !== m.from) y += 14;
       previous = m.from;
       if (m.files) {
-        const first = y;
         for (const name of m.files) {
           placed.push({ kind: 'file', name, y, m });
           y += 72;
         }
-        placed.push({ kind: 'stamp', m, y: y - 8, height: 0, first });
+        placed.push({ kind: 'stamp', m, y: y - 8 });
       } else {
         const lines = wrap(m.text, LOOK.bubble - 30);
         const width = Math.max(...lines.map((l) => paint.measureText(l).width)) + 30;
@@ -350,9 +234,7 @@ export function createPhone({ camera, audio, hud, onDone }) {
 
     const { placed, height } = layout();
     const area = BOTTOM - TOP;
-    const most = Math.max(0, height - area);
-    const held = focus && placed.find((p) => p.m === focus);
-    want = held ? Math.max(0, Math.min(most, held.y + (held.height || 40) / 2 - area / 2)) : most;
+    want = Math.max(0, height - area); // the newest message is always in sight
 
     paint.save();
     paint.beginPath();
@@ -362,7 +244,7 @@ export function createPhone({ camera, audio, hud, onDone }) {
       const at = TOP + p.y - scroll;
       if (at > BOTTOM || at < TOP - 300) continue;
       const fresh = p.m ? Math.min(1, p.m.age / 0.25) : 1; // a new message rises into place
-      paint.globalAlpha = fresh * (held && p.m !== focus && (p.kind === 'words' || p.kind === 'missed') ? 0.55 : 1);
+      paint.globalAlpha = fresh;
       const rise = (1 - fresh) * 18;
       if (p.kind === 'typing') {
         paint.globalAlpha = 1;
@@ -375,26 +257,6 @@ export function createPhone({ camera, audio, hud, onDone }) {
           paint.arc(38 + i * 21, at + 20, 5, 0, Math.PI * 2);
           paint.fill();
         }
-        continue;
-      }
-      if (p.kind === 'day') {
-        paint.font = `600 ${LOOK.small}px ${LOOK.words}`;
-        const label = p.m.day;
-        const w = paint.measureText(label).width + 26;
-        paint.fillStyle = '#181b22';
-        rounded(W / 2 - w / 2, at, w, 28, 14);
-        paint.fillStyle = LOOK.dim;
-        paint.textAlign = 'center';
-        paint.fillText(label, W / 2, at + 20);
-        paint.textAlign = 'left';
-        continue;
-      }
-      if (p.kind === 'missed') {
-        paint.font = `600 ${LOOK.small + 2}px ${LOOK.words}`;
-        paint.fillStyle = LOOK.missed;
-        paint.textAlign = 'center';
-        paint.fillText(p.m.missed, W / 2, at + 20);
-        paint.textAlign = 'left';
         continue;
       }
       if (p.kind === 'file') {
@@ -434,11 +296,11 @@ export function createPhone({ camera, audio, hud, onDone }) {
     paint.fillStyle = LOOK.dim;
     paint.font = `600 ${LOOK.text}px ${LOOK.words}`;
     paint.textAlign = 'center';
-    paint.fillText(who === WHO ? '?' : who[0], 46, 85);
+    paint.fillText('?', 46, 85);
     paint.textAlign = 'left';
     paint.fillStyle = LOOK.themText;
     paint.font = `${LOOK.text}px ${LOOK.words}`;
-    paint.fillText(who, 80, 86);
+    paint.fillText(WHO, 80, 86);
     paint.fillStyle = '#1a1d24';
     paint.fillRect(0, 108, W, 2);
 
@@ -465,11 +327,10 @@ export function createPhone({ camera, audio, hud, onDone }) {
 
   // The time under a message: when it was sent (tonight, always 3:07).
   function stamp(m, y) {
-    const time = m.time || TIME;
     paint.font = `${LOOK.small}px ${LOOK.words}`;
     paint.fillStyle = LOOK.dim;
-    const width = paint.measureText(time).width;
-    paint.fillText(time, m.from === 'you' ? LOOK.width - 20 - width : 22, y + LOOK.small + 2);
+    const width = paint.measureText(TIME).width;
+    paint.fillText(TIME, m.from === 'you' ? LOOK.width - 20 - width : 22, y + LOOK.small + 2);
   }
 
   // --- Holding it ---------------------------------------------------------------------
@@ -483,29 +344,13 @@ export function createPhone({ camera, audio, hud, onDone }) {
     phone.rotation.set(HAND.tilt, 0, 0);
   }
 
-  function raise() {
+  // Pick the phone up: tonight's conversation, from the start.
+  function open() {
+    reset();
     up = true;
     phone.visible = true;
     hud.prompt(null);
-  }
-
-  // Tonight's conversation, from the start.
-  function open() {
-    reset();
-    mode = 'tonight';
-    then = onDone;
-    raise();
     advance(0);
-  }
-
-  // The thread at the end. whenDone is called once it has been put away.
-  function openThread(whenDone) {
-    reset();
-    mode = 'thread';
-    then = whenDone;
-    buildThread();
-    snap = true; // it starts at the bottom: tonight
-    raise();
   }
 
   function update(dt) {
@@ -516,25 +361,16 @@ export function createPhone({ camera, audio, hud, onDone }) {
       up = false;
       phone.visible = false;
       hud.prompt(null);
-      then();
+      onDone();
       return;
     }
     hold();
     for (const m of shown) m.age += dt;
-    if (raised === 1 && !leaving) {
-      if (mode === 'tonight') advance(dt);
-      else runThread(dt);
-    }
+    if (raised === 1 && !leaving) advance(dt);
     hud.prompt(leaving || raised < 1 ? null : yourTurn() ? 'Send' : finished ? 'Put the phone away' : null);
     draw();
-    // Scroll towards where the thread should be, a little at a time; a long
-    // way, it jumps most of it.
-    if (snap) {
-      scroll = want;
-      snap = false;
-    }
-    scroll = Math.max(want - 400, Math.min(want + 400, scroll));
-    scroll += (want - scroll) * Math.min(1, dt * (focus ? 2.4 : 5));
+    // Scroll towards where the messages should be, a little at a time.
+    scroll += (want - scroll) * Math.min(1, dt * 5);
     if (Math.abs(want - scroll) < 0.5) scroll = want;
   }
 
@@ -565,33 +401,16 @@ export function createPhone({ camera, audio, hud, onDone }) {
     want = 0;
     clock = 0;
     finished = false;
-    who = WHO;
-    steps = [];
-    stepTime = 0;
-    focus = null;
     phone.visible = false;
   }
 
   return {
     open,
-    openThread,
     update,
     use,
     reset,
     isUp: () => up,
     // For tests: where the conversation has got to.
-    state: () => ({
-      up,
-      mode,
-      raised,
-      line: next,
-      of: TONIGHT.length,
-      yourTurn: !!yourTurn(),
-      finished,
-      typing: +typing.toFixed(2),
-      who,
-      steps: steps.length,
-      focus: focus ? focus.text || focus.missed : null,
-    }),
+    state: () => ({ up, raised, line: next, of: TONIGHT.length, yourTurn: !!yourTurn(), finished, typing: +typing.toFixed(2) }),
   };
 }

@@ -46,8 +46,6 @@ const FILE_AFTER = 2.5; // seconds after "One more file" before the fourth file 
 const BODY = 4.5; // seconds on the night itself, and Saad asleep, before the tape tears back to tonight
 const SEEN_AFTER = 1.1; // seconds after the picture burns out before "I can see you."
 const DARK_AFTER = 2.6; // seconds after that before every light in the flat goes out
-const LIGHTS_BACK = 1.2; // seconds after the hunt is over before the lights come back
-const THREAD_AFTER = 1.4; // seconds after the phone buzzes before it is in his hand
 // How far up the drone is (0 to 1) at each point of the night.
 const TENSION = {
   phone: 0.12, // the unknown number
@@ -204,25 +202,20 @@ export function createJob({ renderer, scene, camera, apartment, player, settings
     });
   }
 
-  // It has stopped looking, and its light is out. The lights of the flat
-  // come back. Then the phone lights up, and the thread scrolls up through a
-  // year of messages to the night itself and the name. Once it is put away,
-  // the rest of the ending is src/ending.js.
+  // It has stopped looking, and its light is out. Part 3 is over. Part 4,
+  // the cutscene and the rest of the ending, is src/ending.js.
   function huntOver() {
-    later(LIGHTS_BACK, () => {
-      apartment.power(true);
-      audio.setPower(true);
-      audio.act('powerUp');
-      editor.setDark(false);
-      stage = 'thread';
-      audio.setTension(0.3, 4);
-      audio.message('pocket');
-      later(THREAD_AFTER, () => phone.openThread(() => {
-        stage = 'done';
-        audio.setTension(0, 3);
-        onDone();
-      }));
-    });
+    stage = 'done';
+    onDone();
+  }
+
+  // The lights of the flat come back (the ending asks for it, once the
+  // cutscene is over).
+  function lightsBack() {
+    apartment.power(true);
+    audio.setPower(true);
+    audio.act('powerUp');
+    editor.setDark(false);
   }
 
   // --- 4. The door -------------------------------------------------------------------------
@@ -335,6 +328,7 @@ export function createJob({ renderer, scene, camera, apartment, player, settings
     keyUp,
     click,
     hands,
+    lightsBack,
     reset,
     // For tests.
     parts: { phone, seat, footage, editor, door, hunt },
