@@ -170,6 +170,11 @@ export function createEnding({ apartment, camera, footage, interact, hud, audio,
   screen.add(black, tape);
   screen.visible = false;
   camera.add(screen);
+  // It hangs in front of the player's eyes, wherever in the flat he is
+  // standing: so a tape that films that spot must not show it. (The tape's
+  // picture would be drawn into itself, which the graphics card refuses, and
+  // the black sheet would hang in the tape as a small black square.)
+  footage.keepOff(screen);
   // Keep it filling the view, whatever its shape.
   function fit() {
     const near = 0.1;
