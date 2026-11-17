@@ -1,0 +1,78 @@
+/* The loading screen: what is on the page until the game is ready to play.
+   It is written in index.html and worked by src/loading.js.
+
+   It wears the menu's own clothes (it has the class "menu" as well, so the
+   title, the column and the small words at the foot come from menu.css) and
+   adds only what is its own: a black sheet over everything, and the bar. */
+
+.loading {
+  z-index: 10; /* over the menu, and over everything else */
+  background: #000; /* nothing of the game shows until it is ready */
+  cursor: progress;
+  transition: opacity 700ms ease;
+}
+/* Ready: it fades, and the menu is underneath with its title in the same place. */
+.loading.is-ready {
+  opacity: 0;
+  pointer-events: none;
+  cursor: auto;
+}
+.loading.is-waiting {
+  cursor: pointer;
+}
+
+/* The bar: a thin line, like the sliders in the settings. */
+.loading__bar {
+  width: min(420px, 100%);
+  height: 2px;
+  margin: 0 0 1em;
+  overflow: hidden;
+  background: rgba(217, 214, 204, 0.26);
+}
+.loading__fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--lamp);
+  transform-origin: left center;
+  transform: scaleX(var(--done, 0));
+  transition: transform 240ms linear;
+}
+/* Before the game's code has arrived there is nothing to measure, so a short
+   piece of the bar runs along it instead. Only its position is animated,
+   which a browser keeps moving even while the page itself is busy. */
+.loading.is-fetching .loading__fill {
+  width: 28%;
+  transform: translateX(-100%);
+  transition: none;
+  animation: fetching 1.3s linear infinite;
+}
+@keyframes fetching {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(360%); }
+}
+.loading.is-broken .loading__bar {
+  visibility: hidden;
+}
+.loading.is-broken .loading__hint,
+.loading.is-waiting .loading__hint {
+  color: var(--lamp);
+}
+
+.loading__percent {
+  color: var(--phosphor);
+}
+
+/* For people who have asked their computer for less movement. */
+@media (prefers-reduced-motion: reduce) {
+  .loading,
+  .loading__fill {
+    transition: none;
+  }
+  .loading.is-fetching .loading__fill {
+    animation: none;
+    transform: none;
+    width: 100%;
+    opacity: 0.4;
+  }
+}

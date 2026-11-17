@@ -99,6 +99,7 @@ export function doSit() {
 }
 
 export async function toEditor() {
+  await g().ready; // the loading screen has to have lifted first
   if (g().mode() !== 'title') g().toTitle();
   await g().play();
   g().hold(true);

@@ -4,12 +4,51 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Untitled horror game</title>
+    <meta name="description" content="A short first-person horror game that runs in the browser. About 18 minutes. Needs a keyboard and a mouse." />
+    <meta name="theme-color" content="#000000" />
+    <!-- Tells the browser the page is dark before its styles have arrived, so
+         that a slow connection does not get a flash of white first. -->
+    <meta name="color-scheme" content="dark" />
     <!-- How the page and the menu look. The menu itself is built by src/menu.js. -->
     <link rel="stylesheet" href="/src/menu.css" />
     <!-- The words on the screen while playing. Built by src/hud.js. -->
     <link rel="stylesheet" href="/src/hud.css" />
+    <!-- The loading screen. It borrows the menu's look. -->
+    <link rel="stylesheet" href="/src/loading.css" />
   </head>
   <body>
+    <!-- The loading screen. It is written here, in the page itself, so that
+         it is on the screen before any of the game's code has arrived.
+         src/loading.js fills the bar and takes the screen away when the game
+         is ready. It is laid out like the menu, with the title in the same
+         place, so that when it lifts the title stays where it was. The name
+         is written again in src/menu.js (TITLE): change both. -->
+    <div id="loading" class="menu loading is-fetching" role="status">
+      <div class="menu__column">
+        <header class="menu__head">
+          <h1 class="menu__title" data-text="Untitled">Untitled</h1>
+        </header>
+        <footer class="menu__foot">
+          <p class="menu__hint loading__hint">Best with headphones, in the dark.</p>
+          <div class="loading__bar"><span class="loading__fill"></span></div>
+          <p class="menu__counter"><span class="loading__words">Loading</span><span class="menu__state loading__percent"></span></p>
+        </footer>
+      </div>
+    </div>
+    <script>
+      // If the game cannot start at all (no connection half way through, or a
+      // browser that cannot draw 3D), say so instead of loading for ever.
+      // Once the game is ready this does nothing.
+      window.addEventListener('error', function () {
+        var screen = document.getElementById('loading');
+        if (!screen || screen.classList.contains('is-ready')) return;
+        screen.classList.remove('is-fetching');
+        screen.classList.add('is-broken');
+        screen.querySelector('.loading__words').textContent = 'Could not start';
+        screen.querySelector('.loading__percent').textContent = '';
+        screen.querySelector('.loading__hint').textContent = 'Something went wrong while loading. Reload the page. The game needs a recent browser, such as Chrome, on a computer.';
+      }, true);
+    </script>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

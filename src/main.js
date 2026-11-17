@@ -12,7 +12,9 @@ import { createPlayer } from './player.js';
 import { createVhs } from './vhs.js';
 import { createSettings } from './settings.js';
 import { createAudio } from './audio.js';
-import { createMenu } from './menu.js';
+import { createMenu, TITLE } from './menu.js';
+import { createLoading, prepare } from './loading.js';
+import { CLIPS, LAST_SHOT } from './clips.js';
 import { createAttract } from './attract.js';
 import { createHud } from './hud.js';
 import { createInteract } from './interact.js';
@@ -173,8 +175,8 @@ function toTitle() {
   menu.show('title');
 }
 
+// The menu stays hidden until the game is ready: see "Getting ready", below.
 const menu = createMenu({ settings, audio, onPlay: play, onTitle: toTitle });
-menu.show('title');
 
 // Esc makes the browser take the mouse back. That is the pause button.
 document.addEventListener('playerlockchange', () => {
@@ -186,12 +188,14 @@ window.addEventListener('blur', () => {
 });
 // Sound is not allowed until the first click or key press anywhere. Start it
 // on that, before anything else hears the click, so the very first menu
-// sound is not lost.
-for (const first of ['pointerdown', 'keydown']) {
-  window.addEventListener(first, () => {
-    audio.start();
-    if (mode === 'title') audio.music('theme', { fade: 4 }); // the title screen has its theme
-  }, { once: true, capture: true });
+// sound is not lost. (Only once the title screen is up: see "Getting ready".)
+function listenForFirstTouch() {
+  for (const first of ['pointerdown', 'keydown']) {
+    window.addEventListener(first, () => {
+      audio.start();
+      if (mode === 'title') audio.music('theme', { fade: 4 }); // the title screen has its theme
+    }, { once: true, capture: true });
+  }
 }
 
 player.setStepListener((x, z, fast) => audio.step(floorAt(x, z), fast));
@@ -316,7 +320,32 @@ function frame(ms) {
   tick(dt);
   draw(now);
 }
-renderer.setAnimationLoop(frame);
+
+// --- Getting ready --------------------------------------------------------------
+// The page opens on the loading screen (index.html). Behind it, everything
+// the game will ever draw is prepared (src/loading.js), so that nothing is
+// left to make the picture catch once it is being played. Until that is
+// done the menu is hidden, no key or click does anything, and the game's
+// clock does not run. Then the title screen comes up underneath and the
+// loading screen lifts.
+const loading = createLoading(TITLE);
+const ready = prepare({
+  renderer,
+  scene,
+  camera,
+  footage: job.parts.footage,
+  tapes: [...CLIPS, LAST_SHOT],
+  drawFrame: () => frame(performance.now()),
+  loading,
+})
+  // Should any of it fail, the game still starts: it will only catch here
+  // and there, as it would have without the preparing.
+  .catch((error) => console.error('Getting ready failed part of the way:', error))
+  .then(() => loading.finish(() => {
+    menu.show('title');
+    listenForFirstTouch();
+    renderer.setAnimationLoop(frame);
+  }));
 
 // Only while developing: lets tests reach into the game from the console.
 //   __game.bright(true)   floods the flat with light and removes the fog,
@@ -329,10 +358,12 @@ renderer.setAnimationLoop(frame);
 //                         time on by hand with __game.tick(seconds) and look at
 //                         one exact moment with __game.draw(). hold(false)
 //                         lets it run again.
+//   await __game.ready    waits until the loading screen has lifted.
 if (import.meta.env.DEV) {
   const flood = new THREE.AmbientLight(0xffffff, 2.2);
   const fog = scene.fog;
   window.__game = {
+    ready,
     player,
     apartment,
     camera,
