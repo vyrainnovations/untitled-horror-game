@@ -17,6 +17,10 @@ body {
   margin: 0;
   height: 100%;
   background: #000;
+  /* The page says it is dark (index.html), and a dark page's words are white
+     unless told otherwise. Nothing here relied on that, and nothing should:
+     this keeps what was there before. Everything that is read has its own colour. */
+  color: #000;
   overflow: hidden;
 }
 
@@ -100,13 +104,6 @@ canvas {
   65% { clip-path: inset(30% 0 48% 0); transform: translateX(-0.02em); }
   66% { clip-path: inset(100% 0 0 0); transform: none; }
 }
-.menu__note {
-  margin: 0.9vh 0 0 0.1em;
-  font-size: clamp(13px, 1.7vh, 19px);
-  color: var(--dim);
-  letter-spacing: 0.03em;
-}
-
 /* --- The page of options --- */
 .menu__page {
   position: relative;

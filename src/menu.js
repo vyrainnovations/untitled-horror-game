@@ -5,8 +5,9 @@
 //
 // The look of it lives in menu.css.
 
-export const TITLE = 'Untitled'; // the game's name. It is a working title: change it here.
-const TITLE_NOTE = 'working title';
+// The game's name. It is also written in index.html, on the loading screen,
+// so that it shows before this code has arrived: change both.
+export const TITLE = 'Untitled';
 // The credits: on the Credits page, and at the very end of the game (src/ending.js).
 export const CREDITS = [
   'Directed by Eshan, Vyra Innovations.',
@@ -32,7 +33,6 @@ export function createMenu({ settings, audio, onPlay, onTitle }) {
     <div class="menu__column">
       <header class="menu__head">
         <h1 class="menu__title"></h1>
-        <p class="menu__note"></p>
       </header>
       <div class="menu__page"><span class="menu__cursor"></span></div>
       <footer class="menu__foot">
@@ -49,7 +49,6 @@ export function createMenu({ settings, audio, onPlay, onTitle }) {
   const stateEl = root.querySelector('.menu__state');
   titleEl.textContent = TITLE;
   titleEl.dataset.text = TITLE;
-  root.querySelector('.menu__note').textContent = TITLE_NOTE;
   hintEl.textContent = USUAL_HINT;
 
   let kind = 'title'; // which menu this is: 'title' or 'pause'
