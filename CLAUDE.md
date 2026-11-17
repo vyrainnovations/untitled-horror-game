@@ -87,12 +87,12 @@ Out of scope for now: voice acting, multiple endings, a second location, multipl
 
 The repo is a showcase of a game made with AI, told as a story with the mistakes left in. Keep it that way:
 
-- **Commit often, in small steps**, each one a working state where possible. Never squash, amend or rewrite history to hide a mistake; fix it in a new commit and say what went wrong.
+- **Commit often, in small steps**, each one a working state where possible. Never squash, amend or rewrite history to hide a mistake; fix it in a new commit and say what went wrong. (The history was rewritten once, on 17 November, at Eshan's word, for privacy only: see the devlog. Commits use GitHub's private address for him; keep `user.email` that way.)
 - **Commit message format:** a short plain-English title, a few lines on what changed and why, then a `Director's note:` line with Eshan's own words about that step (quote him, do not invent his voice; ask if he has not said anything).
 - **`DEVLOG.md`:** add to the current day's entry as work happens (what happened, what went wrong or got dropped, Eshan's note, next). New day, new entry, newest at the bottom. Never edit old entries to look better.
 - Keep `README.md` status and this file's Status section current.
 - Push to GitHub (`origin`, branch `main`) after committing. **Every push to `main` goes live:** Vercel (the project `untitled-horror-game`) rebuilds the game and publishes it at the play link within about a minute. So run the tests before pushing, not after.
-- The repo is private until Eshan says to make it public. He has asked for that, once the documents are cleaned (done, 17 November) and his own notes are in the README. Before it goes public he has to decide about the old commits: see Next step.
+- The repo is private until Eshan says to make it public. He has asked for that, once the documents are cleaned (done, 17 November) and his own notes are in the README. The old commits are already scrubbed.
 
 ## Status
 
@@ -142,7 +142,7 @@ Things to know:
 **Next step:** two things, both waiting on Eshan.
 
 1. **His half of the conversation for the README.** He asked for the documentation to read like a short podcast: he and Claude each giving their view on making the game (how hard it was, how it was to direct, how he was to work with, tokens, where development is going), short enough that people read it. Claude's half is drafted in the session of 17 November; his has to be in his own words. It goes in `README.md` under the numbers.
-2. **Making the repo public.** First he has to choose what to do about the old commits. Every commit carries the email address his git is set up with, and the few personal details taken out of the documents on 17 November are still there in the earlier commits. Either he is fine with that, or the history is rewritten once to take them out (the same commits and messages, new commit IDs). Do not make the repo public, and do not rewrite history, until he has said which.
+2. **Making the repo public.** The history is scrubbed (17 November, his choice), so nothing personal is left in it. What remains is his go-ahead, after his notes are in.
 
 Things to know about the ending: the landing light (`lights.landing`) is in the flat from the start, turned down to nothing, so switching it on does not stall the game; the front door opens wide at the end but the doorway's barrier stays, so the player never walks out; the microwave's clock is repainted to 3:08 and back (`src/ending.js`). Anything that appears or moves still touches the rule about shadows being drawn once.
 

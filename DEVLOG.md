@@ -577,6 +577,14 @@ Two lines of Day 0 were reworded today, before the repo goes public: someone who
 
 > "Hey the game is made I played it. It is perfect."
 
+### Later the same day: the history, scrubbed
+
+The paragraph above said the old wording was still in the earlier commits. It no longer is. Asked whether to rewrite the history before the repo goes public, Eshan chose "Scrub first".
+
+So, once, the whole history was rewritten. Every one of the 51 commits now carries GitHub's private address for him instead of his own email, and in every old version of the documents the five personal lines above read as they read today. Nothing else changed: the commit messages, the dates, the order and the code are the same, and the newest files came out identical. What did change is every commit's ID, so links to old commits from before today no longer work.
+
+This breaks the project's own rule, "never rewrite history". It was broken once, on purpose, for privacy and not to hide a mistake, and this entry says so. The mistakes are all still there.
+
 **Next**
 
 The README gets a short conversation between the two of us about making this: his half is his to write. Then the repo is made public.
