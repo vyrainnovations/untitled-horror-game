@@ -264,6 +264,6 @@ New, in the order it was built. All of it is in the game as of 16 November:
 
 1. **Is the thing with the light allowed to be Hamza?** He asked for "an anomaly pretending to be Saad". The player gets one, for ten minutes: a figure that looks like him on the tapes, and a thing with a light for a face that hunts him. Then the cutscene takes both away: the figure was him, and the hunter was his friend. That keeps the ending he approved. If he wants a real monster that stays a monster, the ending has to change, and he should say so.
 2. **The names.** Saad and Hamza are placeholders.
-3. **The title.** The story offers three. "Still Up?" is the first message of the night, the message Hamza sends every night for a year, and what a ghost is. "3:07" is the clue that is on every clock. "Unknown Number" is the plainest.
+3. **The title.** Decided, 16 November: the game is called "Untitled", the working title it had all along. He turned down the three the story offered: "Still Up?" is the first message of the night, the message Hamza sends every night for a year, and what a ghost is. "3:07" is the clue that is on every clock. "Unknown Number" is the plainest.
 4. **How they text.** Plain English now, with the Urdu gone from the phone. Say if some should come back.
 5. **The setting.** A city in Pakistan that is never named, and so the money is in rupees. Say if it should be somewhere else.

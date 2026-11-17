@@ -1,6 +1,6 @@
-# Horror game (working title: untitled)
+# Untitled (a short horror game)
 
-A short first-person lo-fi horror game for the browser. Portfolio piece for Eshan (Vyra Innovations). Target length 10 to 15 minutes. **Deadline: finished and shipped by 16 November 2026.**
+A short first-person lo-fi horror game for the browser, about 18 minutes long. Portfolio piece for Eshan (Vyra Innovations). **Finished on the deadline, 16 November 2026, and online since 17 November: https://untitled-horror-game.vercel.app**
 
 ## Working with Eshan
 
@@ -15,7 +15,7 @@ Original story, lo-fi PS1/VHS look (low-poly models, small textures, low render 
 
 **The full story is in `STORY.md`. Read it before building anything.** Eshan's rule, 12 November: "We need everything to happen for a meaning ... reason behind every action we make the player do ... and the sudden feeling of everything clicking at the very end of the game. Build everything around it. I want you to first decide the full story before making the game." He also said the storyline must be kept intact: do not change it, or add anything it does not need, without him saying so.
 
-`STORY.md` was written by Claude on 12 November and **approved by Eshan on 13 November** ("Yes, build it"). **It was revised on 14 November, at his word**, after he played the first complete game and said: "It was good ngl but the thing is it wasn't horror at all ... WE NEED IT TO BE SCARIER!" The revision keeps what happened and how it ends, and makes the middle frightening: a figure on the tapes, a thing with a light that hunts the player, a cutscene in place of the old messages. It is fixed again. Still his to decide, and listed at the bottom of that file: whether the thing with the light may turn out to be Hamza (he asked for "an anomaly pretending to be Saad"; the story gives the player one and then takes it away), the two names, the title, how the characters text, and the setting. The working versions stand until he does.
+`STORY.md` was written by Claude on 12 November and **approved by Eshan on 13 November** ("Yes, build it"). **It was revised on 14 November, at his word**, after he played the first complete game and said: "It was good ngl but the thing is it wasn't horror at all ... WE NEED IT TO BE SCARIER!" The revision keeps what happened and how it ends, and makes the middle frightening: a figure on the tapes, a thing with a light that hunts the player, a cutscene in place of the old messages. It is fixed again. Still his to decide, and listed at the bottom of that file: whether the thing with the light may turn out to be Hamza (he asked for "an anomaly pretending to be Saad"; the story gives the player one and then takes it away), the two names, how the characters text, and the setting. The working versions stand until he does: he played the finished game on 16 November with all of them in it and called it "perfect". The title is decided: the game is called Untitled.
 
 The five lines below are his first outline. The story keeps all five in this order. Where the two differ (the order of the chores, the pool), `STORY.md` is the newer one and wins.
 
@@ -40,7 +40,8 @@ Out of scope for now: voice acting, multiple endings, a second location, multipl
 ## Layout
 
 - `STORY.md`: the whole story, the rules it sets, every beat of the game, the message script, and the build order to the deadline. Spoilers.
-- `index.html`, `src/main.js`: entry point (renderer, the three states `title` / `playing` / `paused`, game loop, dev-only test hooks).
+- `index.html`, `src/main.js`: entry point (renderer, the three states `title` / `playing` / `paused`, game loop, dev-only test hooks). `index.html` also holds the loading screen, so that it shows before any code has arrived.
+- `src/loading.js`, `src/loading.css`: the loading screen's bar and words, and everything the game prepares behind it before the title screen comes up (see Things to know).
 - `src/menu.js`, `src/menu.css`: the title screen and the pause screen (one menu, a column on the left over the game). The game's name is `TITLE` at the top of `menu.js`, and the credits are `CREDITS` just under it; the end of the game uses both.
 - `src/settings.js`: the settings and their limits, saved in the browser. `src/main.js` says what each one does (`apply`).
 - `src/audio.js`: every sound, made by code, and the score: a drone that rises (`setTension`), risers, hits (`sting`), a heartbeat, and two pieces of music played by a small sequencer (`music('theme')`, `music('finale')`).
@@ -61,6 +62,7 @@ Out of scope for now: voice acting, multiple endings, a second location, multipl
 - `src/ending.js`: Part 4: the cutscene, then the gas, the door, the last shot, the title and the credits.
 - `tools/walk-test.js`: the walking test (see Things to know).
 - `tools/play-test.js`: the play test (see Things to know).
+- `tools/warm-test.js`: the warm-up test (see Things to know).
 - `src/plan.js`: the floor plan (drawn in text at the top) and shared measurements.
 - `src/apartment.js`: floors, walls, doors, windows and all the lights. Calls the room files.
 - `src/rooms/`: furniture and clutter, one file per room (`study`, `bedrooms`, `kitchen`, `bathroom`, `store`, `corridor`), and `landing`, the stairwell outside the front door. Each file also places the invisible barriers for its furniture.
@@ -79,6 +81,7 @@ Out of scope for now: voice acting, multiple endings, a second location, multipl
 
 - `npm run dev`: start the game locally (http://localhost:5173).
 - `npm run build`: make the shippable version in `dist/`.
+- `npm run preview`: serve `dist/` on this computer, to try the shippable version (the `built` entry in `.claude/launch.json` does it on port 4173).
 
 ## Documenting the build
 
@@ -88,11 +91,14 @@ The repo is a showcase of a game made with AI, told as a story with the mistakes
 - **Commit message format:** a short plain-English title, a few lines on what changed and why, then a `Director's note:` line with Eshan's own words about that step (quote him, do not invent his voice; ask if he has not said anything).
 - **`DEVLOG.md`:** add to the current day's entry as work happens (what happened, what went wrong or got dropped, Eshan's note, next). New day, new entry, newest at the bottom. Never edit old entries to look better.
 - Keep `README.md` status and this file's Status section current.
-- Push to GitHub (`origin`, branch `main`) after committing. The repo is private until Eshan decides to make it public.
+- Push to GitHub (`origin`, branch `main`) after committing. **Every push to `main` goes live:** Vercel (the project `untitled-horror-game`) rebuilds the game and publishes it at the play link within about a minute. So run the tests before pushing, not after.
+- The repo is private until Eshan says to make it public. He has asked for that, once the documents are cleaned (done, 17 November) and his own notes are in the README. Before it goes public he has to decide about the old commits: see Next step.
 
 ## Status
 
-As of 16 November 2026, the deadline: the whole revised story is built, and the game plays from the title screen to the credits in about 18 minutes. Part 1 (the three chores), Part 2 (the phone, the PC, four tapes with a figure on them, the landline, the door hammered on and an eye at the peephole, the chai boiling over, the live tape burning out), Part 3 (lights out: the thing with the light, the hiding, being found) and Part 4 (the cutscene, the gas, the door, the last shot, the title and the credits). Eshan played the first complete version on 14 November; everything since is built on his notes from that, and **he has not played any of it yet**. What is left: him playing it, the game's name, and putting it online. The game has no name: the menu says "Untitled", with "working title" under it. `STORY.md` offers three.
+As of 17 November 2026: the game is finished and online. The whole revised story is built, and the game plays from the title screen to the credits in about 18 minutes. Part 1 (the three chores), Part 2 (the phone, the PC, four tapes with a figure on them, the landline, the door hammered on and an eye at the peephole, the chai boiling over, the live tape burning out), Part 3 (lights out: the thing with the light, the hiding, being found) and Part 4 (the cutscene, the gas, the door, the last shot, the title and the credits). Eshan played the first complete version on 14 November and the revised one on 16 November. His verdict on the second: "Hey the game is made I played it. It is perfect." On 17 November it got its loading screen, lost the words "working title" from the menu, and went online on Vercel.
+
+Two things on the loading screen are Claude's and he has not seen them, so they are his to throw out: the line "Best with headphones, in the dark.", and, on a phone, a note that the game needs a keyboard and a mouse (with a tap to go on anyway).
 
 Look decisions Eshan has made (do not undo without asking):
 
@@ -102,6 +108,8 @@ Look decisions Eshan has made (do not undo without asking):
 - He wants surfaces textured and rooms full of small real-life detail. His verdict on the furnished flat: "Now this looks pretty good."
 - Turning left and right was "a little faster and difficult to use". It is 0.0018 radians per pixel now, down from 0.0022 (`LOOK_SIDEWAYS` in `src/player.js`). He did not mention up and down, so that is unchanged.
 - The menu is a column on the left with the game showing behind it and every option clickable, "not a sloppy box in the middle". He asked for it to look "similar to the fears to fathom": keep it in that family (a plain list over the live game, VHS all over), but never copy that game's menu.
+
+- The game is called Untitled (his decision, 16 November), with nothing written under the title. The name is in two places: `TITLE` in `src/menu.js` and the loading screen in `index.html`.
 
 What he said after playing the whole game on 14 November (the devlog has it in full). These are decisions too:
 
@@ -128,8 +136,13 @@ Things to know:
 - The engine does not bounce light. The bedroom has one soft light standing in for lamplight bouncing off the wall.
 - The mirrors are fakes (dark glossy panels).
 - The game is played in Chrome in a big window (roughly 2400 x 1300). Check the look at that size.
+- The loading screen (`index.html`, `src/loading.js`) prepares everything the game will ever draw before the title screen comes up, so that nothing makes the picture catch in the middle of the game. It can only prepare what is already in the flat. So anything that appears later must be built at start-up and kept hidden (as the figures, the phone and the late lights are), never built while the game is being played. After adding anything that appears or moves, run the warm-up test: `(await import('/tools/warm-test.js')).run()`. It plays the whole game, drawing as it goes, and fails if anything new had to be made after the loading screen lifted, or if the graphics card refused to draw something. In a test, `await __game.ready` waits for the loading screen to lift.
+- A tape must never film the thing it is shown on. `footage.keepOff(object)` keeps an object out of every tape: the tripod, the monitor's picture, and the sheet the cutscene hangs in front of the player's eyes are all kept off that way.
 
-**Next step:** Eshan plays the revised game in Chrome, start to finish, and says what he thinks; his words go in the next commit, and his notes come before anything new. What he most needs to judge, because Claude cannot: whether it is frightening now; how it sounds (the drone, the hit, the heartbeat, and the two pieces of music, which Claude wrote and has never heard); whether the hiding is fair with a real mouse (the seconds to get out of the study, finding a wardrobe in the dark); and whether the cutscene makes it click. He also owes the game its name (`TITLE` in `src/menu.js`), an answer on the thing with the light (the top of the list at the bottom of `STORY.md`), the two names and the setting. Then ship it: `npm run build` makes `dist/`, which can go on any static host; where it goes is his call. The play test (`tools/play-test.js`) plays the whole game and should pass before anything is shipped.
+**Next step:** two things, both waiting on Eshan.
+
+1. **His half of the conversation for the README.** He asked for the documentation to read like a short podcast: he and Claude each giving their view on making the game (how hard it was, how it was to direct, how he was to work with, tokens, where development is going), short enough that people read it. Claude's half is drafted in the session of 17 November; his has to be in his own words. It goes in `README.md` under the numbers.
+2. **Making the repo public.** First he has to choose what to do about the old commits. Every commit carries the email address his git is set up with, and the few personal details taken out of the documents on 17 November are still there in the earlier commits. Either he is fine with that, or the history is rewritten once to take them out (the same commits and messages, new commit IDs). Do not make the repo public, and do not rewrite history, until he has said which.
 
 Things to know about the ending: the landing light (`lights.landing`) is in the flat from the start, turned down to nothing, so switching it on does not stall the game; the front door opens wide at the end but the doorway's barrier stays, so the player never walks out; the microwave's clock is repainted to 3:08 and back (`src/ending.js`). Anything that appears or moves still touches the rule about shadows being drawn once.
 

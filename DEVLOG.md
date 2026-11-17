@@ -524,3 +524,59 @@ The cutscene was written late on the 14th. The session ran out of its allowance 
 **Next**
 
 Today is the deadline. Eshan plays it. If it holds, it needs its name (`TITLE` in `src/menu.js`), and `npm run build` makes the `dist/` folder that goes online; where it goes is his call. Still his to decide: whether the thing with the light may turn out to be Hamza, the two names, the title, and the setting.
+
+---
+
+## Day 7: 17 November 2026. Online
+
+Eshan played the revised game on the 16th, the deadline, and asked the same evening for it to go online. The work was done the next morning. So the game was finished on the deadline and went live one day after it.
+
+**Play it: https://untitled-horror-game.vercel.app**
+
+**What happened**
+
+- **The name.** It stays Untitled. The grey words "working title" under it on the menu are gone.
+- **A loading screen.** The page opens on the title, a bar, and a line saying what is being done. When everything is ready the title screen comes up underneath, with its title in the same place.
+- **Online.** The game is on Vercel, at the link above, and the link is on the front of the GitHub repo. Every push to `main` now rebuilds the live game within a minute. The whole download is about 210 KB: one page, one sheet of styles, one file of code.
+- **The documents were gone over** before the repo is made public. What was changed is listed at the end of this entry.
+
+**What the loading screen really waits for**
+
+Eshan asked for it so that "all the models and the story line gets loaded up before the game starts". There are none to load. The game has no model, image or sound files: the flat is built and every texture painted by its own code, in about a tenth of a second. Claude said so, and then went looking for what a slow computer does wait for.
+
+It is the graphics card. A browser only works out how to draw a thing, and hands over its shape and its texture, the first time the thing is on screen. Measured over a whole play-through, about a fifth of that work was being left for the middle of the game: 244 shapes, 10 textures and 3 ways of drawing a surface were made while playing, at the first look into each room, the first tape, the first figure. On a fast computer nobody notices. On a slow one the picture catches, at exactly the moments meant to frighten.
+
+So behind the loading screen everything is prepared once: how to draw every surface, the shadows, every tape at every step back in time, and every single thing in the flat, shown or hidden. A new test, `tools/warm-test.js`, plays the whole game and fails if anything new has to be made after the loading screen has lifted. It passes: 4,246 pictures drawn, nothing new made.
+
+**What went wrong**
+
+- **A glitch in a game its director had just called perfect.** The new test also asks the graphics card, after every picture, whether it refused to draw anything. It had been refusing something on every frame of the cutscene. In the cutscene the tape fills the screen: a black sheet and the tape's picture hang just in front of the player's eyes. But the tapes are filmed inside the same flat, so whenever a tape's camera pointed at where the player was standing, it filmed that sheet too. The tape's picture was being drawn into itself, which a graphics card will not do, and the black sheet could turn up in the tape as a small black square at head height. Nobody had seen it: not Eshan, who played it twice, and not the play test, which cannot see. One line fixed it.
+- **A day late.** The deadline was the 16th. The game was done on it and online the morning after.
+- **The first picture of the loading screen had no bar.** The preview panel's pictures show only the top-left two thirds of the page. This project already knew that, and it still cost a few minutes: the foot of the screen was there all along, as measuring the page showed.
+- **A test that started before the game had.** The walking test was run while the loading screen was still up, and the menu opened on top of it half-way through. It passed anyway. The play test and the warm-up test now wait for the loading screen to lift.
+- **Two things on the loading screen are Claude's, not Eshan's.** The line "Best with headphones, in the dark.", and, on a phone, a note that the game needs a keyboard and a mouse, with a tap to go on anyway. He has not seen either.
+
+**Checked**
+
+- The play test (240 checks), the walking test (seven rooms, 400,000 random steps) and the warm-up test, on the final code. `npm run build`.
+- The live link, from outside: it answers without asking anyone to sign in, the loading screen runs through its steps and lifts in about two and a half seconds on this PC's built-in graphics chip, and the title screen comes up. No errors in the console.
+- The loading screen in each of its states: fetching, counting, could not start, and on a phone-sized screen with touch.
+- The page's colours before and after it was told it is dark: no element changes colour.
+
+**Not checked**
+
+- How long the loading takes on a really slow computer. There is not one here.
+- A real phone. Only a pretend one, in the browser.
+- How any of it looks in Chrome on his own screen. He has to look.
+
+**Changed in old entries, for privacy**
+
+Two lines of Day 0 were reworded today, before the repo goes public: someone who suggested an idea is no longer named by their relation to Eshan, and the free space on his disk is no longer given as a number. In `CLAUDE.md`, three lines about his computer and his screen lost their numbers, and the line about how he works with code was reworded. Nothing about the build was changed, and no mistake was removed. This is the only time old entries have been edited. The old wording is still in the earlier commits.
+
+**Eshan's note**
+
+> "Hey the game is made I played it. It is perfect."
+
+**Next**
+
+The README gets a short conversation between the two of us about making this: his half is his to write. Then the repo is made public.
