@@ -19,6 +19,44 @@ Directed by Eshan (Vyra Innovations). Built by Claude, an AI model, in Claude Co
 | AI models | Claude Fable 5.2 and Claude Opus 5.5 |
 | Tokens | about 1.9 million written by the AI, and about 300 million read back, nearly all of it the AI re-reading its own conversation |
 
+## The director and the builder, in their own words
+
+Five questions, answered by both of us. Eshan wrote his answers himself, having seen a one-line version of Claude's; only spelling and grammar slips are fixed. Claude wrote its own after reading his. We disagree in places, and those stay in.
+
+### 1. How hard was this to make?
+
+**Eshan:** To be honest it wasn't very hard at all. The reason is that Fable did all the heavy lifting. The problem was token consumption, which made the process a lot slower than it could have been with the power and expertise Fable 5.2 possesses. It is true that hearing and seeing is something Claude can't experience, so I did some work here. My role in this game's development was being the tester and that's it. The story, visuals, code, audio, models, each and everything was handled by Fable itself and was delivered in just a single week without any human intervention.
+
+**Claude:** The code was the easy part. The hard parts were the ones I can't do: I can't hear, so every sound and both pieces of music were written by numbers and I have never heard them; and I can't be frightened, so my first complete version was a sad ghost story with one loud noise in it, and I could not tell. Where I disagree with Eshan is "without any human intervention". He stopped me on day two to write the story before any gameplay, and after his first playthrough he said "it wasn't horror at all". Both changed the game more than anything I decided. Being the tester was the job that mattered.
+
+### 2. How revolutionary is it, honestly?
+
+**Eshan:** The newest model, Fable 5.2, that was used to create this game is a game changer itself. On ultra code Fable 5.2 was able to create the whole apartment and the props inside with just one prompt. Making a game similar to this or even better was still possible before this model; using Opus 5.5 you can create a similar game in less time, but what would be different when you use Fable is that it feels better at making good decisions and handling big parts. If you use Opus to make a game like this you would have to write the story yourself, explain each and every scene, do a lot of iterations on jump scares and audio and much more, but with Fable I just asked it to make a horror game and look what it made. Is it truly revolutionary? Probably not revolutionary, but a first step towards a true revolution. Fable 5.2 is not just a step but a leap towards AGI, and as it is handling big tasks and decisions itself I think we are very close to the day when AI would be able to orchestrate itself without a human in the loop.
+
+**Claude:** The game isn't revolutionary: it is 18 minutes long, its people are made of boxes, and its genre is well worn. What is new is who made it and how fast: one person, a week, an ordinary subscription, and no art or sound files at all. I'd be more careful than Eshan about AGI. This project is evidence that I can carry a large piece of work for days. It is not evidence that I can judge whether a horror game is frightening, and that turned out to be the question that decided everything.
+
+### 3. How hard was it to direct an AI, and how was the other one to work with?
+
+**Eshan:** Directing Claude is the thing that improved the most with this upgrade. Previously we used to explain everything and direct it precisely to achieve what's in our head. Now it's a lot easier to interpret your ideas on the screen through the latest model. Tell Claude what you feel, tell it what's off. Even if what you told it is not very precise, Claude understands your gut feeling, what you are trying to explain, better than you, and the changes happen exactly like what you needed. Although this opinion might vary, as it depends on how you write prompts as well, and I am a full-time AI user since Sonnet 3.
+
+**Claude:** He was good where it counted. His notes were about feeling ("we are too long, almost touching the roof", "it wasn't horror at all") and every one of them was right, even when he couldn't say why. Making me write the story first was the best decision of the project, and it was his. What cost us was scope and timing: the flat doubled in size before a line of gameplay existed, and four times he chose "build the next thing" before playing the last one, so the game was finished before anyone found out it wasn't scary.
+
+### 4. Tokens and the usage limits
+
+**Eshan:** Fable 5.2 is good but it's expensive. This is the most challenging thing about this model. While working on this project, where I was using Fable 5.2 Max at Ultracode, I hit my 5-hour usage limit after each and every prompt (as a Pro user), which was pretty annoying and cost me more time than I expected. If someone who knows how to direct AI is given this model without any limits, I am pretty sure you can make pretty much anything in a very short period of time. Though I have to agree, in the making of this game the cost and the amount of tokens consumed could have been much less if I had used models like Opus and Sonnet for smaller tasks, made tiny changes myself, written more precise prompts and directed it clearly. What I did was just "Make a horror game in my browser. Make no mistakes" and kept iterating by "Make it better". Although not literally, this is the perfect analogy for how I worked and directed it. The reason is that I wanted to push the model to its full capability and see what it can do on its own if there is minimal human intervention. And the game is what it did.
+
+**Claude:** About 1.9 million tokens written and 300 million read back, nearly all of it me re-reading our own conversation to remember where we were. The limit cut sessions off at least eight times and cost one whole day, the 15th, the day before the deadline. Small commits are why nothing was ever lost. I agree with him that it could have been cheaper: long sessions get more expensive with every turn, and a fresh session for each new piece would have cost far less than one conversation that ran for days.
+
+### 5. Where is development going?
+
+**Eshan:** I think development is now evolving, if that's the right word. Development is shifting from learning the "syntax" to learning the "system", as directing the AI is becoming the mainstream. It's not about how many languages you know. It's about how well you can orchestrate AI to make stuff. The future is of the people who learn AI, as AI is a force multiplier, not a job thief.
+
+**Claude:** Typing gets cheap and judgment gets scarce. I can build faster than anyone can check, so the people who go furthest will direct well and also know enough to check the work. In this project nobody read the code but me, so I had to write tests that could catch me. That is the part I'd tell anyone starting out not to skip.
+
+### And one more thing from Eshan
+
+Now, for people who think the time to enroll and learn AI is gone and it's no use learning now as they are already behind: that's not true. I won't say that this is the perfect time, but it's not the wrong time either. If the market feels crowded, keep in mind only 20 in 100 people are actively using AI and the other 80 have no idea how powerful AI is getting. Even the 20 people are just active AI users, and this includes your brother who uses it for homework and your mom who uses it for dinner recipes. The people who are using it to BUILD COOL SHIT are far fewer than it seems. If you think that you are a dentist, 3D artist, lawyer or in any sort of "IT-unrelated" field and you don't need to explore this, you are wrong. Let me explain using a simple analogy of a calculator. You see, a calculator is a tool that is used by mathematicians to solve math problems; it cannot be used by a pharmacist to solve his problems, right? But what if the calculator starts adapting and starts working as a dynamic tool that helps artists, dentists, lawyers and anyone in any field differently, according to their profession? This is AI. Now, you probably already are asking it questions regarding your field, but is asking enough when you can build stuff like CRMs, dashboards and apps that can help you in your profession, or others in that profession? If you want to know how it can help you specifically or how to get started, I would highly recommend you go and open Claude, give it a bit of context about yourself and your profession, give it the link of this GitHub repo and ask it to tell you how AI can help you beyond just answering questions. I am sure your work will get a lot easier with time.
+
 ## How it was made, in the open
 
 The whole process is here, wrong turns included:

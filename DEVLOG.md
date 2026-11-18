@@ -588,3 +588,24 @@ This breaks the project's own rule, "never rewrite history". It was broken once,
 **Next**
 
 The README gets a short conversation between the two of us about making this: his half is his to write. Then the repo is made public.
+
+---
+
+## Day 8: 18 November 2026. The conversation
+
+**What happened**
+
+Eshan asked for the README to read like a short podcast: both of us answering the same questions about making the game, agreeing and disagreeing in the open. It is in the README now, under the numbers. His answers are his own words, with only spelling and grammar slips fixed. Claude's were written after reading his, and say where they differ: mainly over "without any human intervention", and over how close any of this is to AGI.
+
+**What went wrong**
+
+- **An hour of his writing vanished.** On the 17th Claude gave him a form inside the chat for his notes. He spent more than an hour on it, pressed send, and nothing arrived: the form had reset, and nothing it held was saved anywhere. Claude should not have offered a chat form for long writing. He wrote it all again the next day, in a file on his disk.
+- **And that nearly went the same way.** He wrote the second draft in Notepad and never saved it, so the file Claude was asked to read was still the empty template. Windows Notepad keeps unsaved text in its own state files, as every keystroke and deletion in order. Claude rebuilt the text from those 7,648 edits and saved it to the file. Nothing was lost the second time.
+
+**Eshan's note**
+
+> "notes done. Try to use my original writing and rephrase as less as possible. Only where its necessary."
+
+**Next**
+
+Making the repo public, when he says so.

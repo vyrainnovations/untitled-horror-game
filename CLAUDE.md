@@ -141,7 +141,7 @@ Things to know:
 
 **Next step:** two things, both waiting on Eshan.
 
-1. **His half of the conversation for the README.** He asked for the documentation to read like a short podcast: he and Claude each giving their view on making the game (how hard it was, how it was to direct, how he was to work with, tokens, where development is going), short enough that people read it. Claude's half is drafted in the session of 17 November; his has to be in his own words. It goes in `README.md` under the numbers.
+1. **His half of the conversation for the README.** Done, 18 November: it is in `README.md`, in his words.
 2. **Making the repo public.** The history is scrubbed (17 November, his choice), so nothing personal is left in it. What remains is his go-ahead, after his notes are in.
 
 Things to know about the ending: the landing light (`lights.landing`) is in the flat from the start, turned down to nothing, so switching it on does not stall the game; the front door opens wide at the end but the doorway's barrier stays, so the player never walks out; the microwave's clock is repainted to 3:08 and back (`src/ending.js`). Anything that appears or moves still touches the rule about shadows being drawn once.
