@@ -92,7 +92,7 @@ The repo is a showcase of a game made with AI, told as a story with the mistakes
 - **`DEVLOG.md`:** add to the current day's entry as work happens (what happened, what went wrong or got dropped, Eshan's note, next). New day, new entry, newest at the bottom. Never edit old entries to look better.
 - Keep `README.md` status and this file's Status section current.
 - Push to GitHub (`origin`, branch `main`) after committing. **Every push to `main` goes live:** Vercel (the project `untitled-horror-game`) rebuilds the game and publishes it at the play link within about a minute. So run the tests before pushing, not after.
-- The repo is private until Eshan says to make it public. He has asked for that, once the documents are cleaned (done, 17 November) and his own notes are in the README. The old commits are already scrubbed.
+- The repo is public since 18 November 2026 (Eshan said "Make it public"). Everything pushed is visible to anyone: keep personal details out of files and commit messages.
 
 ## Status
 
@@ -142,7 +142,7 @@ Things to know:
 **Next step:** two things, both waiting on Eshan.
 
 1. **His half of the conversation for the README.** Done, 18 November: it is in `README.md`, in his words.
-2. **Making the repo public.** The history is scrubbed (17 November, his choice), so nothing personal is left in it. What remains is his go-ahead, after his notes are in.
+2. **Making the repo public.** Done, 18 November.
 
 Things to know about the ending: the landing light (`lights.landing`) is in the flat from the start, turned down to nothing, so switching it on does not stall the game; the front door opens wide at the end but the doorway's barrier stays, so the player never walks out; the microwave's clock is repainted to 3:08 and back (`src/ending.js`). Anything that appears or moves still touches the rule about shadows being drawn once.
 
